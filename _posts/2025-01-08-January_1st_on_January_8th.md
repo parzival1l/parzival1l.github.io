@@ -1,9 +1,8 @@
 ---
 title: January 1st on January 8th
-date: 2025-01-08 12:44:30 +/-TTTT
+date: 2025-01-08 12:44:30 -0500
 categories: [Reflection]
 tags: [AI]     # TAG names should always be lowercase
----
 ---
 ## Introduction
 
