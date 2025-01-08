@@ -17,7 +17,7 @@ Among the ideas that resonated with me was Cal Newport’s concept of setting qu
 
 In one of his recent videos, Ali Abdaal shared a simple yet effective strategy for planning and achieving goals. I highly recommend watching the full [video](https://www.youtube.com/watch?v=WONRS7BLh4g&t=698s), but the gist is captured in this visual from the video:
 
-![Ali Abdaal's Goal Framework]
+<!-- ![Ali Abdaal's Goal Framework] -->
 
 This, combined with Cal Newport’s philosophy of slow productivity, has inspired me to outline my professional and personal goals for 2025 in a way that keeps them clear and achievable.
 
