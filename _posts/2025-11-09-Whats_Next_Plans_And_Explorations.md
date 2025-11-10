@@ -26,8 +26,8 @@ Sometimes the best way forward is to slow down and build a stronger foundation.
 
 I have several resources sitting idle that I plan to put to good use:
 
-- **Azure credits** - [[link](portal.azure.com)]
-- **LLM fine-tuning course credits** - [[link](https://maven.com/parlance-labs/fine-tuning)]
+- **Azure credits** - [Azure Portal](https://portal.azure.com)
+- **LLM fine-tuning course credits** - [Maven Course](https://maven.com/parlance-labs/fine-tuning)
 - Other accumulated learning resources
 
 It's time to stop letting these expire and start experimenting with them.
@@ -50,18 +50,18 @@ This is a living list that I'll update as I work through materials and discover 
 - **Build a Large Language Model (From Scratch)** by Sebastian Raschka - [[link](https://www.manning.com/books/build-a-large-language-model-from-scratch)]
 
 ### Courses & Notes
-- **LLM Fine-Tuning Course Notes** by Hamel Husain - [[link\]](<https://maven.com/parlance-labs/fine-tuning)]
+- **LLM Fine-Tuning Course Notes** by Hamel Husain - [Maven Course](https://maven.com/parlance-labs/fine-tuning)
 
 ### Podcasts
 - [The BAML Show](https://www.youtube.com/@boundaryml/videos)
-- [Latent Space](http://latent.space)
+- [Latent Space](https://latent.space)
 - [Python Podcast](https://open.spotify.com/show/41Av6Rq81LfOT3Volz7W9D?si=QAu1Hf33Sj2CPb0t1PrjzA)
 
 ### Writers & Thought Leaders
 Articles and insights from people whose work I trust:
 - [Eugene Yan](https://eugeneyan.com)
 - [Jeremy Howard](https://www.answer.ai)
-- [Hamel Husain](http://hamel.dev)
+- [Hamel Husain](https://hamel.dev)
 - [Jason Liu](https://jxnl.co)
 
 ### Company Engineering Blogs
