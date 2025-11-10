@@ -20,7 +20,4 @@ In my free time, I enjoy skateboarding, gaming, and also dabble a little in phot
 
 ## Contact
 
-Feel free to reach out to me at nanda.kumark@mail.concordia.ca ,
-
-> Add Markdown syntax content to file `_tabs/about.md`{: .filepath } and it will show up on this page.
-{: .prompt​⬤
+Feel free to reach out to me at nanda.kumark@mail.concordia.ca
