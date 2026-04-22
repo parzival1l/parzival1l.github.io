@@ -1,13 +1,16 @@
 ---
-title: "ThreadHop at AI Tinkers"
+title: "ThreadHop at AI Tinkerers"
 date: 2026-04-22 18:00:00 -0500
 categories: [Projects]
 tags: [ai, tui, claude-code, threadhop]
 ---
 
-Hey — thanks for scanning! This post was put together for the **AI Tinkers
-demo** where I showed off **ThreadHop**, a small tool I've been building for
-anyone who lives inside Claude Code and keeps losing the plot between sessions.
+- **ThreadHop on GitHub** → [github.com/parzival1l/threadhop](https://github.com/parzival1l/threadhop)
+
+Hey — thanks for scanning! This post was put together for the
+[**AI Tinkerers Montreal**](https://montreal.aitinkerers.org/) demo where I
+showed off **ThreadHop**, a small tool I've been building for anyone who lives
+inside Claude Code and keeps losing the plot between sessions.
 
 ## What ThreadHop is (in one breath)
 
@@ -19,10 +22,6 @@ A longer write-up — architecture, why I built it, what it taught me — is
 coming soon as a separate post. I'll link it here once it's up:
 
 - **Deep-dive post** → *coming soon* <!-- UPDATE: link to threadhop internals post -->
-
-## The project
-
-- **ThreadHop on GitHub** → [github.com/parzival1l/threadhop](https://github.com/parzival1l/threadhop)
 
 ## Find me
 
