@@ -3,6 +3,7 @@ title: What I thought I knew
 date: 2024-09-17 01:26:30 +/-TTTT
 categories: [Reflection]
 tags: [AI]     # TAG names should always be lowercase
+hidden: true
 ---
 
 ---
