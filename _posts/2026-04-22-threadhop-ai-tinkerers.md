@@ -1,5 +1,5 @@
 ---
-title: "ThreadHop at AI Tinkerers"
+title: "ThreadHop at Shopify Builder Sundays Montreal"
 date: 2026-04-22 18:00:00 -0500
 categories: [Projects]
 tags: [ai, tui, claude-code, threadhop]
@@ -8,9 +8,9 @@ tags: [ai, tui, claude-code, threadhop]
 - **ThreadHop on GitHub** → [github.com/parzival1l/threadhop](https://github.com/parzival1l/threadhop)
 
 Hey — thanks for scanning! This post was put together for the
-[**AI Tinkerers Montreal**](https://montreal.aitinkerers.org/) demo where I
-showed off **ThreadHop**, a small tool I've been building for anyone who lives
-inside Claude Code and keeps losing the plot between sessions.
+**Shopify Builder Sundays Montreal** demo where I showed off **ThreadHop**, a
+small tool I've been building for anyone who lives inside Claude Code and keeps
+losing the plot between sessions.
 
 ## What ThreadHop is (in one breath)
 
@@ -41,3 +41,10 @@ coming soon as a separate post. I'll link it here once it's up:
   [LinkedIn](https://www.linkedin.com/in/nandyy/) or
   [Twitter](https://twitter.com/parzival1l) — happy to talk TUIs, LLM tooling,
   or how you're wrangling context in your own workflows.
+
+---
+
+## Previously shown at
+
+- **AI Tinkerers Montreal** —
+  [montreal.aitinkerers.org](https://montreal.aitinkerers.org/)
