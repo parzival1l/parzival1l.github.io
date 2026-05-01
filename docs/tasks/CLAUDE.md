@@ -10,7 +10,7 @@ Tasks not in `completed/` and with `status` other than `done`.
 
 | ID  | Title                                  | Status | Plan       |
 |-----|----------------------------------------|--------|------------|
-| 001 | Scaffold Next.js app                   | todo   | 2026-05-01 |
+| 001 | Scaffold Next.js app                   | done   | 2026-05-01 |
 | 002 | Port existing posts to MDX             | todo   | 2026-05-01 |
 | 003 | Build layout and theme (Lee-style)     | todo   | 2026-05-01 |
 | 004 | Replace deploy workflow                | todo   | 2026-05-01 |

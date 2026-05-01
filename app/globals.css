@@ -1,0 +1,16 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", serif;
+  --color-accent: #2D5BFF;
+}
+
+html {
+  font-family: var(--font-serif);
+}
+
+body {
+  background: #ffffff;
+  color: #1a1a1a;
+}

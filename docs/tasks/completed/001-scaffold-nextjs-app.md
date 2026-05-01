@@ -1,7 +1,7 @@
 ---
 id: 001
 title: Scaffold Next.js app
-status: todo
+status: done
 created: 2026-05-01
 plan: 2026-05-01-blog-platform-rebuild
 adrs: [adr-002, adr-003]
