@@ -1,0 +1,36 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --font-serif:
+    ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --color-accent: #2d5bff;
+}
+
+html {
+  font-family: var(--font-serif);
+  color: #1a1a1a;
+  background: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Tighten the prose plugin's defaults: link color uses our accent, slightly
+   smaller body type, comfortable line-height for long-form reading. */
+.prose {
+  --tw-prose-links: var(--color-accent);
+  --tw-prose-bullets: #9ca3af;
+  font-size: 1.0625rem;
+  line-height: 1.75;
+}
+
+.prose a {
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.prose img {
+  border-radius: 4px;
+}

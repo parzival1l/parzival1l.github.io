@@ -13,7 +13,16 @@ _site
 
 # NPM dependencies
 node_modules
-package-lock.json
+
+# Next.js
+.next
+out
+next-env.d.ts
+
+# Env files
+.env
+.env.local
+.env.*.local
 
 # IDE configurations
 .idea
@@ -24,3 +33,13 @@ package-lock.json
 # Misc
 _sass/dist
 assets/js/dist
+
+# Playwright MCP scratch / screenshots
+.playwright-mcp/
+*.playwright.png
+scaffold-*.png
+home-*.png
+about-*.png
+post-*.png
+notfound-*.png
+blog-index-*.png
