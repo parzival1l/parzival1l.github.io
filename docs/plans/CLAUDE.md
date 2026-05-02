@@ -10,9 +10,10 @@ There should normally be exactly one active plan at a time.
 
 ## Index
 
-| Date       | Plan                          | Status   |
-|------------|-------------------------------|----------|
-| 2026-05-01 | blog-platform-rebuild         | active   |
+| Date       | Plan                          | Status    |
+|------------|-------------------------------|-----------|
+| 2026-05-01 | blog-platform-rebuild         | completed |
+| 2026-05-01 | domain-and-cleanup            | active    |
 
 ## Format
 

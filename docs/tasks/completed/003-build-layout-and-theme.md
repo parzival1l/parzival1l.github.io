@@ -1,7 +1,7 @@
 ---
 id: 003
 title: Build layout and theme (Lee-style)
-status: todo
+status: done
 created: 2026-05-01
 plan: 2026-05-01-blog-platform-rebuild
 adrs: [adr-006]

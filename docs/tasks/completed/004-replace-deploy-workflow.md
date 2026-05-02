@@ -1,7 +1,7 @@
 ---
 id: 004
 title: Replace deploy workflow
-status: todo
+status: done
 created: 2026-05-01
 plan: 2026-05-01-blog-platform-rebuild
 adrs: [adr-002, adr-003]

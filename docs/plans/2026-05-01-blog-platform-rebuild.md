@@ -1,6 +1,6 @@
 ---
 date: 2026-05-01
-status: active
+status: completed
 related_adrs: [adr-002, adr-003, adr-006]
 tasks: [001, 002, 003, 004]
 ---

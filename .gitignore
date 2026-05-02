@@ -33,3 +33,13 @@ next-env.d.ts
 # Misc
 _sass/dist
 assets/js/dist
+
+# Playwright MCP scratch / screenshots
+.playwright-mcp/
+*.playwright.png
+scaffold-*.png
+home-*.png
+about-*.png
+post-*.png
+notfound-*.png
+blog-index-*.png

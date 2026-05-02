@@ -1,9 +1,15 @@
 import type { Metadata } from 'next'
+import { SiteHeader } from '@/components/site-header'
+import { SiteFooter } from '@/components/site-footer'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Nanda Kumar',
-  description: 'Notes from an AI engineer.',
+  title: {
+    default: 'Nanda Kumar',
+    template: '%s · Nanda Kumar',
+  },
+  description:
+    'Notes from an AI engineer building tools for enterprise teams to ship their own agents.',
 }
 
 export default function RootLayout({
@@ -13,7 +19,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className="flex min-h-screen flex-col">
+        <SiteHeader />
+        <main className="flex-1">{children}</main>
+        <SiteFooter />
+      </body>
     </html>
   )
 }
