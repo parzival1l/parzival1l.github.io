@@ -1,8 +1,9 @@
 ---
 date: 2026-05-01
-status: active
+status: superseded
 related_adrs: [adr-004, adr-005]
 tasks: [005, 006, 007, 008]
+superseded_by: 2026-05-01-cleanup-and-syndication
 ---
 
 # Blog Platform Rebuild — Phase 2: Domain, Cleanup, Distribution

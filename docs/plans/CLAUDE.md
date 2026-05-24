@@ -10,10 +10,11 @@ There should normally be exactly one active plan at a time.
 
 ## Index
 
-| Date       | Plan                          | Status    |
-|------------|-------------------------------|-----------|
-| 2026-05-01 | blog-platform-rebuild         | completed |
-| 2026-05-01 | domain-and-cleanup            | active    |
+| Date       | Plan                          | Status     | Notes                              |
+|------------|-------------------------------|------------|------------------------------------|
+| 2026-05-01 | blog-platform-rebuild         | completed  | Phase 1 — Next.js scaffold shipped |
+| 2026-05-01 | domain-and-cleanup            | superseded | Replaced by `cleanup-and-syndication` (domain + RSS deferred) |
+| 2026-05-01 | cleanup-and-syndication       | active     | Phase 2 (pared down) — tasks 006, 008 |
 
 ## Format
 
