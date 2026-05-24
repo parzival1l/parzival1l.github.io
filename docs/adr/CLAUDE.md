@@ -6,13 +6,14 @@ Architecture Decision Records — one decision per file, immutable once accepted
 
 | ID  | Title                                             | Status   | Date       |
 |-----|---------------------------------------------------|----------|------------|
-| 001 | Agentic-dev docs structure                        | accepted | 2026-05-01 |
-| 002 | Migrate Jekyll/Chirpy → Next.js + TypeScript      | accepted | 2026-05-01 |
-| 003 | GitHub Pages for hosting (over Vercel)            | accepted | 2026-05-01 |
-| 004 | Custom domain `stepback.dev` with 301 from github.io | accepted | 2026-05-01 |
-| 005 | Markdown-first content with selective syndication | accepted | 2026-05-01 |
-| 006 | Minimalist editorial UI (Lee-style), not terminal | accepted | 2026-05-01 |
-| 007 | Modal for live AI/ML demos                        | accepted | 2026-05-01 |
+| 001 | Agentic-dev docs structure                        | accepted   | 2026-05-01 |
+| 002 | Migrate Jekyll/Chirpy → Next.js + TypeScript      | accepted   | 2026-05-01 |
+| 003 | GitHub Pages for hosting (over Vercel)            | accepted   | 2026-05-01 |
+| 004 | Custom domain `stepback.dev` with 301 from github.io | superseded | 2026-05-01 |
+| 005 | Markdown-first content with selective syndication | accepted   | 2026-05-01 |
+| 006 | Minimalist editorial UI (Lee-style), not terminal | accepted   | 2026-05-01 |
+| 007 | Modal for live AI/ML demos                        | accepted   | 2026-05-01 |
+| 008 | Custom domain `parzival.blog` via Squarespace     | accepted   | 2026-05-24 |
 
 ## Format
 

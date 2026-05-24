@@ -17,11 +17,19 @@ frontmatter and republishes the post to dev.to and Hashnode with
 `canonical_url` set back to the canonical site. Both platforms respect the
 canonical link for SEO so we don't fragment search authority.
 
-This task wires up that workflow end-to-end. The canonical URL stays at
-`https://parzival1l.github.io` for now — when the custom domain
-(`stepback.dev`) lands in a future plan, a one-time migration will need to
-rewrite already-published platform posts; that migration is out of scope
-here.
+This task wires up that workflow end-to-end. The canonical URL the
+workflow uses depends on sequencing relative to task 005 (custom domain
+migration to `parzival.blog`, ADR-008):
+
+- If task 005 has shipped when 008 lands → use
+  `https://parzival.blog` as the canonical URL from the start.
+- If 008 ships first → use `https://parzival1l.github.io` for now, and
+  pick up the new domain when 005 lands. Since no posts will have been
+  syndicated yet (the workflow is brand-new), there's nothing to migrate
+  on the platform side.
+
+Either way, the canonical URL should be a single constant in one place
+in the workflow so it's a one-line change to update.
 
 ## Acceptance criteria
 
@@ -342,14 +350,13 @@ merged before the secrets are set.
 
 ## Out of scope
 
-- Custom domain `stepback.dev` (deferred from this plan)
-- RSS feed / `sitemap.xml` / GA4 (its own future plan)
+- Custom domain migration itself (task 005 — see Context for how
+  canonical URL sequencing works)
+- RSS feed / `sitemap.xml` / GA4 (its own future plan, ID 007)
 - Removing Jekyll artifacts (task 006)
 - Cross-posting to Medium (rejected per ADR-005)
 - Stripping JSX from MDX before syndicating (follow-up; no current post
   uses JSX)
-- Migrating already-published platform posts when canonical URL changes
-  to `stepback.dev` (handled in the future domain plan)
 
 ## When done
 

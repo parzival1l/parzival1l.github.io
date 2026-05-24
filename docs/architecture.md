@@ -7,7 +7,7 @@ matching ADR in `adr/`.
 ## What this is
 
 A personal technical blog for AI engineering content, hosted on GitHub Pages
-under the custom domain `stepback.dev`, with selective syndication to
+under the custom domain `parzival.blog`, with selective syndication to
 developer platforms (dev.to, Hashnode, optionally Medium).
 
 The repository is the canonical source of truth: posts are markdown files in
@@ -37,7 +37,7 @@ Modal (serverless), linked from project landing pages and post bodies.
                        ▼                              ▼
         ┌──────────────────────────┐       ┌────────────────────┐
         │  GitHub Pages             │       │  dev.to            │
-        │  → stepback.dev (canonical)│       │  Hashnode          │
+        │  → parzival.blog (canonical)│       │  Hashnode          │
         │  ← parzival1l.github.io    │       │  Medium (optional) │
         │     (301 redirect)         │       │  (canonical → us)  │
         └──────────────────────────┘       └────────────────────┘
@@ -58,7 +58,7 @@ Modal (serverless), linked from project landing pages and post bodies.
 | **Next.js (static export)** | Frontend; renders MDX posts at build time | — | TypeScript, Tailwind, MDX |
 | **GitHub Pages** | Static hosting with custom domain + free SSL | Free | 100 GB/mo soft cap; no billing surprises |
 | **GitHub Actions** | Build + deploy on push, cross-posting workflow | Free (within Pro/Student limits) | Two workflows, decoupled |
-| **stepback.dev** | Canonical custom domain | Domain cost only | github.io 301-redirects to it |
+| **parzival.blog** | Canonical custom domain | Domain cost only | github.io 301-redirects to it |
 | **Cross-posting workflow** | Reads `syndicate.*` frontmatter, POSTs to platform APIs with canonical URL | Free | Per-platform booleans; opt-in |
 | **dev.to / Hashnode** | Distribution surface | Free | Both respect canonical URL for SEO |
 | **Modal** | Serverless hosting for live AI/ML demos | $30/mo free tier + student credits | Linked from posts/projects, not coupled to blog |
@@ -70,7 +70,7 @@ Modal (serverless), linked from project landing pages and post bodies.
 1. Write post as content/posts/<slug>.mdx
 2. Set frontmatter: title, date, categories, tags, syndicate.*
 3. git push
-4. deploy.yml → build → GitHub Pages → live on stepback.dev (~1–2 min)
+4. deploy.yml → build → GitHub Pages → live on parzival.blog (~1–2 min)
 5. crosspost.yml → for each syndicate.<platform>: true, POST to API
 6. (optional) Modal demo deployed separately when relevant
 ```
@@ -101,10 +101,10 @@ Default behavior: no `syndicate` block ⇒ no cross-posting. Opt-in per platform
 
 | URL | Purpose |
 |---|---|
-| `stepback.dev` | Canonical. All real traffic. |
-| `parzival1l.github.io` | 301-redirects to `stepback.dev` (preserves old links) |
-| `stepback.dev/blog/<slug>` | Individual posts (final URL pattern TBD; see ADR-002) |
-| `stepback.dev/projects` | Index of project pages |
+| `parzival.blog` | Canonical. All real traffic. |
+| `parzival1l.github.io` | 301-redirects to `parzival.blog` (preserves old links) |
+| `parzival.blog/blog/<slug>` | Individual posts (final URL pattern TBD; see ADR-002) |
+| `parzival.blog/projects` | Index of project pages |
 | `<project>.modal.run` | Live demo endpoints, linked from post bodies |
 
 ## Planned content series

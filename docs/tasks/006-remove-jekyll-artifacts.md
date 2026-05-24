@@ -115,8 +115,9 @@ Task 004 deleted the legacy workflow. No action needed in `.github/`.
 
 ## Out of scope
 
-- Custom domain `stepback.dev` (deferred from this plan)
-- RSS feed / `sitemap.xml` / GA4 (its own future plan)
+- Custom domain migration (task 005 — independent; can ship before
+  or after this one)
+- RSS feed / `sitemap.xml` / GA4 (its own future plan, ID 007)
 - Cross-posting workflow (task 008)
 - Updating `README.md` (separate concern; not blocking anything)
 

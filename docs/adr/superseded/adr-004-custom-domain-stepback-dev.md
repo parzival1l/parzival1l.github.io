@@ -1,10 +1,10 @@
 ---
 id: 004
 title: Custom domain `stepback.dev` with 301 from github.io
-status: accepted
+status: superseded
 date: 2026-05-01
 supersedes: []
-superseded_by: []
+superseded_by: [008]
 ---
 
 ## Context

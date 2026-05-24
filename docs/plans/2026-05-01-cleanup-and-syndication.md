@@ -1,24 +1,29 @@
 ---
 date: 2026-05-01
 status: active
-related_adrs: [adr-005]
-tasks: [006, 008]
+related_adrs: [adr-005, adr-008]
+tasks: [005, 006, 008]
 supersedes: 2026-05-01-domain-and-cleanup
 ---
 
-# Blog Platform Rebuild — Phase 2 (Pared Down): Cleanup and Syndication
+# Blog Platform Rebuild — Phase 2: Domain, Cleanup, and Syndication
 
 Phase 1 shipped the Next.js + MDX site at `parzival1l.github.io`. The
-original phase-2 plan (`2026-05-01-domain-and-cleanup.md`, now superseded)
+original phase-2 plan (`2026-05-01-domain-and-cleanup.md`, superseded)
 bundled four tasks: custom domain, Jekyll cleanup, distribution surfaces
-(RSS / sitemap / GA4), and cross-posting. This pared-down plan keeps only
-the two the author wants right now — clear out the dead Jekyll artifacts,
-and wire up cross-posting per ADR-005.
-
-Custom domain (`stepback.dev`) and distribution surfaces are deferred to
-future plans. They're orthogonal to these two and can land at any time.
+(RSS / sitemap / GA4), and cross-posting. This plan was initially pared
+down to just 006 + 008 with custom domain deferred; the domain decision
+was then reversed (see ADR-008, 2026-05-24) and **005 brought back into
+scope**. Distribution surfaces (007) remain deferred to a future plan.
 
 ## Tasks in this plan
+
+- **005 — Custom domain migration to `parzival.blog`**
+  Register `parzival.blog` through Squarespace Domains, configure DNS to
+  point at GitHub Pages (apex A records + `www` CNAME), add
+  `public/CNAME`, enable the custom domain in repo Pages settings, enforce
+  HTTPS once Let's Encrypt provisions. See ADR-008 for the decision and
+  task 005 for the full sequencing — DNS first, repo change second.
 
 - **006 — Remove Jekyll artifacts**
   `git rm` the dead Chirpy files (`_config.yml`, `_posts/`, `_tabs/`,
@@ -37,37 +42,37 @@ future plans. They're orthogonal to these two and can land at any time.
   `syndicate.hashnode_url`) and commits to `main`, so re-runs become
   updates instead of duplicate posts. Idempotent.
 
-Task files for 006 and 008 don't exist yet. The next agent picking up this
-plan should create `docs/tasks/006-*.md` and `docs/tasks/008-*.md` per the
-format in `docs/tasks/CLAUDE.md` before starting work, then add a row per
-task to the active index in that file.
-
-The IDs **005 and 007 are deliberately skipped** — they were referenced by
-the superseded plan for custom-domain and RSS+sitemap+GA4 work that has
-been deferred. Per `docs/tasks/CLAUDE.md`, IDs are never reused, so 005
-and 007 stay reserved for if/when those tasks come back.
+The ID **007 is deliberately skipped** — it was referenced by the
+superseded plan for RSS+sitemap+GA4 work that has been deferred. Per
+`docs/tasks/CLAUDE.md`, IDs are never reused, so 007 stays reserved for
+when those distribution surfaces come back.
 
 ## Sequencing
 
 ```
-006 ─┐
-     ├─▶ done
-008 ─┘
+005 ──┐
+006 ──┤── done
+008 ──┘
 ```
 
-Independent — 006 and 008 can land in either order or in parallel. 008
-does **not** depend on the custom domain: it uses
-`https://parzival1l.github.io` as the canonical URL for now. A future
-domain plan will need a one-time migration to update existing platform
-posts when the canonical URL changes, but that's handled there.
+All three are independent and can land in any order or in parallel.
+A useful coincidence: if 005 ships before 008, the cross-poster picks
+up `parzival.blog` as the `canonical_url` from day one with no
+migration needed. If 008 ships first, the canonical URL is
+`parzival1l.github.io` for any posts syndicated in the gap — at
+cutover those need one-time updates via the platforms' edit APIs.
+Since no posts have been syndicated yet, **landing 005 first is the
+zero-effort path**, but not strictly required.
 
 ## Definition of done for this plan
 
+- `https://parzival.blog/` serves the site over a valid TLS cert and
+  `parzival1l.github.io` 301-redirects to it
 - Repo contains zero Jekyll artifacts; `npm run build` is the only build
   pathway and the live site is unchanged
 - A test post with `syndicate.devto: true` (and `syndicate.hashnode: true`
   if a Hashnode account exists) triggers `crosspost.yml` and produces
-  platform posts whose `canonical_url` points at the github.io URL
+  platform posts whose `canonical_url` points at `parzival.blog`
 - The platform URLs are written back into the post's frontmatter so a
   second push of the same post updates rather than duplicates
 - Failure modes are handled: missing API key → workflow no-ops with a
@@ -75,19 +80,21 @@ posts when the canonical URL changes, but that's handled there.
 
 ## Prerequisites the author needs to provide
 
-- **dev.to API key** → repo secret `DEVTO_API_KEY`
+- **Domain purchase**: `parzival.blog` registered through Squarespace
+  Domains (needed for task 005)
+- **dev.to API key** → repo secret `DEVTO_API_KEY` (needed for 008)
 - **Hashnode personal access token + publication ID** → repo secrets
   `HASHNODE_TOKEN`, `HASHNODE_PUBLICATION_ID` (skip if no Hashnode account)
 
-Without those secrets the workflow runs but no-ops on the missing platform.
+Without the API secrets, 008's workflow runs but no-ops on the missing
+platform.
 
 ## What's deliberately not in this plan
 
 (All deferred to future plans, not this one)
 
-- **Custom domain `stepback.dev`** — author chose to defer the migration
 - **RSS feed / `sitemap.xml` / GA4** — its own future plan; pieces are
-  small and independent
+  small and independent (this is the reserved-but-skipped task 007)
 - Hashnode-as-CMS — rejected per ADR-005
 - Newsletter (Buttondown) — deferred
 - Search (Pagefind / Fuse.js) — its own plan

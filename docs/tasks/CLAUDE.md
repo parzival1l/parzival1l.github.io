@@ -8,17 +8,18 @@ Tasks not in `completed/` and with `status` other than `done`.
 
 ## Index
 
-| ID  | Title                          | Status | Plan       |
-|-----|--------------------------------|--------|------------|
-| 006 | Remove Jekyll artifacts        | todo   | 2026-05-01 |
-| 008 | Cross-posting workflow         | todo   | 2026-05-01 |
+| ID  | Title                                       | Status | Plan       |
+|-----|---------------------------------------------|--------|------------|
+| 005 | Custom domain migration to parzival.blog    | todo   | 2026-05-01 |
+| 006 | Remove Jekyll artifacts                     | todo   | 2026-05-01 |
+| 008 | Cross-posting workflow                      | todo   | 2026-05-01 |
 
 The active plan
 (`docs/plans/2026-05-01-cleanup-and-syndication.md`) references tasks
-**006** and **008**. IDs **005** (custom domain) and **007**
-(RSS + sitemap + GA4) are deliberately skipped and reserved — they were
-referenced by the now-superseded `2026-05-01-domain-and-cleanup.md` plan
-and will be picked up by future plans.
+**005**, **006**, and **008**. ID **007** (RSS + sitemap + GA4) is
+deliberately skipped and reserved — it was referenced by the now-superseded
+`2026-05-01-domain-and-cleanup.md` plan and will be picked up by a future
+plan covering distribution surfaces.
 
 (Completed tasks live in `completed/` — their IDs remain unique forever;
 never reused. Find the next free ID by `ls`-ing both `tasks/` and
