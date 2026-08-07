@@ -11,7 +11,6 @@ Tasks not in `completed/` and with `status` other than `done`.
 | ID  | Title                                       | Status | Plan       |
 |-----|---------------------------------------------|--------|------------|
 | 005 | Custom domain migration to parzival.blog    | todo   | 2026-05-01 |
-| 006 | Remove Jekyll artifacts                     | todo   | 2026-05-01 |
 | 008 | Cross-posting workflow                      | todo   | 2026-05-01 |
 
 The active plan
@@ -33,6 +32,7 @@ never reused. Find the next free ID by `ls`-ing both `tasks/` and
 | 002 | Port existing posts to MDX             | 2026-05-01 | `completed/002-port-existing-posts.md` |
 | 003 | Build layout and theme (Lee-style)     | 2026-05-01 | `completed/003-build-layout-and-theme.md` |
 | 004 | Replace deploy workflow                | 2026-05-01 | `completed/004-replace-deploy-workflow.md` |
+| 006 | Remove Jekyll artifacts               | 2026-05-01 | `completed/006-remove-jekyll-artifacts.md` |
 
 ## Format
 

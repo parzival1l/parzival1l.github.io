@@ -1,16 +1,3 @@
-# Bundler cache
-.bundle
-vendor
-Gemfile.lock
-
-# Jekyll cache
-.jekyll-cache
-.jekyll-metadata
-_site
-
-# RubyGems
-*.gem
-
 # NPM dependencies
 node_modules
 
@@ -29,10 +16,6 @@ next-env.d.ts
 .vscode
 !.vscode/settings.json
 !.vscode/extensions.json
-
-# Misc
-_sass/dist
-assets/js/dist
 
 # Playwright MCP scratch / screenshots
 .playwright-mcp/

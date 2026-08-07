@@ -1,7 +1,7 @@
 ---
 id: 006
 title: Remove Jekyll artifacts
-status: todo
+status: done
 created: 2026-05-01
 plan: 2026-05-01-cleanup-and-syndication
 adrs: [adr-002]

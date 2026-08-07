@@ -12,11 +12,9 @@ Domains, see ADR-008). Source of truth for posts is markdown in this repo.
 layout. Posts live in `content/posts/*.mdx`. Build and deploy run through
 `.github/workflows/deploy.yml` on push to `main`.
 
-The legacy Jekyll/Chirpy artifacts (`_config.yml`, `_posts/`, `_tabs/`,
-`Gemfile`, `_plugins/`, `_data/`, `index.html`, the legacy `assets/` tree)
-are still in the repo but unused — they sit untouched until the cleanup task
-in the active phase-2 plan. They should be left alone for now so a quick
-revert is possible.
+The legacy Jekyll/Chirpy artifacts were removed in task 006 — the repo is
+now Next.js-only. (The root `README.md` is still the old Chirpy theme
+README; rewriting it is deferred to a future plan.)
 
 If you're a fresh agent landing here to do work, **start with
 `docs/CLAUDE.md`**. It explains the docs structure and gets you to the
@@ -55,10 +53,13 @@ active plan and tasks.
 
 Active plan: **`docs/plans/2026-05-01-cleanup-and-syndication.md`** (phase
 2) — covers tasks **005** (custom domain migration to `parzival.blog`,
-per ADR-008), **006** (remove Jekyll artifacts), and **008**
-(cross-posting workflow per ADR-005). ID 007 (RSS + sitemap + GA4) is
-deliberately skipped and reserved — distribution surfaces are deferred
-to a future plan. Task files for 005, 006, and 008 all exist as todo.
+per ADR-008) and **008** (cross-posting workflow per ADR-005). Task **006**
+(remove Jekyll artifacts) is done — see `docs/tasks/completed/`. ID 007
+(RSS + sitemap + GA4) is deliberately skipped and reserved — distribution
+surfaces are deferred to a future plan.
+
+Per the author (2026-08-07): 005 is on hold until the domain is purchased;
+008 is on hold too. Both task files exist as todo and are ready to pick up.
 
 The original phase-2 plan
 (`docs/plans/2026-05-01-domain-and-cleanup.md`, `status: superseded`)
@@ -86,10 +87,8 @@ Phase 1 (`docs/plans/2026-05-01-blog-platform-rebuild.md`,
 ## Don't
 
 - Don't edit existing ADRs in place — supersede them.
-- Don't delete Chirpy artifacts (`_config.yml`, `_posts/`, `_tabs/`,
-  `_data/`, `_plugins/`, `Gemfile`, `index.html`, `.gitmodules`, the legacy
-  `assets/` tree) outside of task 006 in the active plan. The new build
-  ignores them; deleting prematurely complicates rollback.
+- Don't reintroduce Jekyll/Chirpy artifacts — they were removed in task 006.
+  The repo is Next.js-only.
 - Don't add a `CNAME` file or `parzival.blog` config until task 005 in the
   active plan — domain cutover is its own coordinated step (DNS at
   Squarespace must resolve before the repo change lands).
