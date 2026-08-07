@@ -23,7 +23,7 @@ export function PostLayout({
           {category ? <span> · {category}</span> : null}
         </p>
       </header>
-      <div className="prose prose-neutral max-w-none">{children}</div>
+      <div className="prose prose-neutral dark:prose-invert max-w-none">{children}</div>
     </article>
   )
 }
