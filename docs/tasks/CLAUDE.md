@@ -8,15 +8,31 @@ Tasks not in `completed/` and with `status` other than `done`.
 
 ## Index
 
-| ID  | Title                                  | Status | Plan       |
-|-----|----------------------------------------|--------|------------|
-| 001 | Scaffold Next.js app                   | done   | 2026-05-01 |
-| 002 | Port existing posts to MDX             | done   | 2026-05-01 |
-| 003 | Build layout and theme (Lee-style)     | done   | 2026-05-01 |
-| 004 | Replace deploy workflow                | done   | 2026-05-01 |
+| ID  | Title                                       | Status | Plan       |
+|-----|---------------------------------------------|--------|------------|
+| 005 | Custom domain migration to parzival.blog    | todo   | 2026-05-01 |
+| 008 | Cross-posting workflow                      | todo   | 2026-05-01 |
 
-(Completed tasks live in `completed/` — their IDs remain unique forever; never
-reused.)
+The active plan
+(`docs/plans/2026-05-01-cleanup-and-syndication.md`) references tasks
+**005**, **006**, and **008**. ID **007** (RSS + sitemap + GA4) is
+deliberately skipped and reserved — it was referenced by the now-superseded
+`2026-05-01-domain-and-cleanup.md` plan and will be picked up by a future
+plan covering distribution surfaces.
+
+(Completed tasks live in `completed/` — their IDs remain unique forever;
+never reused. Find the next free ID by `ls`-ing both `tasks/` and
+`tasks/completed/`.)
+
+### Recently completed
+
+| ID  | Title                                  | Plan       | Location                          |
+|-----|----------------------------------------|------------|-----------------------------------|
+| 001 | Scaffold Next.js app                   | 2026-05-01 | `completed/001-scaffold-nextjs-app.md` |
+| 002 | Port existing posts to MDX             | 2026-05-01 | `completed/002-port-existing-posts.md` |
+| 003 | Build layout and theme (Lee-style)     | 2026-05-01 | `completed/003-build-layout-and-theme.md` |
+| 004 | Replace deploy workflow                | 2026-05-01 | `completed/004-replace-deploy-workflow.md` |
+| 006 | Remove Jekyll artifacts               | 2026-05-01 | `completed/006-remove-jekyll-artifacts.md` |
 
 ## Format
 
