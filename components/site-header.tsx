@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 const NAV = [
   { href: '/blog/', label: 'Blogs' },
@@ -22,27 +23,30 @@ export function SiteHeader() {
         >
           Nanda Kumar
         </Link>
-        <nav className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
-          {NAV.map((item) => {
-            const active =
-              pathname === item.href ||
-              (item.href !== '/' && pathname.startsWith(item.href))
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={
-                  active
-                    ? 'text-neutral-900 underline underline-offset-4 decoration-accent'
-                    : 'text-neutral-600 hover:text-neutral-900'
-                }
-                aria-current={active ? 'page' : undefined}
-              >
-                {item.label}
-              </Link>
-            )
-          })}
-        </nav>
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
+          <nav className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
+            {NAV.map((item) => {
+              const active =
+                pathname === item.href ||
+                (item.href !== '/' && pathname.startsWith(item.href))
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={
+                    active
+                      ? 'text-neutral-900 underline underline-offset-4 decoration-accent'
+                      : 'text-neutral-600 hover:text-neutral-900'
+                  }
+                  aria-current={active ? 'page' : undefined}
+                >
+                  {item.label}
+                </Link>
+              )
+            })}
+          </nav>
+          <ThemeToggle />
+        </div>
       </div>
     </header>
   )

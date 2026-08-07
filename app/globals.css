@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* Class-based dark mode: the inline script in app/layout.tsx sets .dark on
+   <html> before first paint; components/theme-toggle.tsx flips it after. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-serif:
     ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
@@ -9,12 +13,36 @@
   --color-accent: #2d5bff;
 }
 
+/* Light/dark surface tokens. Remapping the neutral palette vars under .dark
+   flips every text-neutral-* / border-neutral-* utility site-wide without
+   touching component markup. */
+:root {
+  --bg: #ffffff;
+  --fg: #1a1a1a;
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #0a0a0a;
+  --fg: #e8e8e8;
+  --color-neutral-200: #262626; /* header/footer borders */
+  --color-neutral-500: #8f8f8f;
+  --color-neutral-600: #a3a3a3;
+  --color-neutral-700: #d4d4d4;
+  --color-neutral-900: #e8e8e8;
+  --color-accent: #6b8cff;
+  color-scheme: dark;
+}
+
 html {
   font-family: var(--font-serif);
-  color: #1a1a1a;
-  background: #ffffff;
+  color: var(--fg);
+  background: var(--bg);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
 }
 
 /* Tighten the prose plugin's defaults: link color uses our accent, slightly
@@ -33,4 +61,15 @@ html {
 
 .prose img {
   border-radius: 4px;
+}
+
+/* Dark-mode prose: keep links on the (lightened) accent instead of the
+   typography plugin's inverted gray, and dim bullets to match. */
+.dark .prose {
+  --tw-prose-links: var(--color-accent);
+  --tw-prose-bullets: #6b7280;
+}
+
+.dark .prose img {
+  outline: 1px solid rgba(255, 255, 255, 0.12);
 }

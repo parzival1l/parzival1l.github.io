@@ -64,6 +64,15 @@ Modal (serverless), linked from project landing pages and post bodies.
 | **Modal** | Serverless hosting for live AI/ML demos | $30/mo free tier + student credits | Linked from posts/projects, not coupled to blog |
 | **GA4** | Visitor analytics | Free | Embedded in Next.js layout |
 
+## Theming
+
+Class-based dark mode: an inline script in `app/layout.tsx` sets `.dark` on
+`<html>` before first paint (localStorage `theme` key, else
+`prefers-color-scheme`). `components/theme-toggle.tsx` flips it. Colors theme
+by remapping Tailwind palette vars (`--color-neutral-*`, `--color-accent`)
+under `.dark` in `globals.css` — components stay on `text-neutral-*` classes;
+prose blocks use `dark:prose-invert`.
+
 ## Content workflow
 
 ```
