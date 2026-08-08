@@ -1,0 +1,29 @@
+# Recommended reading — things I read and want to keep.
+#
+# One list item per entry. Newest `date` sorts to the top.
+#
+#   title    required  what shows in the list
+#   url      required  link to the original
+#   date     required  YYYY-MM-DD, the day you added it
+#   tags     required  lowercase, one or more; they become the filter chips
+#   archive  optional  archive.ph snapshot; adds the small archive icon
+#   repo     optional  source code; adds the small GitHub icon
+#
+# A missing required field fails the build, so a typo never ships silently.
+
+- title: Building effective agents
+  url: https://www.anthropic.com/engineering/building-effective-agents
+  archive: https://archive.ph/newest/https://www.anthropic.com/engineering/building-effective-agents
+  date: 2026-08-07
+  tags: [agents, patterns]
+
+- title: Model Context Protocol
+  url: https://modelcontextprotocol.io/
+  repo: https://github.com/modelcontextprotocol/servers
+  date: 2026-08-06
+  tags: [mcp, tooling, open-source]
+
+- title: llama.cpp
+  url: https://github.com/ggml-org/llama.cpp
+  date: 2026-08-05
+  tags: [inference, open-source]

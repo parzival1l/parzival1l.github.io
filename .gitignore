@@ -26,3 +26,6 @@ about-*.png
 post-*.png
 notfound-*.png
 blog-index-*.png
+
+# TypeScript incremental build cache
+tsconfig.tsbuildinfo
