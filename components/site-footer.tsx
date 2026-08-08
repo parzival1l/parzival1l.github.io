@@ -4,9 +4,12 @@ export function SiteFooter() {
       <div className="mx-auto grid max-w-3xl gap-8 px-6 py-10 text-sm text-neutral-600 sm:grid-cols-3">
         <div>
           <p className="font-medium text-neutral-900">Nanda Kumar</p>
-          <p className="mt-2 break-words">
-            nanda [dot] kumark [at] mail [dot] concordia [dot] ca
-          </p>
+          <a
+            href="mailto:nanda.kumark@mail.concordia.ca"
+            className="mt-2 block break-words hover:text-neutral-900"
+          >
+            nanda.kumark@mail.concordia.ca
+          </a>
         </div>
 
         <nav className="flex flex-col gap-1.5" aria-label="Social links">

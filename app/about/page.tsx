@@ -49,9 +49,12 @@ export default function AboutPage() {
 
       <p>
         You can reach me at{' '}
-        <span className="whitespace-nowrap">
-          nanda [dot] kumark [at] mail [dot] concordia [dot] ca
-        </span>
+        <a
+          href="mailto:nanda.kumark@mail.concordia.ca"
+          className="whitespace-nowrap underline decoration-neutral-300 underline-offset-4 hover:decoration-neutral-900"
+        >
+          nanda.kumark@mail.concordia.ca
+        </a>
         .
       </p>
     </PageLayout>
