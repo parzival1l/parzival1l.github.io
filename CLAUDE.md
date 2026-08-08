@@ -38,6 +38,11 @@ active plan and tasks.
 - **Drafts** are MDX files with `draft: true` in frontmatter. They're
   filtered out of `getAllPosts()` (so the homepage and `/blog/` index hide
   them) but `generateStaticParams` includes them, so direct URLs resolve.
+- **Reading list** entries live in `content/reading.yaml` and render at
+  `/reading/`. Shape and required fields are in `lib/reading.ts`
+  (`ReadingEntry`); the file header documents them too. A missing required
+  field throws at build time, so a bad entry fails the deploy instead of
+  shipping a broken row.
 - **Documentation** lives under `docs/` and follows the agentic-dev structure
   defined in ADR-001. Use CLAUDE.md (not README.md) for folder navigation.
 - **ADRs are immutable** once accepted. To change a decision, write a new
