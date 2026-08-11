@@ -9,7 +9,6 @@ const NAV = [
   { href: '/reading/', label: 'Reading' },
   { href: '/publications/', label: 'Publications' },
   { href: '/projects/', label: 'Projects' },
-  { href: '/about/', label: 'About' },
 ]
 
 export function SiteHeader() {
