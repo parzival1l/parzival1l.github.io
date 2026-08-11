@@ -68,8 +68,19 @@ html {
 .prose {
   --tw-prose-links: var(--color-accent);
   --tw-prose-bullets: #9ca3af;
-  font-size: 1.0625rem;
-  line-height: 1.75;
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+/* Flatter heading scale than the typography plugin's defaults: sections rank
+   by weight more than size, like the reading surfaces this site borrows
+   from. */
+.prose :where(h2) {
+  font-size: 1.25em; /* 20px at 16px body */
+}
+
+.prose :where(h3) {
+  font-size: 1.0625em; /* 17px */
 }
 
 .prose a {

@@ -8,13 +8,13 @@ export default function HomePage() {
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
       <section className="mb-16 max-w-prose">
-        <p className="text-lg leading-relaxed text-neutral-900">
+        <p className="text-base leading-relaxed text-neutral-900">
           Hi, I&rsquo;m <span className="font-medium">Nanda</span> &mdash; an AI
           engineer building a platform that lets enterprise teams stand up
           their own agents without writing code (Lovable / Vercel, pointed at
           internal workflows).
         </p>
-        <p className="mt-3 text-lg leading-relaxed text-neutral-700">
+        <p className="mt-3 text-base leading-relaxed text-neutral-700">
           I write here about multi-step agentic systems, context engineering,
           and the fundamentals I&rsquo;m circling back to.
         </p>
