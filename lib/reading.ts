@@ -2,13 +2,24 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { load } from 'js-yaml'
 
+/** The kind of thing being referenced. Drives the card icon and type filter. */
+export const READING_TYPES = ['article', 'paper', 'video', 'tweet', 'repo'] as const
+export type ReadingType = (typeof READING_TYPES)[number]
+
 export interface ReadingEntry {
   title: string
   /** Link to the original. */
   url: string
   /** YYYY-MM-DD — the day the entry was added. Drives the sort order. */
   date: string
+  type: ReadingType
+  /** Two-liner about the piece itself, shown inside the card. */
+  summary: string
   tags: string[]
+  /** My take, rendered above the card quote-tweet style. Long text clamps. */
+  thoughts?: string
+  /** Pinned entries also appear in the left rail. */
+  pinned?: boolean
   /** archive.ph snapshot. Renders the archive icon when present. */
   archive?: string
   /** Source code. Renders the GitHub icon when present. */
@@ -39,12 +50,30 @@ function toEntry(raw: unknown, index: number): ReadingEntry {
       ? item.date.toISOString().slice(0, 10)
       : (str(item.date) ?? fail(index, `(${title}) has no date`))
 
+  const type = str(item.type)
+  if (!type || !READING_TYPES.includes(type as ReadingType)) {
+    fail(index, `(${title}) type must be one of: ${READING_TYPES.join(', ')}`)
+  }
+
+  const summary = str(item.summary) ?? fail(index, `(${title}) has no summary`)
+
   const tags = Array.isArray(item.tags)
     ? item.tags.map(String).map(t => t.trim().toLowerCase()).filter(Boolean)
     : []
   if (tags.length === 0) fail(index, `(${title}) has no tags`)
 
-  return { title, url, date, tags, archive: str(item.archive), repo: str(item.repo) }
+  return {
+    title,
+    url,
+    date,
+    type: type as ReadingType,
+    summary,
+    tags,
+    thoughts: str(item.thoughts),
+    pinned: item.pinned === true,
+    archive: str(item.archive),
+    repo: str(item.repo),
+  }
 }
 
 /** Every entry, newest first. Ties break alphabetically so the order is stable. */
@@ -60,6 +89,12 @@ export function getReadingList(): ReadingEntry[] {
     .sort((a, b) =>
       a.date === b.date ? a.title.localeCompare(b.title) : a.date < b.date ? 1 : -1,
     )
+}
+
+/** Types present across all entries, in READING_TYPES order. */
+export function getReadingTypes(entries: ReadingEntry[]): ReadingType[] {
+  const present = new Set(entries.map(e => e.type))
+  return READING_TYPES.filter(t => present.has(t))
 }
 
 /** Distinct tags across all entries, most used first, then alphabetical. */
