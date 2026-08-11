@@ -29,13 +29,13 @@
   thoughts: >-
     The distinction between workflows and agents is the part I keep coming
     back to. Most of what teams call "agents" in production are really
-    workflows with an LLM step in the middle — the routing and
+    workflows with an LLM step in the middle. The routing and
     parallelization patterns here map directly onto what we ship. The
     uncomfortable corollary: if your use case fits a workflow, an agent
     mostly buys you latency and failure modes. I've started asking "which
     pattern from this post is this?" in design reviews, and half the time
     the honest answer is "an augmented LLM with extra steps." That's not a
-    knock — simple patterns are the ones that survive contact with
+    knock. Simple patterns are the ones that survive contact with
     production.
   tags: [agents, patterns]
 
@@ -46,7 +46,7 @@
   type: article
   summary: >-
     Open protocol that standardizes how LLM applications connect to tools
-    and data sources — one interface instead of per-tool integrations.
+    and data sources: one interface instead of per-tool integrations.
   tags: [mcp, tooling, open-source]
 
 - title: llama.cpp
@@ -54,7 +54,7 @@
   date: 2026-08-05
   type: repo
   summary: >-
-    LLM inference in plain C/C++ — runs large models on laptops and
+    LLM inference in plain C/C++; runs large models on laptops and
     commodity hardware through aggressive quantization.
   tags: [inference, open-source]
 
@@ -68,7 +68,7 @@
     recurrence entirely, which unlocked parallel training and every model
     since.
   thoughts: >-
-    The abstract reads like a dare — "attention is all you need" — and the
+    The abstract reads like a dare ("attention is all you need"), and the
     whole industry has spent the years since paying off that sentence. I
     reread it once a year; section 3 lands differently every time.
   tags: [transformers, architecture]
@@ -78,8 +78,8 @@
   date: 2026-08-03
   type: video
   summary: >-
-    Karpathy builds a GPT from zero in code — tokenization through the
-    training loop — in the most-watched transformer walkthrough on YouTube.
+    Karpathy builds a GPT from zero in code, tokenization through the
+    training loop, in the most-watched transformer walkthrough on YouTube.
   thoughts: >-
     The best two hours you can spend on fundamentals. Watching the attention
     math get typed out line by line removed the magic for me.
