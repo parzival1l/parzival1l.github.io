@@ -17,7 +17,7 @@ export function PostCard({ post }: { post: PostCardData }) {
           {formatDate(post.date)}
           {post.category ? <span> · {post.category}</span> : null}
         </p>
-        <h3 className="mt-1 text-xl font-medium leading-snug text-neutral-900 group-hover:text-accent">
+        <h3 className="mt-1 text-lg font-medium leading-snug text-neutral-900 group-hover:text-accent">
           {post.title}
         </h3>
         {post.description ? (

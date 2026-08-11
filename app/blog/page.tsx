@@ -10,7 +10,7 @@ export default function BlogIndexPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
-      <h1 className="mb-10 text-3xl font-medium text-neutral-900">Blogs</h1>
+      <h1 className="mb-10 text-2xl font-medium text-neutral-900">Blogs</h1>
       <div className="space-y-8">
         {posts.map((p) => (
           <PostCard

@@ -20,7 +20,7 @@ export function SiteHeader() {
       <div className="mx-auto flex max-w-3xl flex-wrap items-baseline justify-between gap-x-6 gap-y-3 px-6 py-6">
         <Link
           href="/"
-          className="text-lg font-medium tracking-tight text-neutral-900"
+          className="text-base font-medium tracking-tight text-neutral-900"
         >
           Nanda Kumar
         </Link>

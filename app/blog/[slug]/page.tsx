@@ -6,7 +6,8 @@
 
 import { notFound } from 'next/navigation'
 import { MDXRemote } from 'next-mdx-remote/rsc'
-import { getAllPosts, getPostBySlug } from '@/lib/posts'
+import rehypeSlug from 'rehype-slug'
+import { getAllPosts, getPostBySlug, getPostHeadings } from '@/lib/posts'
 import { PostLayout } from '@/components/post-layout'
 
 export function generateStaticParams() {
@@ -42,8 +43,14 @@ export default async function PostPage({
       title={post.frontmatter.title}
       date={post.frontmatter.date}
       category={post.frontmatter.categories?.[0]}
+      // rehype-slug ids the rendered headings so the TOC anchors resolve;
+      // getPostHeadings reproduces the same slugs from the markdown source.
+      headings={getPostHeadings(post.content)}
     >
-      <MDXRemote source={post.content} />
+      <MDXRemote
+        source={post.content}
+        options={{ mdxOptions: { rehypePlugins: [rehypeSlug] } }}
+      />
     </PostLayout>
   )
 }

@@ -94,7 +94,7 @@ export function ReadingList({
                 href={entry.url}
                 target="_blank"
                 rel="noreferrer"
-                className="text-xl font-medium leading-snug text-neutral-900 transition-colors hover:text-accent"
+                className="text-lg font-medium leading-snug text-neutral-900 transition-colors hover:text-accent"
               >
                 {entry.title}
               </a>
