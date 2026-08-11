@@ -19,3 +19,4 @@ next-env.d.ts
 
 # TypeScript incremental build cache
 tsconfig.tsbuildinfo
+.playwright-mcp/

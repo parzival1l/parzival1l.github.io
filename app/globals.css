@@ -103,38 +103,38 @@ html {
   outline: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-/* Sleeping-dog sprite for the local-time footer badge. 128x64 sheet with
-   4 breathing frames per row (public/dog.png); mechanics mirror the classic
+/* Sleeping-cat sprite for the local-time footer badge. 128x64 sheet with
+   4 breathing frames per row (public/cat.png); mechanics mirror the classic
    CSS pixel-cat: a 40x24 window, steps() frame animation, floating z's. */
-.dog {
+.cat {
   width: 40px;
   height: 24px;
   image-rendering: pixelated;
-  background-image: url(/dog.png);
+  background-image: url(/cat.png);
   background-position-x: -12px;
   background-repeat: no-repeat;
   background-size: 256px 128px;
   flex: none;
 }
 
-.dog-dodo {
+.cat-dodo {
   background-position-y: -104px;
-  animation: 1.8s steps(4, end) infinite dog-4-images;
+  animation: 1.8s steps(4, end) infinite cat-4-images;
 }
 
-.dog-z {
+.cat-z {
   opacity: 0;
-  animation: 3.2s ease-out infinite dog-z;
+  animation: 3.2s ease-out infinite cat-z;
   animation-delay: calc(var(--rang) * 1.05s);
 }
 
-@keyframes dog-4-images {
+@keyframes cat-4-images {
   to {
     background-position-x: -268px;
   }
 }
 
-@keyframes dog-z {
+@keyframes cat-z {
   0% {
     opacity: 0;
     transform: translate(0) scale(0.6);
@@ -152,8 +152,8 @@ html {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .dog-dodo,
-  .dog-z {
+  .cat-dodo,
+  .cat-z {
     animation: none;
   }
 }

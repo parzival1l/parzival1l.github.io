@@ -16,7 +16,7 @@ function montrealTime(): string {
 }
 
 /**
- * "11:52pm in Montreal, Canada" next to a sleeping pixel dog with floating
+ * "11:52pm in Montreal, Canada" next to a sleeping pixel cat with floating
  * z's. Renders the time only after hydration so the server HTML never
  * mismatches the reader's clock.
  */
@@ -37,12 +37,12 @@ export function LocalClock() {
     >
       <span>{time ? `${time} in Montreal, Canada` : ' '}</span>
       <span aria-hidden="true" className="relative inline-flex items-baseline">
-        <span className="dog dog-dodo" />
+        <span className="cat cat-dodo" />
         <span className="pointer-events-none absolute bottom-4 left-[27px]">
           {[0, 1, 2].map((i) => (
             <span
               key={i}
-              className="dog-z absolute text-[11px] font-semibold leading-none text-neutral-900"
+              className="cat-z absolute text-[11px] font-semibold leading-none text-neutral-900"
               style={{ '--rang': i } as React.CSSProperties}
             >
               z

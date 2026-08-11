@@ -2,12 +2,17 @@
 #
 # One list item per entry. Newest `date` sorts to the top.
 #
-#   title    required  what shows in the list
-#   url      required  link to the original
-#   date     required  YYYY-MM-DD, the day you added it
-#   tags     required  lowercase, one or more; they become the filter chips
-#   archive  optional  archive.ph snapshot; adds the small archive icon
-#   repo     optional  source code; adds the small GitHub icon
+#   title     required  what shows on the card
+#   url       required  link to the original
+#   date      required  YYYY-MM-DD, the day you added it
+#   type      required  article | paper | video | tweet | repo
+#   summary   required  two-liner about the piece, shown inside the card
+#   tags      required  lowercase, one or more; they become the filter rows
+#   thoughts  optional  my take, rendered above the card quote-tweet style;
+#                       long text clamps behind a "Show more" toggle
+#   pinned    optional  true surfaces the entry in the left rail
+#   archive   optional  archive.ph snapshot; adds the small archive icon
+#   repo      optional  source code; adds the small GitHub icon
 #
 # A missing required field fails the build, so a typo never ships silently.
 
@@ -15,15 +20,67 @@
   url: https://www.anthropic.com/engineering/building-effective-agents
   archive: https://archive.ph/newest/https://www.anthropic.com/engineering/building-effective-agents
   date: 2026-08-07
+  type: article
+  pinned: true
+  summary: >-
+    Anthropic's field guide to agent systems: start with simple workflows,
+    and reach for autonomous agents only when the task needs dynamic
+    decision-making.
+  thoughts: >-
+    The distinction between workflows and agents is the part I keep coming
+    back to. Most of what teams call "agents" in production are really
+    workflows with an LLM step in the middle — the routing and
+    parallelization patterns here map directly onto what we ship. The
+    uncomfortable corollary: if your use case fits a workflow, an agent
+    mostly buys you latency and failure modes. I've started asking "which
+    pattern from this post is this?" in design reviews, and half the time
+    the honest answer is "an augmented LLM with extra steps." That's not a
+    knock — simple patterns are the ones that survive contact with
+    production.
   tags: [agents, patterns]
 
 - title: Model Context Protocol
   url: https://modelcontextprotocol.io/
   repo: https://github.com/modelcontextprotocol/servers
   date: 2026-08-06
+  type: article
+  summary: >-
+    Open protocol that standardizes how LLM applications connect to tools
+    and data sources — one interface instead of per-tool integrations.
   tags: [mcp, tooling, open-source]
 
 - title: llama.cpp
   url: https://github.com/ggml-org/llama.cpp
   date: 2026-08-05
+  type: repo
+  summary: >-
+    LLM inference in plain C/C++ — runs large models on laptops and
+    commodity hardware through aggressive quantization.
   tags: [inference, open-source]
+
+- title: Attention is all you need
+  url: https://arxiv.org/abs/1706.03762
+  date: 2026-08-04
+  type: paper
+  pinned: true
+  summary: >-
+    The paper that introduced the transformer: self-attention replaces
+    recurrence entirely, which unlocked parallel training and every model
+    since.
+  thoughts: >-
+    The abstract reads like a dare — "attention is all you need" — and the
+    whole industry has spent the years since paying off that sentence. I
+    reread it once a year; section 3 lands differently every time.
+  tags: [transformers, architecture]
+
+- title: "Let's build GPT: from scratch, in code, spelled out"
+  url: https://www.youtube.com/watch?v=kCc8FmEb1nY
+  date: 2026-08-03
+  type: video
+  summary: >-
+    Karpathy builds a GPT from zero in code — tokenization through the
+    training loop — in the most-watched transformer walkthrough on YouTube.
+  thoughts: >-
+    The best two hours you can spend on fundamentals. Watching the attention
+    math get typed out line by line removed the magic for me.
+  tags: [transformers, teaching]
