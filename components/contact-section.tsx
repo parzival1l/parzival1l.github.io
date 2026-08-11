@@ -1,13 +1,21 @@
 /**
  * Contact + elsewhere colophon. Identity links live in exactly two places:
- * the homepage footer (via SiteFooter) and the bottom of the About page.
+ * the homepage footer (via SiteFooter, without the tagline) and the bottom
+ * of the About page (with it — the journal tagline lives there only).
  * The RSS slot is intentionally absent until task 007 builds /feed.xml.
  */
-export function ContactSection({ className = '' }: { className?: string }) {
+export function ContactSection({
+  tagline = false,
+  className = '',
+}: {
+  /** Show the journal tagline as a third column (About page only). */
+  tagline?: boolean
+  className?: string
+}) {
   return (
     <section
       aria-label="Contact and elsewhere"
-      className={`not-prose grid gap-8 text-sm text-neutral-600 sm:grid-cols-3 ${className}`}
+      className={`not-prose grid gap-8 text-sm text-neutral-600 ${tagline ? 'sm:grid-cols-3' : 'sm:grid-cols-2'} ${className}`}
     >
       {/* min-w-0: grid items default to min-width auto, which lets the long
           email overflow its track into the next column on narrow widths. */}
@@ -45,10 +53,12 @@ export function ContactSection({ className = '' }: { className?: string }) {
         </a>
       </nav>
 
-      <p className="min-w-0 text-neutral-500">
-        A working journal — notes from projects, things I changed my mind
-        about, occasional live demos.
-      </p>
+      {tagline ? (
+        <p className="min-w-0 text-neutral-500">
+          A working journal — notes from projects, things I changed my mind
+          about, occasional live demos.
+        </p>
+      ) : null}
     </section>
   )
 }

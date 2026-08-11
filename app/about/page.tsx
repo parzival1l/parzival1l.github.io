@@ -48,7 +48,7 @@ export default function AboutPage() {
         little photography.
       </p>
 
-      <ContactSection className="mt-12 border-t border-neutral-200 pt-8" />
+      <ContactSection tagline className="mt-12 border-t border-neutral-200 pt-8" />
     </PageLayout>
   )
 }

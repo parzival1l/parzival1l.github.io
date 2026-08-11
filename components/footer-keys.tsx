@@ -6,31 +6,22 @@ import { useEffect } from 'react'
 
 /**
  * Footer navigation styled as physical keyboard keys. Each keycap is a real
- * link, and each letter is also a real global shortcut: a reader at the
- * bottom of a long post can press `h` (home), `b` (blog index), `a`
- * (about) or `t` (back to top) instead of scrolling all the way up. The
- * keycap "presses" on hover (bottom edge gives way), and the key for the
- * page you're already on hides itself.
+ * link — and its letter is a real global shortcut, so a reader at the
+ * bottom of a long post can press `h` (home) or `a` (about) instead of
+ * scrolling all the way up. The keycap "presses" on hover (bottom edge
+ * gives way), and the key for the page you're already on hides itself.
  */
 
-type KeyId = 'home' | 'blog' | 'about' | 'top'
+type KeyId = 'home' | 'about'
 
 const KEYS: { id: KeyId; letter: string; label: string }[] = [
   { id: 'home', letter: 'h', label: 'Home' },
-  { id: 'blog', letter: 'b', label: 'Blogs' },
   { id: 'about', letter: 'a', label: 'About' },
-  { id: 'top', letter: 't', label: 'Top' },
 ]
 
-const HREFS: Record<Exclude<KeyId, 'top'>, string> = {
+const HREFS: Record<KeyId, string> = {
   home: '/',
-  blog: '/blog/',
   about: '/about/',
-}
-
-function scrollToTop() {
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' })
 }
 
 // A raised keycap: the inset bottom edge is the key's "depth"; on hover it
@@ -49,16 +40,10 @@ export function FooterKeys() {
   const pathname = usePathname() ?? '/'
   const router = useRouter()
 
-  // Normalize: '/blog/' and '/blog' both mean the blog index.
+  // Normalize: '/about/' and '/about' both mean the about page.
   const path = pathname.replace(/\/+$/, '') || '/'
   const here: KeyId | null =
-    path === '/'
-      ? 'home'
-      : path === '/blog'
-        ? 'blog'
-        : path === '/about'
-          ? 'about'
-          : null
+    path === '/' ? 'home' : path === '/about' ? 'about' : null
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -75,9 +60,7 @@ export function FooterKeys() {
       }
       const k = e.key.toLowerCase()
       if (k === 'h' && here !== 'home') router.push(HREFS.home)
-      else if (k === 'b' && here !== 'blog') router.push(HREFS.blog)
       else if (k === 'a' && here !== 'about') router.push(HREFS.about)
-      else if (k === 't') scrollToTop()
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
@@ -85,34 +68,19 @@ export function FooterKeys() {
 
   return (
     <nav aria-label="Shortcuts" className="flex flex-wrap items-center gap-x-4 gap-y-2">
-      {KEYS.filter((key) => key.id !== here).map((key) =>
-        key.id === 'top' ? (
-          <button
-            key={key.id}
-            type="button"
-            onClick={scrollToTop}
-            title={`Press ${key.letter}`}
-            className={TRIGGER}
-          >
-            <kbd aria-hidden="true" className={CAP}>
-              {key.letter}
-            </kbd>
-            <span>{key.label}</span>
-          </button>
-        ) : (
-          <Link
-            key={key.id}
-            href={HREFS[key.id]}
-            title={`Press ${key.letter}`}
-            className={TRIGGER}
-          >
-            <kbd aria-hidden="true" className={CAP}>
-              {key.letter}
-            </kbd>
-            <span>{key.label}</span>
-          </Link>
-        ),
-      )}
+      {KEYS.filter((key) => key.id !== here).map((key) => (
+        <Link
+          key={key.id}
+          href={HREFS[key.id]}
+          title={`Press ${key.letter}`}
+          className={TRIGGER}
+        >
+          <kbd aria-hidden="true" className={CAP}>
+            {key.letter}
+          </kbd>
+          <span>{key.label}</span>
+        </Link>
+      ))}
     </nav>
   )
 }

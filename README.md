@@ -35,9 +35,10 @@ builds the site and deploys it to GitHub Pages on every push to `main`.
 
 ## Footer behavior
 
-- Homepage: full contact and links block (`components/contact-section.tsx`).
-- Every page: minimal footer with the local-time clock and keycap shortcuts.
-- The same contact block also renders on the About page.
+- Homepage: contact plus social links (`components/contact-section.tsx`).
+- Every page: minimal footer with the local-time clock and keycap shortcuts
+  (`h` for home, `a` for about — they work as real keypresses too).
+- The full block, journal tagline included, renders on the About page.
 
 ## License
 
