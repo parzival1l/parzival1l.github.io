@@ -13,8 +13,8 @@ layout. Posts live in `content/posts/*.mdx`. Build and deploy run through
 `.github/workflows/deploy.yml` on push to `main`.
 
 The legacy Jekyll/Chirpy artifacts were removed in task 006 — the repo is
-now Next.js-only. (The root `README.md` is still the old Chirpy theme
-README; rewriting it is deferred to a future plan.)
+now Next.js-only. The root `README.md` describes the Next.js app, not the
+old starter.
 
 If you're a fresh agent landing here to do work, **start with
 `docs/CLAUDE.md`**. It explains the docs structure and gets you to the
@@ -45,6 +45,13 @@ active plan and tasks.
   shipping a broken row.
 - **Documentation** lives under `docs/` and follows the agentic-dev structure
   defined in ADR-001. Use CLAUDE.md (not README.md) for folder navigation.
+- **Footer is route-aware** (`components/site-footer.tsx`): the homepage
+  shows the full contact colophon (`components/contact-section.tsx`) above
+  the clock; every other page shows a slim bar with the clock and keycap
+  shortcuts (`components/footer-keys.tsx` — pressing `h`/`b`/`a`/`t` goes
+  home, blog index, about, top; each is also a real link). The contact block
+  also renders at the bottom of the About page body. No RSS link until task
+  007 builds `/feed.xml`.
 - **ADRs are immutable** once accepted. To change a decision, write a new
   ADR that supersedes the old one and `git mv` the old file to
   `docs/adr/superseded/`. Lifecycle details in `docs/adr/CLAUDE.md`.

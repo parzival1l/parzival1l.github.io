@@ -1,61 +1,44 @@
-# Chirpy Starter
+# parzival1l.github.io
 
-[![Gem Version](https://img.shields.io/gem/v/jekyll-theme-chirpy)][gem]&nbsp;
-[![GitHub license](https://img.shields.io/github/license/cotes2020/chirpy-starter.svg?color=blue)][mit]
+Personal technical blog of Nanda Kumar — notes on AI engineering: agentic
+systems, context engineering, and model fundamentals.
 
-When installing the [**Chirpy**][chirpy] theme through [RubyGems.org][gem], Jekyll can only read files in the folders
-`_data`, `_layouts`, `_includes`, `_sass` and `assets`, as well as a small part of options of the `_config.yml` file
-from the theme's gem. If you have ever installed this theme gem, you can use the command
-`bundle info --path jekyll-theme-chirpy` to locate these files.
+Stack: Next.js (static export), TypeScript, Tailwind CSS, MDX. GitHub Actions
+builds the site and deploys it to GitHub Pages on every push to `main`.
 
-The Jekyll team claims that this is to leave the ball in the user’s court, but this also results in users not being
-able to enjoy the out-of-the-box experience when using feature-rich themes.
+## Commands
 
-To fully use all the features of **Chirpy**, you need to copy the other critical files from the theme's gem to your
-Jekyll site. The following is a list of targets:
+| Command | Purpose |
+|---|---|
+| `npm ci` | Install dependencies from the lockfile |
+| `npm run dev` | Start the local dev server |
+| `npm run build` | Build the static export into `out/` |
 
-```shell
-.
-├── _config.yml
-├── _plugins
-├── _tabs
-└── index.html
-```
+## Layout
 
-To save you time, and also in case you lose some files while copying, we extract those files/configurations of the
-latest version of the **Chirpy** theme and the [CD][CD] workflow to here, so that you can start writing in minutes.
+- `content/posts/*.mdx` — posts, the source of truth. Frontmatter shape is
+  `PostFrontmatter` in `lib/posts.ts`.
+- `content/reading.yaml` — reading list entries. Schema is `ReadingEntry` in
+  `lib/reading.ts`.
+- `app/` — routes: home, blog, reading, publications, projects, about.
+- `components/` — UI: site chrome, post layout, TOC, footer.
+- `lib/` — content loading and formatting.
+- `public/` — static assets.
+- `docs/` — architecture, ADRs, plans, tasks. Start at `docs/CLAUDE.md`.
+- `.github/workflows/deploy.yml` — build and deploy pipeline.
 
-## Prerequisites
+## Writing a post
 
-Follow the instructions in the [Jekyll Docs](https://jekyllrb.com/docs/installation/) to complete the installation of
-the basic environment. [Git](https://git-scm.com/) also needs to be installed.
+1. Add `content/posts/<slug>.mdx` with frontmatter: `title`, `date`,
+   `categories`, `description`. Set `draft: true` to hide it from listings.
+2. Push to `main`. The deploy workflow publishes it in about a minute.
 
-## Installation
+## Footer behavior
 
-Sign in to GitHub and [**use this template**][use-template] to generate a brand new repository and name it
-`USERNAME.github.io`, where `USERNAME` represents your GitHub username.
-
-Then clone it to your local machine and run:
-
-```console
-$ bundle
-```
-
-## Usage
-
-Please see the [theme's docs](https://github.com/cotes2020/jekyll-theme-chirpy#documentation).
-
-## Contributing
-
-The contents of this repository are automatically updated when new releases are made to the [main repository][chirpy].  
-If you have problems using it, or would like to participate in improving it, please go to the main repository for feedback!
+- Homepage: full contact and links block (`components/contact-section.tsx`).
+- Every page: minimal footer with the local-time clock and keycap shortcuts.
+- The same contact block also renders on the About page.
 
 ## License
 
-This work is published under [MIT][mit] License.
-
-[gem]: https://rubygems.org/gems/jekyll-theme-chirpy
-[chirpy]: https://github.com/cotes2020/jekyll-theme-chirpy/
-[use-template]: https://github.com/cotes2020/chirpy-starter/generate
-[CD]: https://en.wikipedia.org/wiki/Continuous_deployment
-[mit]: https://github.com/cotes2020/chirpy-starter/blob/master/LICENSE
+MIT. See `LICENSE`.
