@@ -8,10 +8,10 @@ import { LocalClock } from '@/components/local-clock'
 
 /**
  * Two footer shapes:
- * - Homepage: the full contact colophon above the clock — the only page
- *   that carries identity in the chrome.
- * - Everywhere else: a slim bar, clock on the left and keycap shortcuts on
- *   the right, so a long read ends with a quick way out instead of a
+ * - Homepage: the contact colophon (identity, social icons) above the
+ *   clock — the only page that carries identity in the chrome.
+ * - Everywhere else: a slim bar, clock on the left and the `h` home keycap
+ *   on the right, so a long read ends with a quick way out instead of a
  *   repeat of the header.
  */
 export function SiteFooter() {

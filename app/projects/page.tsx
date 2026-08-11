@@ -9,7 +9,7 @@ export default function ProjectsPage() {
     <PageLayout title="Projects">
       <p>A running list of things I&rsquo;m building.</p>
       <p>
-        <strong>ThreadHop</strong> &mdash; persistent, searchable,
+        <strong>ThreadHop</strong>: persistent, searchable,
         cross-session memory for Claude Code. Every Claude Code session ships
         as an isolated JSONL transcript; ThreadHop indexes them into SQLite
         with FTS5 full-text search, runs a background extractor that pulls
@@ -20,7 +20,7 @@ export default function ProjectsPage() {
         <a href="https://github.com/parzival1l/threadhop">GitHub</a>.
       </p>
       <p>
-        <strong>docket</strong> &mdash; an agent-shaped task tracker with a
+        <strong>docket</strong>: an agent-shaped task tracker with a
         TDD execution harness, built for solo and small-team coding work. It
         is a per-repo task store (one gitignored SQLite file) plus a curated
         set of prompts that turn an agent&rsquo;s task pickup into a

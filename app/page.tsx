@@ -68,13 +68,15 @@ export default function HomePage() {
           I&rsquo;m an AI engineer at <AmpliMark />{' '}
           <span className="font-medium text-neutral-900">Ampliwork</span>,
           where we&rsquo;re building the easiest way for enterprise teams to
-          ship their own agents &mdash; no code required. I write here about
+          ship their own agents, no code required. I write here about
           multi-step agentic systems and context engineering.
         </p>
         <p className="mt-4 text-base leading-relaxed text-neutral-700">
-          Previously, I finished my master&rsquo;s at Concordia University
-          &mdash; thesis on structured information extraction from LLMs{' '}
-          (<a
+          Previously, I worked as a Machine Learning Engineer at
+          Femtherapeutics, then finished my master&rsquo;s at Concordia
+          University, where my thesis was on structured information
+          extraction from LLMs (
+          <a
             href="https://arxiv.org/abs/2510.17720"
             className={BIO_LINK}
             target="_blank"
@@ -82,8 +84,7 @@ export default function HomePage() {
           >
             preprint on arXiv
           </a>
-          ) &mdash; and worked as a Machine Learning Engineer at
-          Femtherapeutics.
+          ).
         </p>
         <p className="mt-4 text-base leading-relaxed text-neutral-700">
           You can reach me at{' '}

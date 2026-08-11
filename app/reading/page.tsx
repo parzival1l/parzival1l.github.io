@@ -20,7 +20,7 @@ export default function ReadingPage() {
               Reading
             </h1>
             <p className="text-neutral-600">
-              Articles, papers, videos and posts I read and keep — with my
+              Articles, papers, videos and posts I read and keep, with my
               notes on each. Each card links to the original.
             </p>
           </>

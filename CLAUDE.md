@@ -46,13 +46,14 @@ active plan and tasks.
 - **Documentation** lives under `docs/` and follows the agentic-dev structure
   defined in ADR-001. Use CLAUDE.md (not README.md) for folder navigation.
 - **Footer is route-aware** (`components/site-footer.tsx`): the homepage
-  shows the contact/socials colophon (`components/contact-section.tsx`)
-  above the clock; every other page shows a slim bar with the clock and
-  keycap shortcuts (`components/footer-keys.tsx` — pressing `h`/`a` goes
-  home/about; each is also a real link, and the current page's key hides).
-  The full block with the journal tagline renders at the bottom of the
-  About page body (`<ContactSection tagline />`). No RSS link until task
-  007 builds `/feed.xml`.
+  shows the contact colophon (`components/contact-section.tsx` — email plus
+  brand-icon socials from `components/social-icons.tsx`) above the clock;
+  every other page shows a slim bar with the clock and an `h` home keycap
+  (`components/footer-keys.tsx` — a real link and a real keypress, hidden
+  on the homepage itself). No RSS link until task 007 builds `/feed.xml`.
+- **There is no About page.** Bio, current org (Ampliwork), and previous
+  orgs (Concordia, Femtherapeutics) live in the homepage hero
+  (`app/page.tsx`). `/about/` 404s; don't link to it.
 - **ADRs are immutable** once accepted. To change a decision, write a new
   ADR that supersedes the old one and `git mv` the old file to
   `docs/adr/superseded/`. Lifecycle details in `docs/adr/CLAUDE.md`.
