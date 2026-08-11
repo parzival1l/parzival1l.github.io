@@ -8,8 +8,13 @@
 @theme {
   --font-serif:
     ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  /* next/font sets --font-inter / --font-geist-mono on <html> (see
+     app/layout.tsx); fallbacks keep the site usable while fonts load. */
   --font-sans:
-    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, sans-serif;
+  --font-mono:
+    var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
   --color-accent: #2d5bff;
 }
 
@@ -35,14 +40,27 @@
 }
 
 html {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   color: var(--fg);
   background: var(--bg);
+  scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   transition:
     background-color 160ms ease,
     color 160ms ease;
+}
+
+/* Anchor jumps from the table of contents should land below the header,
+   and honor users who ask for no animation. */
+.prose :is(h2, h3) {
+  scroll-margin-top: 4.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 /* Tighten the prose plugin's defaults: link color uses our accent, slightly
@@ -72,4 +90,59 @@ html {
 
 .dark .prose img {
   outline: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Sleeping-dog sprite for the local-time footer badge. 128x64 sheet with
+   4 breathing frames per row (public/dog.png); mechanics mirror the classic
+   CSS pixel-cat: a 40x24 window, steps() frame animation, floating z's. */
+.dog {
+  width: 40px;
+  height: 24px;
+  image-rendering: pixelated;
+  background-image: url(/dog.png);
+  background-position-x: -12px;
+  background-repeat: no-repeat;
+  background-size: 256px 128px;
+  flex: none;
+}
+
+.dog-dodo {
+  background-position-y: -104px;
+  animation: 1.8s steps(4, end) infinite dog-4-images;
+}
+
+.dog-z {
+  opacity: 0;
+  animation: 3.2s ease-out infinite dog-z;
+  animation-delay: calc(var(--rang) * 1.05s);
+}
+
+@keyframes dog-4-images {
+  to {
+    background-position-x: -268px;
+  }
+}
+
+@keyframes dog-z {
+  0% {
+    opacity: 0;
+    transform: translate(0) scale(0.6);
+  }
+  22% {
+    opacity: 1;
+  }
+  68% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(8px, -14px) scale(1.15);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dog-dodo,
+  .dog-z {
+    animation: none;
+  }
 }

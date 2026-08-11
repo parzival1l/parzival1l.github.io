@@ -1,3 +1,5 @@
+import { LocalClock } from '@/components/local-clock'
+
 export function SiteFooter() {
   return (
     <footer className="mt-20 border-t border-neutral-200">
@@ -43,6 +45,9 @@ export function SiteFooter() {
           A working journal — notes from projects, things I changed my mind
           about, occasional live demos.
         </p>
+      </div>
+      <div className="mx-auto max-w-3xl px-6 pb-8">
+        <LocalClock />
       </div>
     </footer>
   )
