@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     template: '%s · Nanda Kumar',
   },
   description:
-    'Notes from an AI engineer building tools for enterprise teams to ship their own agents.',
+    'Notes from a software engineer building tools for enterprise teams to ship their own agents.',
 }
 
 export const viewport: Viewport = {

@@ -12,29 +12,38 @@ export default function AboutPage() {
       <p>Hi, I&rsquo;m Nanda Kumar.</p>
 
       <p>
-        I&rsquo;m an AI engineer. Right now I&rsquo;m building a platform that
-        lets enterprise teams ship their own AI agents without writing code
-        &mdash; think Lovable or Vercel, but pointed at internal workflows
-        instead of marketing sites. The thesis is that the people closest to a
-        workflow should be the ones shaping the agent that runs it; my job is
-        to make that path short.
+        I&rsquo;m a software engineer at{' '}
+        <a href="https://www.ampliwork.com/">Ampliwork</a>, building a
+        platform that lets enterprise teams ship their own AI agents without
+        writing code &mdash; think Lovable or Vercel, but pointed at internal
+        workflows instead of marketing sites. The thesis is that the people
+        closest to a workflow should be the ones shaping the agent that runs
+        it; my job is to make that path short.
       </p>
 
       <p>
-        Outside of work I spend time on multi-step agentic workflows and
-        context engineering &mdash; the unglamorous mechanics of getting the
-        right information in front of a model at the right time. I&rsquo;m
-        also slowly working back through fundamentals on the principle that
-        the abstractions I lean on every day are only as load-bearing as my
+        Before Ampliwork I worked at{' '}
+        <a href="https://femtherapeutics.com/">FemTherapeutics</a>,{' '}
+        <a href="https://www.accenture.com/">Accenture</a>,{' '}
+        <a href="https://neuron7.ai">Neuron7.ai</a>, and{' '}
+        <a href="https://www.tenantpay.com">TenantPay</a>. My titles floated
+        between data scientist and machine learning engineer, but the way I
+        think of the work is simpler than the labels: I build good software.
+      </p>
+
+      <p>
+        The areas I work in: multi-step agentic workflows and context
+        engineering &mdash; the unglamorous mechanics of getting the right
+        information in front of a model at the right time. I&rsquo;m also
+        slowly working back through fundamentals on the principle that the
+        abstractions I lean on every day are only as load-bearing as my
         understanding of what&rsquo;s underneath.
       </p>
 
       <p>
-        I recently finished my master&rsquo;s at Concordia University. My
-        thesis was on structured information extraction from LLMs &mdash;
-        preprint on{' '}
-        <Link href="https://arxiv.org/abs/2510.17720">arXiv</Link>. Before
-        that I was a Machine Learning Engineer at Femtherapeutics.
+        I recently finished a master&rsquo;s at Concordia University.
+        Thesis on structured information extraction from LLMs &mdash; preprint
+        on <Link href="https://arxiv.org/abs/2510.17720">arXiv</Link>.
       </p>
 
       <p>

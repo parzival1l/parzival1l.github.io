@@ -60,12 +60,12 @@ export default function HomePage() {
               Nanda Kumar
               <VerifiedBadge />
             </p>
-            <p className="text-sm text-neutral-500">AI Engineer</p>
+            <p className="text-sm text-neutral-500">Software Engineer</p>
           </div>
         </div>
 
         <p className="text-base leading-relaxed text-neutral-700">
-          I&rsquo;m an AI engineer at <AmpliMark />{' '}
+          I&rsquo;m a software engineer at <AmpliMark />{' '}
           <span className="font-medium text-neutral-900">Ampliwork</span>,
           where we&rsquo;re building the easiest way for enterprise teams to
           ship their own agents &mdash; no code required. I write here about
