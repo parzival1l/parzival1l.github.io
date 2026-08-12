@@ -115,9 +115,7 @@ export default function HomePage() {
               SWin: A Sliding Window Summarization Approach for Coherent
               LLM-driven Dialogue Systems
             </a>
-            <p className="mt-1 text-sm text-neutral-500">
-              with Savant, Zhao, and Yan &middot; IEEE CAI 2026
-            </p>
+            <p className="mt-1 text-sm text-neutral-500">2026</p>
           </li>
           <li>
             <a
@@ -129,10 +127,7 @@ export default function HomePage() {
               PANER: A Paraphrase-Augmented Framework for Low-Resource Named
               Entity Recognition
             </a>
-            <p className="mt-1 text-sm text-neutral-500">
-              with Yan and Wang &middot; arXiv, 2025 &middot; master&rsquo;s
-              thesis
-            </p>
+            <p className="mt-1 text-sm text-neutral-500">2025</p>
           </li>
         </ul>
       </section>
