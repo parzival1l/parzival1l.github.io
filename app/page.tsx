@@ -46,8 +46,13 @@ function AmpliMark() {
 const BIO_LINK =
   'underline decoration-neutral-300 underline-offset-4 hover:decoration-neutral-900'
 
-const ROW_TITLE =
-  'min-w-0 flex-1 text-base leading-snug text-neutral-900 underline decoration-transparent underline-offset-4 transition-colors hover:text-accent'
+const ROW =
+  'group -mx-4 flex items-center gap-x-5 rounded-2xl px-4 py-3 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800'
+
+const ROW_TITLE = 'min-w-0 flex-1 text-base leading-snug text-neutral-900'
+
+const ROW_RAIL =
+  'whitespace-nowrap pl-2 text-right text-sm tabular-nums text-neutral-500'
 
 const WORKS = [
   {
@@ -82,14 +87,14 @@ function dateParts(iso: string) {
   }
 }
 
-/** Bordered square: month over day. */
+/** Bordered calendar square: month chip raised over the top edge, big day. */
 function DateBadge({ mon, day }: { mon: string; day: string }) {
   return (
-    <span className="flex h-10 w-10 flex-none flex-col items-center justify-center rounded-[10px] border border-neutral-200">
-      <span className="text-[9px] font-medium uppercase leading-none tracking-wide text-neutral-500">
+    <span className="relative flex h-14 w-14 flex-none items-center justify-center rounded-xl border border-neutral-200 bg-[var(--bg)] shadow-sm">
+      <span className="absolute -top-2.5 rounded-full border border-neutral-200 bg-[var(--bg)] px-1.5 py-px text-[10px] font-medium uppercase tracking-wider text-neutral-500">
         {mon}
       </span>
-      <span className="text-sm font-medium leading-tight tabular-nums text-neutral-800">
+      <span className="text-xl font-medium tabular-nums text-neutral-900">
         {day}
       </span>
     </span>
@@ -99,13 +104,13 @@ function DateBadge({ mon, day }: { mon: string; day: string }) {
 /** Same square, with a paper glyph for publications. */
 function PaperBadge() {
   return (
-    <span className="flex h-10 w-10 flex-none items-center justify-center rounded-[10px] border border-neutral-200 text-neutral-400">
+    <span className="flex h-14 w-14 flex-none items-center justify-center rounded-xl border border-neutral-200 bg-[var(--bg)] text-neutral-400 shadow-sm">
       <svg
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.5"
-        className="h-[18px] w-[18px]"
+        className="h-6 w-6"
         aria-hidden="true"
       >
         <path
@@ -175,21 +180,14 @@ export default function HomePage() {
         <h2 className="mb-6 text-xs font-medium uppercase tracking-wider text-neutral-500">
           Selected works
         </h2>
-        <ul className="space-y-5">
+        <ul className="space-y-3">
           {WORKS.map((w) => (
-            <li key={w.href} className="flex items-center gap-x-4">
-              <PaperBadge />
-              <a
-                href={w.href}
-                className={ROW_TITLE}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {w.title}
+            <li key={w.href}>
+              <a href={w.href} className={ROW} target="_blank" rel="noreferrer">
+                <PaperBadge />
+                <span className={ROW_TITLE}>{w.title}</span>
+                <span className={ROW_RAIL}>{w.year}</span>
               </a>
-              <span className="whitespace-nowrap pl-2 text-right text-sm tabular-nums text-neutral-500">
-                {w.year}
-              </span>
             </li>
           ))}
         </ul>
@@ -199,18 +197,16 @@ export default function HomePage() {
         <h2 className="mb-6 text-xs font-medium uppercase tracking-wider text-neutral-500">
           Recent posts
         </h2>
-        <ul className="space-y-6">
+        <ul className="space-y-3">
           {posts.map((p) => {
             const { mon, day, monthYear } = dateParts(p.frontmatter.date)
             return (
-              <li key={p.slug} className="flex items-center gap-x-4">
-                <DateBadge mon={mon} day={day} />
-                <Link href={`/blog/${p.slug}/`} className={ROW_TITLE}>
-                  {p.frontmatter.title}
+              <li key={p.slug}>
+                <Link href={`/blog/${p.slug}/`} className={ROW}>
+                  <DateBadge mon={mon} day={day} />
+                  <span className={ROW_TITLE}>{p.frontmatter.title}</span>
+                  <span className={ROW_RAIL}>{monthYear}</span>
                 </Link>
-                <span className="whitespace-nowrap pl-2 text-right text-sm text-neutral-500">
-                  {monthYear}
-                </span>
               </li>
             )
           })}
