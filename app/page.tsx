@@ -29,17 +29,15 @@ function VerifiedBadge() {
 /** Tiny inline company mark used inside the bio text. */
 function AmpliMark() {
   return (
-    <svg
-      viewBox="0 0 16 16"
-      className="inline-block h-[15px] w-[15px] align-[-0.2em]"
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/images/ampliwork-logo.png"
+      alt=""
+      width={16}
+      height={17}
+      className="inline-block h-[17px] w-auto align-[-0.2em] grayscale"
       aria-hidden="true"
-    >
-      <rect width="16" height="16" rx="3.5" className="fill-neutral-900" />
-      <path
-        fill="#fff"
-        d="M8.9 2.8 4.8 9h2.6l-1 4.2 4.7-6.4H8.4l1.1-4z"
-      />
-    </svg>
+    />
   )
 }
 
@@ -149,8 +147,16 @@ export default function HomePage() {
         </div>
 
         <p className="text-base leading-relaxed text-neutral-700">
-          I&rsquo;m a software engineer at <AmpliMark />{' '}
-          <span className="font-medium text-neutral-900">Ampliwork</span>,
+          I&rsquo;m a software engineer at{' '}
+          <a
+            href="https://www.ampliwork.com"
+            className={BIO_LINK}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <AmpliMark />{' '}
+            <span className="font-medium text-neutral-900">Ampliwork</span>
+          </a>,
           where we&rsquo;re building the easiest way for enterprise teams to
           ship their own agents, no code required. I write here about
           multi-step agentic systems and context engineering.
