@@ -54,6 +54,9 @@ active plan and tasks.
 - **There is no About page.** Bio, current org (Ampliwork), and previous
   orgs (Concordia, Femtherapeutics) live in the homepage hero
   (`app/page.tsx`). `/about/` 404s; don't link to it.
+- **There is no Publications page.** Papers live in the homepage's
+  Selected works section (`app/page.tsx`). `/publications/` 404s; don't
+  recreate it as a route without a nav decision.
 - **ADRs are immutable** once accepted. To change a decision, write a new
   ADR that supersedes the old one and `git mv` the old file to
   `docs/adr/superseded/`. Lifecycle details in `docs/adr/CLAUDE.md`.
@@ -91,11 +94,9 @@ Phase 1 (`docs/plans/2026-05-01-blog-platform-rebuild.md`,
 - Deploy: GitHub Actions → GitHub Pages (see ADR-003)
 - Active workflow: **`.github/workflows/deploy.yml`** (`next build` → static
   export → `actions/deploy-pages@v4`)
-- Pages source: should be set to **"GitHub Actions"** in
-  `Settings → Pages → Build and deployment` to stop the redundant legacy
-  branch-build from running on every push. (As of phase-1 ship the API
-  still reports `build_type: legacy`, but the new artifact wins because it
-  deploys after.)
+- Pages source: set to **"GitHub Actions"** (`build_type: workflow`, flipped
+  via the Pages API on 2026-08-11). The legacy branch-build no longer runs on
+  push, so only the `deploy.yml` artifact can publish.
 - Domain after phase-2 cutover: `parzival.blog` (see ADR-008 and task 005)
 
 ## Don't
