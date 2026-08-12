@@ -54,6 +54,9 @@ active plan and tasks.
 - **There is no About page.** Bio, current org (Ampliwork), and previous
   orgs (Concordia, Femtherapeutics) live in the homepage hero
   (`app/page.tsx`). `/about/` 404s; don't link to it.
+- **There is no Publications page.** Papers live in the homepage's
+  Selected works section (`app/page.tsx`). `/publications/` 404s; don't
+  recreate it as a route without a nav decision.
 - **ADRs are immutable** once accepted. To change a decision, write a new
   ADR that supersedes the old one and `git mv` the old file to
   `docs/adr/superseded/`. Lifecycle details in `docs/adr/CLAUDE.md`.

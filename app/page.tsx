@@ -74,17 +74,8 @@ export default function HomePage() {
         <p className="mt-4 text-base leading-relaxed text-neutral-700">
           Previously, I worked as a Machine Learning Engineer at
           Femtherapeutics, then finished my master&rsquo;s at Concordia
-          University, where my thesis was on structured information
-          extraction from LLMs (
-          <a
-            href="https://arxiv.org/abs/2510.17720"
-            className={BIO_LINK}
-            target="_blank"
-            rel="noreferrer"
-          >
-            preprint on arXiv
-          </a>
-          ).
+          University, where my thesis on structured information extraction
+          from LLMs became the PANER paper below.
         </p>
         <p className="mt-4 text-base leading-relaxed text-neutral-700">
           You can reach me at{' '}
@@ -107,6 +98,43 @@ export default function HomePage() {
           </a>
           .
         </p>
+      </section>
+
+      <section className="mb-16 max-w-prose">
+        <h2 className="mb-6 text-xs font-medium uppercase tracking-wider text-neutral-500">
+          Selected works
+        </h2>
+        <ul className="space-y-5 text-base leading-relaxed">
+          <li>
+            <a
+              href="https://ieeexplore.ieee.org/abstract/document/11536307"
+              className={BIO_LINK}
+              target="_blank"
+              rel="noreferrer"
+            >
+              SWin: A Sliding Window Summarization Approach for Coherent
+              LLM-driven Dialogue Systems
+            </a>
+            <p className="mt-1 text-sm text-neutral-500">
+              with Savant, Zhao, and Yan &middot; IEEE CAI 2026
+            </p>
+          </li>
+          <li>
+            <a
+              href="https://arxiv.org/abs/2510.17720"
+              className={BIO_LINK}
+              target="_blank"
+              rel="noreferrer"
+            >
+              PANER: A Paraphrase-Augmented Framework for Low-Resource Named
+              Entity Recognition
+            </a>
+            <p className="mt-1 text-sm text-neutral-500">
+              with Yan and Wang &middot; arXiv, 2025 &middot; master&rsquo;s
+              thesis
+            </p>
+          </li>
+        </ul>
       </section>
 
       <section>

@@ -20,7 +20,8 @@ builds the site and deploys it to GitHub Pages on every push to `main`.
   `PostFrontmatter` in `lib/posts.ts`.
 - `content/reading.yaml` — reading list entries. Schema is `ReadingEntry` in
   `lib/reading.ts`.
-- `app/` — routes: home, blog, reading, publications, projects.
+- `app/` — routes: home, blog, reading, projects. Publications live in the
+  homepage's Selected works section (no separate route).
 - `components/` — UI: site chrome, post layout, TOC, footer.
 - `lib/` — content loading and formatting.
 - `public/` — static assets.
