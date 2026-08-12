@@ -47,12 +47,13 @@ const BIO_LINK =
   'underline decoration-neutral-300 underline-offset-4 hover:decoration-neutral-900'
 
 const ROW =
-  'group -mx-4 flex items-center gap-x-5 rounded-2xl px-4 py-3 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800'
+  'group -mx-3 flex items-center gap-x-4 rounded-[18px] px-3 py-2.5 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800'
 
-const ROW_TITLE = 'min-w-0 flex-1 text-base leading-snug text-neutral-900'
+const ROW_TITLE =
+  'min-w-0 flex-1 truncate text-base font-medium leading-snug text-neutral-900'
 
 const ROW_RAIL =
-  'whitespace-nowrap pl-2 text-right text-sm tabular-nums text-neutral-500'
+  'max-w-[50%] shrink-0 truncate text-right text-sm text-neutral-500'
 
 const WORKS = [
   {
@@ -87,38 +88,45 @@ function dateParts(iso: string) {
   }
 }
 
-/** Bordered calendar square: month chip raised over the top edge, big day. */
+/** Ringed shell: border + padding + inner border reads as the double-ring
+    badge from the noechague-site reference. */
+const BADGE_SHELL =
+  'flex shrink-0 items-center justify-center rounded-[11px] border border-neutral-200 bg-[var(--bg)] p-[3px] shadow-sm'
+
+const BADGE_INNER =
+  'flex h-11 w-11 shrink-0 select-none flex-col overflow-hidden rounded-[7px] border border-neutral-200 bg-[var(--bg)]'
+
+/** Mini calendar: gray month strip on top, big day below. */
 function DateBadge({ mon, day }: { mon: string; day: string }) {
   return (
-    <span className="relative flex h-14 w-14 flex-none items-center justify-center rounded-xl border border-neutral-200 bg-[var(--bg)] shadow-sm">
-      <span className="absolute -top-2.5 rounded-full border border-neutral-200 bg-[var(--bg)] px-1.5 py-px text-[10px] font-medium uppercase tracking-wider text-neutral-500">
-        {mon}
-      </span>
-      <span className="text-xl font-medium tabular-nums text-neutral-900">
-        {day}
+    <span className={BADGE_SHELL}>
+      <span className={BADGE_INNER}>
+        <span className="flex h-3.5 w-full shrink-0 items-center justify-center bg-neutral-200 text-[8px] font-medium uppercase leading-none tracking-wider text-neutral-600">
+          {mon}
+        </span>
+        <span className="flex flex-1 items-center justify-center text-lg font-medium leading-none tabular-nums text-neutral-900">
+          {day}
+        </span>
       </span>
     </span>
   )
 }
 
-/** Same square, with a paper glyph for publications. */
+/** Same shell, with the staggered paragraph-lines glyph for papers. */
 function PaperBadge() {
+  const widths = ['w-[14px]', 'w-[26px]', 'w-[20px]', 'w-[10px]']
   return (
-    <span className="flex h-14 w-14 flex-none items-center justify-center rounded-xl border border-neutral-200 bg-[var(--bg)] text-neutral-400 shadow-sm">
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        className="h-6 w-6"
-        aria-hidden="true"
+    <span className={BADGE_SHELL}>
+      <span
+        className={`${BADGE_INNER} items-start justify-center gap-[3px] p-1.5`}
       >
-        <path
-          strokeLinejoin="round"
-          d="M7.5 3.5h6l4 4v13h-10z"
-        />
-        <path strokeLinejoin="round" d="M13.5 3.5v4h4" />
-      </svg>
+        {widths.map((w) => (
+          <span
+            key={w}
+            className={`h-[2px] shrink-0 rounded-full bg-neutral-400 ${w}`}
+          />
+        ))}
+      </span>
     </span>
   )
 }
