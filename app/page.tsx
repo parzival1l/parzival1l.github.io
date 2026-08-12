@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { getAllPosts } from '@/lib/posts'
-import { PostCard } from '@/components/post-card'
 import { Avatar } from '@/components/avatar'
 
 function VerifiedBadge() {
@@ -46,6 +45,78 @@ function AmpliMark() {
 
 const BIO_LINK =
   'underline decoration-neutral-300 underline-offset-4 hover:decoration-neutral-900'
+
+const ROW_TITLE =
+  'min-w-0 flex-1 text-base leading-snug text-neutral-900 underline decoration-transparent underline-offset-4 transition-colors hover:text-accent'
+
+const WORKS = [
+  {
+    title:
+      'SWin: A Sliding Window Summarization Approach for Coherent LLM-driven Dialogue Systems',
+    href: 'https://ieeexplore.ieee.org/abstract/document/11536307',
+    year: '2026',
+  },
+  {
+    title:
+      'PANER: A Paraphrase-Augmented Framework for Low-Resource Named Entity Recognition',
+    href: 'https://arxiv.org/abs/2510.17720',
+    year: '2025',
+  },
+]
+
+/** Split an ISO date string into the badge + right-rail pieces. */
+function dateParts(iso: string) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso)
+  const d = m
+    ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]))
+    : new Date(iso)
+  return {
+    mon: d
+      .toLocaleDateString('en-US', { month: 'short' })
+      .toUpperCase(),
+    day: String(d.getDate()),
+    monthYear: d.toLocaleDateString('en-US', {
+      month: 'long',
+      year: 'numeric',
+    }),
+  }
+}
+
+/** Bordered square: month over day. */
+function DateBadge({ mon, day }: { mon: string; day: string }) {
+  return (
+    <span className="flex h-10 w-10 flex-none flex-col items-center justify-center rounded-[10px] border border-neutral-200">
+      <span className="text-[9px] font-medium uppercase leading-none tracking-wide text-neutral-500">
+        {mon}
+      </span>
+      <span className="text-sm font-medium leading-tight tabular-nums text-neutral-800">
+        {day}
+      </span>
+    </span>
+  )
+}
+
+/** Same square, with a paper glyph for publications. */
+function PaperBadge() {
+  return (
+    <span className="flex h-10 w-10 flex-none items-center justify-center rounded-[10px] border border-neutral-200 text-neutral-400">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        className="h-[18px] w-[18px]"
+        aria-hidden="true"
+      >
+        <path
+          strokeLinejoin="round"
+          d="M7.5 3.5h6l4 4v13h-10z"
+        />
+        <path strokeLinejoin="round" d="M13.5 3.5v4h4" />
+      </svg>
+    </span>
+  )
+}
 
 export default function HomePage() {
   const posts = getAllPosts().slice(0, 5)
@@ -100,35 +171,27 @@ export default function HomePage() {
         </p>
       </section>
 
-      <section className="mb-16 max-w-prose">
+      <section className="mb-16">
         <h2 className="mb-6 text-xs font-medium uppercase tracking-wider text-neutral-500">
           Selected works
         </h2>
-        <ul className="space-y-5 text-base leading-relaxed">
-          <li>
-            <a
-              href="https://ieeexplore.ieee.org/abstract/document/11536307"
-              className={BIO_LINK}
-              target="_blank"
-              rel="noreferrer"
-            >
-              SWin: A Sliding Window Summarization Approach for Coherent
-              LLM-driven Dialogue Systems
-            </a>
-            <p className="mt-1 text-sm text-neutral-500">2026</p>
-          </li>
-          <li>
-            <a
-              href="https://arxiv.org/abs/2510.17720"
-              className={BIO_LINK}
-              target="_blank"
-              rel="noreferrer"
-            >
-              PANER: A Paraphrase-Augmented Framework for Low-Resource Named
-              Entity Recognition
-            </a>
-            <p className="mt-1 text-sm text-neutral-500">2025</p>
-          </li>
+        <ul className="space-y-5">
+          {WORKS.map((w) => (
+            <li key={w.href} className="flex items-center gap-x-4">
+              <PaperBadge />
+              <a
+                href={w.href}
+                className={ROW_TITLE}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {w.title}
+              </a>
+              <span className="whitespace-nowrap pl-2 text-right text-sm tabular-nums text-neutral-500">
+                {w.year}
+              </span>
+            </li>
+          ))}
         </ul>
       </section>
 
@@ -136,20 +199,22 @@ export default function HomePage() {
         <h2 className="mb-6 text-xs font-medium uppercase tracking-wider text-neutral-500">
           Recent posts
         </h2>
-        <div className="space-y-8">
-          {posts.map((p) => (
-            <PostCard
-              key={p.slug}
-              post={{
-                slug: p.slug,
-                title: p.frontmatter.title,
-                date: p.frontmatter.date,
-                category: p.frontmatter.categories?.[0],
-                description: p.frontmatter.description,
-              }}
-            />
-          ))}
-        </div>
+        <ul className="space-y-6">
+          {posts.map((p) => {
+            const { mon, day, monthYear } = dateParts(p.frontmatter.date)
+            return (
+              <li key={p.slug} className="flex items-center gap-x-4">
+                <DateBadge mon={mon} day={day} />
+                <Link href={`/blog/${p.slug}/`} className={ROW_TITLE}>
+                  {p.frontmatter.title}
+                </Link>
+                <span className="whitespace-nowrap pl-2 text-right text-sm text-neutral-500">
+                  {monthYear}
+                </span>
+              </li>
+            )
+          })}
+        </ul>
         <div className="mt-10">
           <Link href="/blog/" className="text-accent hover:underline">
             See all posts &rarr;
