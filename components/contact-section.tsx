@@ -1,21 +1,29 @@
+import { GitHubIcon, LinkedInIcon, XIcon } from '@/components/social-icons'
+
 /**
- * Contact + elsewhere colophon. Identity links live in exactly two places:
- * the homepage footer (via SiteFooter, without the tagline) and the bottom
- * of the About page (with it — the journal tagline lives there only).
- * The RSS slot is intentionally absent until task 007 builds /feed.xml.
+ * Contact colophon, rendered only in the homepage footer (via SiteFooter):
+ * identity + email on the left, brand-icon socials on the right. The RSS
+ * slot is intentionally absent until task 007 builds /feed.xml.
  */
-export function ContactSection({
-  tagline = false,
-  className = '',
-}: {
-  /** Show the journal tagline as a third column (About page only). */
-  tagline?: boolean
-  className?: string
-}) {
+const SOCIALS = [
+  { href: 'https://github.com/parzival1l', label: 'GitHub', Icon: GitHubIcon },
+  {
+    href: 'https://www.linkedin.com/in/nandyy/',
+    label: 'LinkedIn',
+    Icon: LinkedInIcon,
+  },
+  { href: 'https://x.com/parzival1l', label: 'X (Twitter)', Icon: XIcon },
+]
+
+const ICON_LINK =
+  // Matches the icon-link treatment in components/reading-feed.tsx.
+  'inline-flex h-7 w-7 items-center justify-center rounded text-neutral-500 transition-colors hover:text-neutral-900'
+
+export function ContactSection({ className = '' }: { className?: string }) {
   return (
     <section
       aria-label="Contact and elsewhere"
-      className={`not-prose grid gap-8 text-sm text-neutral-600 ${tagline ? 'sm:grid-cols-3' : 'sm:grid-cols-2'} ${className}`}
+      className={`not-prose grid gap-8 text-sm text-neutral-600 sm:grid-cols-2 ${className}`}
     >
       {/* min-w-0: grid items default to min-width auto, which lets the long
           email overflow its track into the next column on narrow widths. */}
@@ -29,36 +37,24 @@ export function ContactSection({
         </a>
       </div>
 
-      <nav className="flex min-w-0 flex-col gap-1.5" aria-label="Social links">
-        <a
-          href="https://github.com/parzival1l"
-          className="hover:text-neutral-900"
-          rel="me"
-        >
-          GitHub
-        </a>
-        <a
-          href="https://www.linkedin.com/in/nandyy/"
-          className="hover:text-neutral-900"
-          rel="me"
-        >
-          LinkedIn
-        </a>
-        <a
-          href="https://x.com/parzival1l"
-          className="hover:text-neutral-900"
-          rel="me"
-        >
-          Twitter / X
-        </a>
+      <nav
+        className="flex min-w-0 items-center gap-1.5"
+        aria-label="Social links"
+      >
+        {SOCIALS.map(({ href, label, Icon }) => (
+          <a
+            key={href}
+            href={href}
+            title={label}
+            aria-label={label}
+            target="_blank"
+            rel="me noreferrer"
+            className={ICON_LINK}
+          >
+            <Icon className="h-[15px] w-[15px]" />
+          </a>
+        ))}
       </nav>
-
-      {tagline ? (
-        <p className="min-w-0 text-neutral-500">
-          A working journal — notes from projects, things I changed my mind
-          about, occasional live demos.
-        </p>
-      ) : null}
     </section>
   )
 }

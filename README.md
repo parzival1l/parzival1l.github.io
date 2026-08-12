@@ -20,7 +20,7 @@ builds the site and deploys it to GitHub Pages on every push to `main`.
   `PostFrontmatter` in `lib/posts.ts`.
 - `content/reading.yaml` — reading list entries. Schema is `ReadingEntry` in
   `lib/reading.ts`.
-- `app/` — routes: home, blog, reading, publications, projects, about.
+- `app/` — routes: home, blog, reading, publications, projects.
 - `components/` — UI: site chrome, post layout, TOC, footer.
 - `lib/` — content loading and formatting.
 - `public/` — static assets.
@@ -35,10 +35,11 @@ builds the site and deploys it to GitHub Pages on every push to `main`.
 
 ## Footer behavior
 
-- Homepage: contact plus social links (`components/contact-section.tsx`).
-- Every page: minimal footer with the local-time clock and keycap shortcuts
-  (`h` for home, `a` for about — they work as real keypresses too).
-- The full block, journal tagline included, renders on the About page.
+- Homepage: contact colophon — email plus brand-icon socials
+  (`components/contact-section.tsx`). Bio and org details live in the
+  homepage hero itself (no separate About page).
+- Every other page: slim footer with the local-time clock and an `h` home
+  keycap — a real link that also works as a keypress.
 
 ## License
 

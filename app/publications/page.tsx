@@ -8,8 +8,8 @@ export default function PublicationsPage() {
   return (
     <PageLayout title="Publications">
       <p>
-        Master&rsquo;s thesis on structured information extraction from LLMs
-        &mdash; preprint on{' '}
+        Master&rsquo;s thesis on structured information extraction from
+        LLMs. Preprint on{' '}
         <a href="https://arxiv.org/abs/2510.17720">arXiv</a>.
       </p>
       <p>More to come.</p>
