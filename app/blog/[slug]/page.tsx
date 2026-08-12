@@ -41,8 +41,15 @@ export default async function PostPage({
   return (
     <PostLayout
       title={post.frontmatter.title}
+      slug={post.slug}
       date={post.frontmatter.date}
       category={post.frontmatter.categories?.[0]}
+      tags={[
+        ...new Set([
+          ...(post.frontmatter.categories ?? []),
+          ...(post.frontmatter.tags ?? []),
+        ]),
+      ]}
       // rehype-slug ids the rendered headings so the TOC anchors resolve;
       // getPostHeadings reproduces the same slugs from the markdown source.
       headings={getPostHeadings(post.content)}

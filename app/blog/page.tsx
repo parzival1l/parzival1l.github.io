@@ -1,30 +1,31 @@
 import { getAllPosts } from '@/lib/posts'
-import { PostCard } from '@/components/post-card'
+import { BlogFeed, type BlogFeedPost } from '@/components/blog-feed'
 
 export const metadata = {
   title: 'Blogs',
 }
 
+/** A post's filterable tag set: categories first (they're the display chip),
+    then tags, deduped. */
+function postTags(categories?: string[], tags?: string[]): string[] {
+  return Array.from(new Set([...(categories ?? []), ...(tags ?? [])]))
+}
+
 export default function BlogIndexPage() {
-  const posts = getAllPosts()
+  const posts: BlogFeedPost[] = getAllPosts().map(p => ({
+    slug: p.slug,
+    title: p.frontmatter.title,
+    date: p.frontmatter.date,
+    description: p.frontmatter.description,
+    tags: postTags(p.frontmatter.categories, p.frontmatter.tags),
+  }))
+  const allTags = Array.from(new Set(posts.flatMap(p => p.tags))).sort(
+    (a, b) => a.toLowerCase().localeCompare(b.toLowerCase()),
+  )
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-16">
-      <h1 className="mb-10 text-2xl font-medium text-neutral-900">Blogs</h1>
-      <div className="space-y-8">
-        {posts.map((p) => (
-          <PostCard
-            key={p.slug}
-            post={{
-              slug: p.slug,
-              title: p.frontmatter.title,
-              date: p.frontmatter.date,
-              category: p.frontmatter.categories?.[0],
-              description: p.frontmatter.description,
-            }}
-          />
-        ))}
-      </div>
+    <div className="mx-auto max-w-4xl px-6 py-16">
+      <BlogFeed posts={posts} tags={allTags} />
     </div>
   )
 }

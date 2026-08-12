@@ -1,6 +1,15 @@
 import Link from 'next/link'
 import { getAllPosts } from '@/lib/posts'
 import { Avatar } from '@/components/avatar'
+import {
+  BADGE_INNER,
+  BADGE_SHELL,
+  DateBadge,
+  ROW,
+  ROW_TITLE,
+  ROW_RAIL,
+  dateParts,
+} from '@/components/date-badge'
 
 function VerifiedBadge() {
   return (
@@ -44,15 +53,6 @@ function AmpliMark() {
 const BIO_LINK =
   'underline decoration-neutral-300 underline-offset-4 hover:decoration-neutral-900'
 
-const ROW =
-  'group -mx-3 flex items-center gap-x-4 rounded-[18px] px-3 py-2.5 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800'
-
-const ROW_TITLE =
-  'min-w-0 flex-1 truncate text-base font-medium leading-snug text-neutral-900'
-
-const ROW_RAIL =
-  'max-w-[50%] shrink-0 truncate text-right text-sm text-neutral-500'
-
 const WORKS = [
   {
     title:
@@ -67,48 +67,6 @@ const WORKS = [
     year: '2025',
   },
 ]
-
-/** Split an ISO date string into the badge + right-rail pieces. */
-function dateParts(iso: string) {
-  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso)
-  const d = m
-    ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]))
-    : new Date(iso)
-  return {
-    mon: d
-      .toLocaleDateString('en-US', { month: 'short' })
-      .toUpperCase(),
-    day: String(d.getDate()),
-    monthYear: d.toLocaleDateString('en-US', {
-      month: 'long',
-      year: 'numeric',
-    }),
-  }
-}
-
-/** Ringed shell: border + padding + inner border reads as the double-ring
-    badge from the noechague-site reference. */
-const BADGE_SHELL =
-  'flex shrink-0 items-center justify-center rounded-[11px] border border-neutral-200 bg-[var(--bg)] p-[3px] shadow-sm'
-
-const BADGE_INNER =
-  'flex h-11 w-11 shrink-0 select-none flex-col overflow-hidden rounded-[7px] border border-neutral-200 bg-[var(--bg)]'
-
-/** Mini calendar: gray month strip on top, big day below. */
-function DateBadge({ mon, day }: { mon: string; day: string }) {
-  return (
-    <span className={BADGE_SHELL}>
-      <span className={BADGE_INNER}>
-        <span className="flex h-3.5 w-full shrink-0 items-center justify-center bg-neutral-200 text-[8px] font-medium uppercase leading-none tracking-wider text-neutral-600">
-          {mon}
-        </span>
-        <span className="flex flex-1 items-center justify-center text-lg font-medium leading-none tabular-nums text-neutral-900">
-          {day}
-        </span>
-      </span>
-    </span>
-  )
-}
 
 /** Same shell, with the staggered paragraph-lines glyph for papers. */
 function PaperBadge() {
