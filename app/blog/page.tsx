@@ -24,7 +24,7 @@ export default function BlogIndexPage() {
   )
 
   return (
-    <div className="mx-auto max-w-4xl px-6 py-16">
+    <div className="mx-auto max-w-3xl px-6 py-16">
       <BlogFeed posts={posts} tags={allTags} />
     </div>
   )

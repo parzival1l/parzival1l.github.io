@@ -109,8 +109,10 @@ export function BlogFeed({
       : tags.slice(0, TAG_PREVIEW_COUNT)
 
   return (
-    <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_200px] lg:gap-x-10">
-      <aside className="order-first self-start lg:order-none lg:col-start-2 lg:sticky lg:top-6">
+    // The column matches the homepage's max-w-3xl container, so the tags
+    // sidebar hangs off the right edge at xl+ instead of taking grid space.
+    <div className="relative">
+      <aside className="mb-10 self-start xl:absolute xl:left-full xl:top-0 xl:mb-0 xl:ml-8 xl:w-[200px]">
         <h2 className={HEADING}>Tags</h2>
         <div className="mt-3 flex flex-wrap gap-1.5">
           {visibleTags.map(tag => (
@@ -141,7 +143,7 @@ export function BlogFeed({
         ) : null}
       </aside>
 
-      <div className="min-w-0 lg:col-start-1 lg:row-start-1">
+      <div className="min-w-0">
         <div className="mb-10 flex items-center justify-between gap-4">
           <h1 className="text-2xl font-medium text-neutral-900">Blogs</h1>
           <SearchBadge

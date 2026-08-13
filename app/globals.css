@@ -51,6 +51,37 @@ html {
     color 160ms ease;
 }
 
+/* Site-wide backdrop: the blurred arcade engraving, fixed behind every page.
+    A --bg-tinted wash keeps body text readable; the wash deepens in dark
+    mode so the cream artwork doesn't fight the dark palette. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(
+      color-mix(in srgb, var(--bg) 72%, transparent),
+      color-mix(in srgb, var(--bg) 72%, transparent)
+    ),
+    url(/images/bg-arcade_blurred.jpeg) center / cover no-repeat;
+}
+
+.dark body::before {
+  background:
+    linear-gradient(
+      color-mix(in srgb, var(--bg) 74%, transparent),
+      color-mix(in srgb, var(--bg) 74%, transparent)
+    ),
+    url(/images/bg-arcade_blurred.jpeg) center / cover no-repeat;
+  /* The cream paper washes out sepia in dark mode; desaturating keeps the
+     engraving a cool gray behind the dark palette. Routed through a custom
+     property because Tailwind v4's parser drops the argument of
+     filter: grayscale(...) in raw CSS. */
+  --bg-desat: grayscale(100%);
+  filter: var(--bg-desat);
+}
+
 /* Anchor jumps from the table of contents should land below the header,
    and honor users who ask for no animation. */
 .prose :is(h2, h3) {
@@ -157,3 +188,4 @@ html {
     animation: none;
   }
 }
+
