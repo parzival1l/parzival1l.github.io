@@ -1,0 +1,265 @@
+---
+/**
+ * Interactive product shot — the threadhop trick.
+ * Plain DOM, no framework. Every task's detail pane is rendered at build time
+ * into a <template>; a few dozen lines of JS swap them on click, recompute
+ * ready/blocked from deps (exactly like the CLI does), and cascade `done`.
+ */
+import { tasks, groups, WAITING, isReady, isBlocked, type Task } from "../data/tasks";
+
+const selected = tasks.find((t) => t.id === 7)!;
+const byId = (id: number) => tasks.find((t) => t.id === id)!;
+const groupOf = (t: Task) => groups.find((g) => g.name === t.group);
+const logTasks = (t: Task) =>
+  tasks.filter((x) => x.group === t.group && x.status !== "backlog").sort((a, b) => a.id - b.id);
+
+// Compact state blob the script needs beyond what's in the DOM.
+const blob = tasks.map((t) => ({
+  id: t.id, title: t.title, deps: t.deps, status: t.status, priority: t.priority,
+  group: t.group, agent: t.agent ?? null, when: t.when ?? null, commit: t.commit ?? null,
+  waiting: WAITING[t.id] ?? null,
+}));
+const groupBlob = groups.map((g) => ({ name: g.name, branch: g.branch }));
+
+const dot = (t: Task) =>
+  t.status === "done" ? "✓" : t.status === "in_progress" ? "●" : t.status === "backlog" ? "·" : "○";
+const viewStatus = (t: Task) =>
+  t.status === "done" ? "done" : t.status === "backlog" ? "backlog" : t.status === "in_progress" ? "in_progress" : isBlocked(t, tasks) ? "blocked" : "ready";
+---
+
+<section class="shot-section" id="product" aria-label="docket product demo">
+  <div class="shot" id="shot" data-selected={selected.id}>
+    <!-- sidebar -->
+    <aside class="side">
+      <div class="repo">~/oss/uploader<span>.docket</span></div>
+      <button type="button" class="view" data-view="ready" aria-pressed="true"><span>Ready</span><span class="n" data-count="ready">{tasks.filter((t) => isReady(t, tasks)).length}</span></button>
+      <button type="button" class="view" data-view="all" aria-pressed="false"><span>All tasks</span><span class="n" data-count="all">{tasks.length}</span></button>
+      <button type="button" class="view" data-view="blocked" aria-pressed="false"><span>Blocked</span><span class="n" data-count="blocked">{tasks.filter((t) => isBlocked(t, tasks)).length}</span></button>
+      <button type="button" class="view" data-view="backlog" aria-pressed="false"><span>Backlog</span><span class="n" data-count="backlog">{tasks.filter((t) => t.status === "backlog").length}</span></button>
+      <div class="label">Groups</div>
+      {groups.map((g) => {
+        const gt = tasks.filter((t) => t.group === g.name);
+        const done = gt.filter((t) => t.status === "done").length;
+        return (
+          <div class="grp" data-group={g.name} data-state={g.state}>
+            <span class="m">{done === gt.length ? "✓" : done > 0 ? "●" : "○"}</span>
+            <span class="name">{g.name}</span>
+            <span class="n">{done}/{gt.length}</span>
+          </div>
+        );
+      })}
+      <div class="side-foot" data-agent-foot>agent · <b>claude</b> · working T-7</div>
+    </aside>
+
+    <!-- task list -->
+    <main class="list">
+      <div class="list-head"><h3 data-view-title>Ready</h3><span data-view-sub>status=open · deps all done</span></div>
+      <div class="rows" role="listbox" aria-label="tasks">
+        {/* Rendered flat; the script orders, labels and hides rows per view. */}
+        {tasks.map((t) => (
+          <button
+            type="button"
+            role="option"
+            class="task"
+            data-id={t.id}
+            data-view-status={viewStatus(t)}
+            aria-selected={t.id === selected.id ? "true" : "false"}
+          >
+            <span class="tid">T-{t.id}</span>
+            <span class="dot">{dot(t)}</span>
+            <span class="title">{t.title}</span>
+            <span class="chip">{t.group ?? ""}</span>
+            <span class:list={["chip", { p1: t.priority <= 1 }]}>{t.priority <= 1 ? "P1" : ""}</span>
+            <span class="dep">{isBlocked(t, tasks) ? "← " + t.deps.filter((d) => byId(d).status !== "done").map((d) => `T-${d}`).join(", ") : ""}</span>
+          </button>
+        ))}
+      </div>
+      <div class="list-foot"><span class="p">$</span> docket ready --json | agent pick</div>
+    </main>
+
+    <!-- detail -->
+    <aside class="detail" id="detail" aria-live="polite"></aside>
+  </div>
+
+  {/* One template per task: the whole right pane. Dynamic bits carry data-* hooks. */}
+  {tasks.map((t) => (
+    <template data-task-tpl={t.id}>
+      <div class="crumb">
+        <span>T-{t.id}</span><span>·</span><span>{t.group ?? "no group"}</span>
+        {t.priority <= 1 && <><span>·</span><span class="p1">P{t.priority}</span></>}
+      </div>
+      <h2>{t.title}</h2>
+      <div>
+        <div class="label" style="margin-bottom:6px">Acceptance</div>
+        <div class="box">{t.acceptance}</div>
+      </div>
+      <div class="kv">
+        <div>
+          <div class="label">Deps</div>
+          <div class="v" data-deps>
+            {t.deps.length === 0 && <span class="none">none</span>}
+            {t.deps.map((d, i) => <><span data-dep={d}>T-{d} <span class="mk">{byId(d).status === "done" ? "✓" : "○"}</span></span>{i < t.deps.length - 1 && " · "}</>)}
+          </div>
+        </div>
+        <div>
+          <div class="label">Branch</div>
+          <div class="v">{groupOf(t)?.branch ?? <span class="none">—</span>}</div>
+        </div>
+        <div>
+          <div class="label">Picked by</div>
+          <div class="v" data-picked></div>
+        </div>
+      </div>
+      <div class="log">
+        <div class="label">Dispatch log · {t.group ? "this group" : "ungrouped"}</div>
+        {logTasks(t).map((x) => (
+          <div class:list={["lrow", { cur: x.id === t.id }]} data-log={x.id}>
+            <span class="tid">T-{x.id}</span>
+            <span class="st" data-s></span>
+            <span class="msg"><span></span><span class="ag badge" data-prov></span></span>
+          </div>
+        ))}
+      </div>
+      <div class="detail-foot">
+        <button type="button" class="done-btn" data-done={t.id}>docket done T-{t.id}</button>
+        <span class="next" data-next></span>
+      </div>
+    </template>
+  ))}
+
+  <script is:inline define:vars={{ blob, groupBlob }}>
+    (function () {
+      var root = document.getElementById("shot");
+      if (!root) return;
+      var rows = root.querySelector(".rows");
+      var detail = document.getElementById("detail");
+      var T = {}; blob.forEach(function (t) { T[t.id] = t; });
+      var rowEl = {}; Array.prototype.forEach.call(rows.querySelectorAll(".task"), function (b) { rowEl[b.dataset.id] = b; });
+      var view = "ready";
+      var selectedId = Number(root.dataset.selected);
+
+      /* ── the same rules as the CLI ── */
+      function depsDone(t) { return t.deps.every(function (d) { return T[d].status === "done"; }); }
+      function unmet(t) { return t.deps.filter(function (d) { return T[d].status !== "done"; }); }
+      function vs(t) {
+        if (t.status === "done") return "done";
+        if (t.status === "backlog") return "backlog";
+        if (!depsDone(t)) return "blocked";
+        return t.status === "in_progress" ? "in_progress" : "ready";
+      }
+      function all() { return Object.keys(T).map(function (k) { return T[k]; }).sort(function (a, b) { return a.id - b.id; }); }
+      function byPriority(a, b) { return a.priority - b.priority || a.id - b.id; }
+      var GLYPH = { done: "✓", in_progress: "●", ready: "○", blocked: "○", backlog: "·" };
+
+      /* ── middle pane ── */
+      var HEAD = {
+        ready: ["Ready", "status=open · deps all done"],
+        all: ["All tasks", "status≠backlog · ordered by id"],
+        blocked: ["Blocked", "deps unmet · computed, never stored"],
+        backlog: ["Backlog", "parked · docket promote T-N to open"],
+      };
+      function section(label, list) {
+        if (!list.length) return;
+        if (label) { var l = document.createElement("div"); l.className = "label"; l.textContent = label; rows.appendChild(l); }
+        list.forEach(function (t) {
+          var b = rowEl[t.id], s = vs(t);
+          b.dataset.viewStatus = s;
+          b.querySelector(".dot").textContent = GLYPH[s];
+          b.querySelector(".dep").textContent = s === "blocked" ? "← " + unmet(t).map(function (d) { return "T-" + d; }).join(", ") : "";
+          rows.appendChild(b);
+        });
+      }
+      function renderList() {
+        rows.innerHTML = "";
+        root.querySelector("[data-view-title]").textContent = HEAD[view][0];
+        root.querySelector("[data-view-sub]").textContent = HEAD[view][1];
+        var ts = all();
+        if (view === "ready") {
+          section(null, ts.filter(function (t) { var s = vs(t); return s === "ready" || s === "in_progress"; }).sort(byPriority));
+          section("Blocked", ts.filter(function (t) { return vs(t) === "blocked"; }));
+        } else if (view === "all") {
+          section(null, ts.filter(function (t) { return t.status !== "backlog"; }));
+        } else if (view === "blocked") {
+          section(null, ts.filter(function (t) { return vs(t) === "blocked"; }));
+        } else {
+          section(null, ts.filter(function (t) { return t.status === "backlog"; }));
+        }
+        if (!rows.children.length) { var e = document.createElement("div"); e.className = "empty"; e.textContent = "nothing here — run docket ready"; rows.appendChild(e); }
+        Array.prototype.forEach.call(rows.querySelectorAll(".task"), function (b) { b.setAttribute("aria-selected", String(Number(b.dataset.id) === selectedId)); });
+      }
+
+      /* ── sidebar counts + groups ── */
+      function renderSide() {
+        var ts = all(), c = { ready: 0, all: ts.length, blocked: 0, backlog: 0 };
+        ts.forEach(function (t) { var s = vs(t); if (s === "ready" || s === "in_progress") c.ready++; if (s === "blocked") c.blocked++; if (s === "backlog") c.backlog++; });
+        Object.keys(c).forEach(function (k) { root.querySelector('[data-count="' + k + '"]').textContent = c[k]; });
+        groupBlob.forEach(function (g) {
+          var gt = ts.filter(function (t) { return t.group === g.name; }), d = gt.filter(function (t) { return t.status === "done"; }).length;
+          var el = root.querySelector('.grp[data-group="' + g.name + '"]');
+          el.querySelector(".m").textContent = d === gt.length ? "✓" : d > 0 ? "●" : "○";
+          el.querySelector(".n").textContent = d + "/" + gt.length;
+          el.dataset.state = d === gt.length ? "closed" : "open";
+        });
+        var w = ts.filter(function (t) { return t.status === "in_progress"; })[0];
+        root.querySelector("[data-agent-foot]").innerHTML = "agent · <b>claude</b> · " + (w ? "working T-" + w.id : "idle · docket ready");
+      }
+
+      /* ── right pane ── */
+      function badge(el, prov) { el.dataset.prov = prov || ""; el.textContent = prov || ""; el.style.display = prov ? "" : "none"; }
+      function select(id, animate) {
+        selectedId = id;
+        var t = T[id], tpl = document.querySelector('template[data-task-tpl="' + id + '"]');
+        if (!tpl) return;
+        var frag = tpl.content.cloneNode(true);
+        frag.querySelectorAll("[data-dep]").forEach(function (s) { s.querySelector(".mk").textContent = T[s.dataset.dep].status === "done" ? "✓" : "○"; s.querySelector(".mk").className = "mk " + (T[s.dataset.dep].status === "done" ? "ok" : "no"); });
+        var picked = frag.querySelector("[data-picked]");
+        if (t.status === "done" || t.status === "in_progress") picked.innerHTML = '<span class="badge" data-prov="' + t.agent + '">' + t.agent + "</span> " + (t.when || "");
+        else picked.innerHTML = '<span class="none">' + (vs(t) === "ready" ? "unclaimed · next in queue" : vs(t) === "backlog" ? "parked" : "waiting on " + unmet(t).map(function (d) { return "T-" + d; }).join(", ")) + "</span>";
+        frag.querySelectorAll("[data-log]").forEach(function (r) {
+          var x = T[r.dataset.log], s = vs(x), st = r.querySelector(".st"), msg = r.querySelector(".msg span:first-child");
+          st.dataset.s = s === "ready" ? "ready" : s === "blocked" ? "waiting" : s;
+          st.textContent = s === "blocked" ? "waiting" : s;
+          msg.textContent = s === "done" ? "[T-" + x.id + "] " + x.commit : s === "in_progress" ? "started " + x.when : s === "ready" ? "ready · next free agent takes it" : "ready when " + unmet(x).map(function (d) { return "T-" + d; }).join(", ") + (unmet(x).length > 1 ? " are" : " is") + " done";
+          badge(r.querySelector(".ag"), s === "done" || s === "in_progress" ? x.agent : x.waiting);
+        });
+        var btn = frag.querySelector("[data-done]"), next = frag.querySelector("[data-next]");
+        var unlock = all().filter(function (o) { return o.status !== "done" && o.status !== "backlog" && o.deps.indexOf(t.id) >= 0 && unmet(o).every(function (d) { return d === t.id; }); });
+        if (t.status === "done") { btn.disabled = true; btn.textContent = "done · T-" + t.id; next.textContent = t.commit ? "git log --grep='\\[T-" + t.id + "\\]'" : ""; }
+        else if (t.status === "backlog") { btn.textContent = "docket promote T-" + t.id; next.textContent = "→ moves to open"; }
+        else next.textContent = unlock.length ? "→ " + unlock.map(function (o) { return "T-" + o.id; }).join(", ") + (unlock.length > 1 ? " become" : " becomes") + " ready" : "→ nothing is waiting on this";
+        detail.innerHTML = ""; detail.appendChild(frag);
+        if (animate) { detail.dataset.swapping = ""; setTimeout(function () { delete detail.dataset.swapping; }, 300); }
+        Array.prototype.forEach.call(rows.querySelectorAll(".task"), function (b) { b.setAttribute("aria-selected", String(Number(b.dataset.id) === id)); });
+      }
+
+      /* ── actions ── */
+      function markDone(id) {
+        var t = T[id];
+        if (t.status === "backlog") { t.status = "open"; renderList(); renderSide(); select(id, true); return; }
+        var before = all().filter(function (o) { return vs(o) === "ready"; }).map(function (o) { return o.id; });
+        t.status = "done"; t.agent = t.agent || "claude"; t.when = "just now";
+        renderList(); renderSide(); select(id, true);
+        all().forEach(function (o) {
+          if (vs(o) === "ready" && before.indexOf(o.id) < 0) { var b = rowEl[o.id]; b.classList.remove("flash"); void b.offsetWidth; b.classList.add("flash"); }
+        });
+      }
+      rows.addEventListener("click", function (e) { var b = e.target.closest(".task"); if (b) select(Number(b.dataset.id), true); });
+      detail.addEventListener("click", function (e) { var b = e.target.closest("[data-done]"); if (b && !b.disabled) markDone(Number(b.dataset.done)); });
+      root.querySelector(".side").addEventListener("click", function (e) {
+        var b = e.target.closest(".view[data-view]"); if (!b) return;
+        view = b.dataset.view;
+        root.querySelectorAll(".view").forEach(function (v) { v.setAttribute("aria-pressed", String(v === b)); });
+        renderList();
+      });
+      rows.addEventListener("keydown", function (e) {
+        if (e.key !== "j" && e.key !== "k" && e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+        var vis = Array.prototype.slice.call(rows.querySelectorAll(".task"));
+        var i = vis.findIndex(function (b) { return b.getAttribute("aria-selected") === "true"; });
+        var n = vis[(i + (e.key === "j" || e.key === "ArrowDown" ? 1 : -1) + vis.length) % vis.length];
+        e.preventDefault(); select(Number(n.dataset.id), true); n.focus();
+      });
+
+      renderList(); renderSide(); select(selectedId, false);
+    })();
+  </script>
+</section>

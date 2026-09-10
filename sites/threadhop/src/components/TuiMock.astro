@@ -1,0 +1,179 @@
+---
+/**
+ * Interactive TUI mock — the herdr.dev trick.
+ * Plain DOM, no terminal. Every session's transcript + digest is rendered
+ * at build time into a <template>; a few lines of JS swap them on click and
+ * re-group the sidebar. No framework, no hydration, ~2 KB of script.
+ */
+import { sessions, PROVIDER_LABEL, STATUS_LABEL } from "../data/sessions";
+
+const selected = sessions[0];
+---
+
+<section class="mock-section" aria-label="ThreadHop TUI demo">
+  <div class="mock-caption">
+    <span>the tui, over real transcripts — <span class="hint">click a session</span></span>
+    <span>threadhop v0.4 · ~/.config/threadhop/sessions.db</span>
+  </div>
+
+  <div class="mock" id="tui" data-selected={selected.id}>
+    <div class="mock-body">
+      <!-- sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-head">
+          <span>SESSIONS · 14d</span>
+          <span>{sessions.length} sessions · 7 agents</span>
+        </div>
+        <div class="groupby" role="group" aria-label="group sessions by">
+          <button type="button" data-group="project" aria-pressed="true">project</button>
+          <button type="button" data-group="provider" aria-pressed="false">agent</button>
+          <button type="button" data-group="status" aria-pressed="false">status</button>
+        </div>
+        <div class="session-list" role="listbox" aria-label="sessions">
+          {/* Items are rendered flat; the script inserts group labels and orders them. */}
+          {sessions.map((s) => (
+            <button
+              type="button"
+              role="option"
+              class:list={["sess", { dim: s.status === "done" }]}
+              data-session={s.id}
+              data-project={s.project}
+              data-provider={s.provider}
+              data-status={s.status}
+              aria-selected={s.id === selected.id ? "true" : "false"}
+            >
+              <span class="icon">{s.icon}</span>
+              <span class="name">{s.title}</span>
+              <span class:list={["prov", s.provider]}>{PROVIDER_LABEL[s.provider]}</span>
+              <span class="age">{s.age}</span>
+            </button>
+          ))}
+        </div>
+      </aside>
+
+      <!-- transcript -->
+      <main class="transcript" id="transcript" aria-live="polite">
+        {selected.transcript.map((t) => (
+          <div class:list={["turn", t.role]}>
+            {t.role !== "shell" && <span class="who">{t.role === "you" ? "you" : PROVIDER_LABEL[selected.provider]}</span>}
+            <span class="text" set:html={t.text} />
+          </div>
+        ))}
+        <div class="reply"><span class="caret">❯</span>reply · Enter send · Alt+Enter newline<span class="right">claude -p --resume</span></div>
+      </main>
+
+      <!-- digest -->
+      <aside class="digest" id="digest">
+        <div class="head">DIGEST</div>
+        <dl>
+          <div><dt>title</dt><dd class="hi" data-f="title">{selected.title}</dd></div>
+          <div><dt>cwd</dt><dd data-f="cwd">{selected.project}</dd></div>
+          <div><dt>branch · turns</dt><dd data-f="branch">{selected.branch} · {selected.turns}</dd></div>
+          <div><dt>files touched</dt><dd data-f="files" set:html={selected.files.join("<br/>")} /></div>
+          <div><dt>bookmarks</dt><dd data-f="bookmarks"><span class="star">★</span> {selected.bookmarks.star} · <span class="research">⌕</span> {selected.bookmarks.research} research</dd></div>
+          <div data-f="borrowed-wrap" hidden={!selected.borrowedFrom}><dt>borrowed from</dt><dd class="acc" data-f="borrowed">{selected.borrowedFrom ? `${selected.borrowedFrom.ticket} ← ${selected.borrowedFrom.title}` : ""}</dd></div>
+        </dl>
+      </aside>
+    </div>
+
+    <footer class="keys">
+      <span><b>/</b> search</span><span><b>b</b> bookmarks</span><span><b>B</b> kanban</span>
+      <span><b>s</b> status</span><span><b>m</b> select</span><span><b>y</b> copy</span><span><b>t</b> theme</span>
+      <span class="right"><b>?</b> help</span>
+    </footer>
+  </div>
+
+  {/* One template per session: transcript + digest payload. */}
+  {sessions.map((s) => (
+    <template data-session-tpl={s.id} data-provider={s.provider}>
+      <div class="transcript-body">
+        {s.transcript.map((t) => (
+          <div class:list={["turn", t.role]}>
+            {t.role !== "shell" && <span class="who">{t.role === "you" ? "you" : PROVIDER_LABEL[s.provider]}</span>}
+            <span class="text" set:html={t.text} />
+          </div>
+        ))}
+      </div>
+      <script type="application/json" class="digest-json" set:html={JSON.stringify({
+        title: s.title, cwd: s.project, branch: `${s.branch} · ${s.turns}`,
+        files: s.files.join("<br/>"),
+        bookmarks: `<span class="star">★</span> ${s.bookmarks.star} · <span class="research">⌕</span> ${s.bookmarks.research} research`,
+        borrowed: s.borrowedFrom ? `${s.borrowedFrom.ticket} ← ${s.borrowedFrom.title}` : "",
+      })} />
+    </template>
+  ))}
+
+  <script is:inline define:vars={{ statusLabel: STATUS_LABEL }}>
+    (function () {
+      var root = document.getElementById("tui");
+      if (!root) return;
+      var list = root.querySelector(".session-list");
+      var transcript = document.getElementById("transcript");
+      var digest = document.getElementById("digest");
+      var items = Array.prototype.slice.call(list.querySelectorAll(".sess"));
+
+      /* ── select a session ── */
+      function select(id) {
+        var tpl = document.querySelector('template[data-session-tpl="' + id + '"]');
+        if (!tpl) return;
+        items.forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.session === id)); });
+        root.dataset.selected = id;
+
+        var body = tpl.content.querySelector(".transcript-body").cloneNode(true);
+        var reply = transcript.querySelector(".reply");
+        transcript.innerHTML = "";
+        Array.prototype.slice.call(body.children).forEach(function (c) { transcript.appendChild(c); });
+        transcript.appendChild(reply);
+        transcript.dataset.swapping = "";
+        setTimeout(function () { delete transcript.dataset.swapping; }, 400);
+
+        var d = JSON.parse(tpl.content.querySelector(".digest-json").textContent);
+        digest.querySelector('[data-f="title"]').textContent = d.title;
+        digest.querySelector('[data-f="cwd"]').textContent = d.cwd;
+        digest.querySelector('[data-f="branch"]').textContent = d.branch;
+        digest.querySelector('[data-f="files"]').innerHTML = d.files;
+        digest.querySelector('[data-f="bookmarks"]').innerHTML = d.bookmarks;
+        digest.querySelector('[data-f="borrowed"]').textContent = d.borrowed;
+        digest.querySelector('[data-f="borrowed-wrap"]').hidden = !d.borrowed;
+      }
+
+      /* ── regroup the sidebar ── */
+      var order = { status: ["in_progress", "in_review", "done"], provider: ["claude", "codex", "opencode", "pi", "cursor", "antigravity", "gemini"] };
+      function regroup(key) {
+        root.querySelectorAll(".groupby button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.group === key)); });
+        list.querySelectorAll(".group-label").forEach(function (l) { l.remove(); });
+        var groups = {};
+        items.forEach(function (b) { var k = b.dataset[key]; (groups[k] = groups[k] || []).push(b); });
+        var keys = Object.keys(groups);
+        if (order[key]) keys.sort(function (a, b) { return order[key].indexOf(a) - order[key].indexOf(b); });
+        var selectedKey = list.querySelector('[aria-selected="true"]').dataset[key];
+        keys.forEach(function (k) {
+          var label = document.createElement("div");
+          label.className = "group-label" + (k === selectedKey ? " hot" : "");
+          label.textContent = key === "status" ? statusLabel[k] : key === "project" ? "▸ " + k : "▸ " + k;
+          list.appendChild(label);
+          groups[k].forEach(function (b) { list.appendChild(b); });
+        });
+      }
+
+      list.addEventListener("click", function (e) {
+        var b = e.target.closest(".sess");
+        if (b) { select(b.dataset.session); regroup(currentGroup()); }
+      });
+      root.querySelector(".groupby").addEventListener("click", function (e) {
+        var b = e.target.closest("button[data-group]");
+        if (b) regroup(b.dataset.group);
+      });
+      list.addEventListener("keydown", function (e) {
+        if (e.key !== "j" && e.key !== "k" && e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+        var visible = Array.prototype.slice.call(list.querySelectorAll(".sess"));
+        var i = visible.findIndex(function (b) { return b.getAttribute("aria-selected") === "true"; });
+        var n = visible[(i + (e.key === "j" || e.key === "ArrowDown" ? 1 : -1) + visible.length) % visible.length];
+        e.preventDefault(); select(n.dataset.session); regroup(currentGroup()); n.focus();
+      });
+      function currentGroup() { return root.querySelector('.groupby [aria-pressed="true"]').dataset.group; }
+
+      regroup("project");
+    })();
+  </script>
+</section>

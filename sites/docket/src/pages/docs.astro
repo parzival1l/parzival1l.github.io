@@ -1,0 +1,130 @@
+---
+/**
+ * /docs — deliberately one page. Install, quick start, every CLI verb,
+ * the schema, the plugin, and where the data lives.
+ */
+import Layout from "../components/Layout.astro";
+
+const install = "curl -LsSf https://docket.parzival.computer/install.sh | bash";
+
+type Verb = { cmd: string; what: string; flags?: string };
+const cli: Verb[] = [
+  { cmd: "docket init", what: "Create .docket/db.sqlite in the current repo, append .docket/ to .gitignore" },
+  { cmd: "docket add <title>", what: "Create a task", flags: "--body --acceptance --deps --priority --group --kind --backlog" },
+  { cmd: "docket ls", what: "List tasks (hides backlog)", flags: "--status --group --kind --json" },
+  { cmd: "docket show T-N", what: "Full task with body, acceptance, deps with resolved states", flags: "--json" },
+  { cmd: "docket ready", what: "Tasks with status=open and all deps done — the dispatch queue (ignores backlog)", flags: "--json" },
+  { cmd: "docket blocked", what: "Inverse of ready: tasks with unmet deps (debug view; ignores backlog)", flags: "--json" },
+  { cmd: "docket backlog", what: "List tasks parked in the backlog", flags: "--group --kind --json" },
+  { cmd: "docket promote T-N", what: "Move a task from backlog to open" },
+  { cmd: "docket status T-N <state>", what: "Set status: backlog, open, in_progress, done, or any string" },
+  { cmd: "docket done T-N", what: "Convenience for docket status T-N done" },
+  { cmd: "docket rm T-N", what: "Delete a task" },
+  { cmd: "docket prompt <name>", what: "Print an embedded prompt: create-task, commit, pr, tdd-pursuit" },
+  { cmd: "docket group new <name>", what: "Create a group", flags: "--branch --description" },
+  { cmd: "docket group ls", what: "List groups with done/total task counts", flags: "--json" },
+  { cmd: "docket group show <name>", what: "Group detail + its tasks", flags: "--json" },
+  { cmd: "docket group close <name>", what: "Mark a group closed" },
+];
+---
+
+<Layout title="Docs — docket" description="Install docket, run the quick start, and every CLI verb, the schema, and the Claude Code plugin." path="/docs/">
+  <header class="page-head">
+    <div class="kicker">docs</div>
+    <h1>One page. Everything it does.</h1>
+    <p class="lede">
+      docket is a single static binary over one SQLite file per repo. Every list and show
+      command takes <code>--json</code>, so any agent that can run a shell can use it.
+    </p>
+  </header>
+
+  <section class="doc-section" id="install">
+    <h2>Install</h2>
+    <p>macOS and Linux (x86_64, aarch64). The installer detects your platform, downloads the matching binary from the latest GitHub Release, verifies its SHA-256, and drops <code>docket</code> into <code>~/.local/bin</code>. Re-run it to update.</p>
+    <pre class="code"><span class="p">$</span> {install}</pre>
+    <p>Make sure <code>~/.local/bin</code> is on your <code>$PATH</code>. Pin a version with <code>bash -s -- --version v0.0.4</code>; install elsewhere with <code>DOCKET_INSTALL_DIR=/somewhere/bin</code>.</p>
+    <h3>From source</h3>
+    <pre class="code"><span class="p">$</span> git clone https://github.com/parzival1l/docket.git
+<span class="p">$</span> cd docket
+<span class="p">$</span> cargo install --path .          <span class="c"># → ~/.cargo/bin/docket</span></pre>
+  </section>
+
+  <section class="doc-section" id="quick-start">
+    <h2>Quick start</h2>
+    <pre class="code"><span class="p">$</span> cd /path/to/your/repo
+<span class="p">$</span> docket init                              <span class="c"># creates .docket/db.sqlite, appends .docket/ to .gitignore</span>
+
+<span class="p">$</span> docket add "uploader retries failed parts" \
+    --acceptance "retries each part up to 3x; succeeds if any part succeeds" \
+    --group "uploader-fixes"
+
+<span class="p">$</span> docket add "uploader emits per-part metrics" \
+    --acceptance "metric uploader_part_total has labels &#123;status, attempt&#125;" \
+    --deps T-1 \
+    --group "uploader-fixes"
+
+<span class="p">$</span> docket ready                              <span class="c"># T-1 only — T-2 is blocked by T-1</span>
+<span class="p">$</span> docket done T-1                           <span class="c"># T-2 now ready</span>
+<span class="p">$</span> docket ready                              <span class="c"># T-2 surfaces</span></pre>
+    <p>That's dispatch. Any agent in any terminal runs <code>docket ready --json</code>, takes the first task, does it, runs <code>docket done</code>. Deps unblock the next one. No orchestrator, no model calls.</p>
+  </section>
+
+  <section class="doc-section" id="cli">
+    <h2>CLI</h2>
+    <p>Every list/show command supports <code>--json</code> for agent consumption. Task ids are rendered <code>T-N</code>; commands accept both <code>T-7</code> and <code>7</code>.</p>
+    <table class="cli">
+      <thead><tr><th>Verb</th><th>Purpose</th></tr></thead>
+      <tbody>
+        {cli.map((v) => (
+          <tr>
+            <td><code>{v.cmd}</code></td>
+            <td>{v.what}{v.flags && <span class="flags">{v.flags}</span>}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc-section" id="schema">
+    <h2>Schema</h2>
+    <p>Two tables in <code>.docket/db.sqlite</code>. No archive, no audit, no comments, no labels.</p>
+    <pre class="code">tasks(id, title, body, acceptance, deps, status, priority, kind, group_id, created_at, updated_at)
+groups(id, name UNIQUE, branch_name, description, state, created_at)</pre>
+    <ul>
+      <li><code>id</code> is integer-incrementing; rendered as <code>T-N</code>.</li>
+      <li><code>deps</code> is a JSON array of integer task ids, e.g. <code>[3, 5]</code>. The only link type is <b>blocks</b>.</li>
+      <li><code>status</code> follows <code>backlog → open → in_progress → done</code> by convention. <code>backlog</code> is a parked state, invisible to <code>ls</code>, <code>ready</code> and <code>blocked</code>. <b>blocked is computed</b> from unmet deps, never stored.</li>
+      <li><code>priority</code> is 0..4, default 2 — lower is more urgent. <code>ready</code> returns most urgent first.</li>
+      <li><code>kind</code> defaults to <code>feature</code>; <code>bug</code> and <code>chore</code> are the other known kinds.</li>
+      <li><code>group_id</code> is nullable — tasks don't have to be in a group.</li>
+    </ul>
+  </section>
+
+  <section class="doc-section" id="groups">
+    <h2>Groups</h2>
+    <p>A group is a batch of tasks that ship together: one branch, one PR. Tasks in a group run sequentially on that branch, so there's nothing to coordinate against — no locks, no claims. <code>docket group close</code> marks it finished; the PR body is aggregated from the tasks' acceptance.</p>
+    <p>The single bridge between docket and git is the <code>[T-N]</code> tag in commit messages. <code>git log --grep='\[T-3\]'</code> shows what changed for a task. docket does not track files, SHAs, or PR URLs — git already does.</p>
+  </section>
+
+  <section class="doc-section" id="plugin">
+    <h2>Plugin (Claude Code)</h2>
+    <p>Thin wrappers over the CLI, so they run instantly with no model turn. Requires <code>docket</code> on your <code>$PATH</code>. Install from inside Claude Code:</p>
+    <pre class="code">/plugin marketplace add parzival1l/docket
+/plugin install docket@docket</pre>
+    <dl class="kv">
+      <dt><code>/docket:create-task</code></dt><dd>turn a one-line ask into a task with testable acceptance criteria</dd>
+      <dt><code>/docket:start T-N</code></dt><dd>pick up a task: mark in_progress, load its acceptance into the session</dd>
+    </dl>
+    <p style="margin-top:14px">Update with <code>/plugin marketplace update docket</code>; pick up edits in an active session with <code>/plugin reload</code>.</p>
+  </section>
+
+  <section class="doc-section" id="data">
+    <h2>Where data lives</h2>
+    <dl class="kv">
+      <dt><code>.docket/db.sqlite</code></dt><dd>per-repo, gitignored by <code>docket init</code>. Per-developer state, no binary merge conflicts.</dd>
+      <dt><code>~/.local/bin/docket</code></dt><dd>the binary. Nothing else is written to your home directory.</dd>
+      <dt><code>git log --grep='\[T-N\]'</code></dt><dd>the activity log. Done tasks stay in <code>tasks</code> with <code>status=done</code>.</dd>
+    </dl>
+    <p style="margin-top:14px">No servers, no accounts, no network calls. Project-level rollup belongs to whatever PM tool you already use.</p>
+  </section>
+</Layout>

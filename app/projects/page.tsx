@@ -22,23 +22,24 @@ const projects: ProjectData[] = [
   {
     name: 'ThreadHop',
     repo: 'parzival1l/threadhop',
+    url: 'https://threadhop.parzival.computer',
     description:
-      'Persistent, searchable, cross-session memory for Claude Code. Indexes ' +
-      'isolated JSONL transcripts into SQLite with FTS5, extracts TODOs and ' +
-      'decisions from each session, and surfaces decision conflicts across ' +
-      'sibling sessions. TUI browser, CLI, and Claude Code plugin on one store.',
-    tags: ['SQLite', 'FTS5', 'TUI', 'Claude Code'],
+      'Local-first session manager for coding agents. Indexes every transcript ' +
+      'on the machine into one SQLite + FTS5 store, searches across projects ' +
+      'and agents, and lets any session borrow another\u2019s context with a ' +
+      'single ticket. TUI, CLI, and agent plugin on one store.',
+    tags: ['SQLite', 'FTS5', 'TUI', 'Rust', 'agents'],
   },
   {
     name: 'docket',
     repo: 'parzival1l/docket',
+    url: 'https://docket.parzival.computer',
     description:
-      'Agent-shaped task tracker with a TDD execution harness, for solo and ' +
-      'small-team coding work. Per-repo SQLite task store plus curated prompts ' +
-      'that turn task pickup into a disciplined test-driven loop: acceptance ' +
-      'criteria and deps first-class, a ready queue, groups that map to one ' +
-      'branch and one PR. Single static Rust binary.',
-    tags: ['Rust', 'CLI', 'TDD', 'agents'],
+      'Dispatch work to any coding agent. A per-repo SQLite queue of tasks ' +
+      'with acceptance criteria and deps first-class; whoever is free runs ' +
+      'docket ready, picks the next one, and ships it on the group\u2019s ' +
+      'branch. One group, one branch, one PR. Single static Rust binary.',
+    tags: ['Rust', 'CLI', 'SQLite', 'agents'],
   },
 ]
 
