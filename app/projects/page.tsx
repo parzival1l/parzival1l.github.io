@@ -22,12 +22,13 @@ const projects: ProjectData[] = [
   {
     name: 'ThreadHop',
     repo: 'parzival1l/threadhop',
+    url: 'https://threadhop.parzival.computer',
     description:
-      'Persistent, searchable, cross-session memory for Claude Code. Indexes ' +
-      'isolated JSONL transcripts into SQLite with FTS5, extracts TODOs and ' +
-      'decisions from each session, and surfaces decision conflicts across ' +
-      'sibling sessions. TUI browser, CLI, and Claude Code plugin on one store.',
-    tags: ['SQLite', 'FTS5', 'TUI', 'Claude Code'],
+      'Local-first session manager for coding agents. Indexes every transcript ' +
+      'on the machine into one SQLite + FTS5 store, searches across projects ' +
+      'and agents, and lets any session borrow another\u2019s context with a ' +
+      'single ticket. TUI, CLI, and agent plugin on one store.',
+    tags: ['SQLite', 'FTS5', 'TUI', 'Rust', 'agents'],
   },
   {
     name: 'docket',

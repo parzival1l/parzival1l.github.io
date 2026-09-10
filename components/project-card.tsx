@@ -9,6 +9,10 @@ export interface ProjectData {
   /** GitHub repo slug, e.g. "parzival1l/tidyread". Drives the link and the
       last-commit nudge. */
   repo: string
+  /** Optional product site. When set, the card title links here and the
+      GitHub repo moves to a small secondary link; the last-commit nudge
+      still comes from `repo`. */
+  url?: string
   /** Short facet chips: language, distribution, whatever earns the space. */
   tags: string[]
 }
@@ -66,12 +70,22 @@ export function ProjectCard({ project }: { project: ProjectData }) {
   return (
     <article className="flex flex-col gap-3 rounded-lg border border-neutral-200 p-5 transition-colors hover:border-neutral-500">
       <div className="flex items-baseline justify-between gap-3">
-        <a
-          href={`https://github.com/${project.repo}`}
-          className="text-base font-medium text-neutral-900 underline-offset-4 hover:underline"
-        >
-          {project.name}
-        </a>
+        <span className="flex items-baseline gap-2">
+          <a
+            href={project.url ?? `https://github.com/${project.repo}`}
+            className="text-base font-medium text-neutral-900 underline-offset-4 hover:underline"
+          >
+            {project.name}
+          </a>
+          {project.url ? (
+            <a
+              href={`https://github.com/${project.repo}`}
+              className="text-xs text-neutral-500 underline-offset-4 hover:underline"
+            >
+              github
+            </a>
+          ) : null}
+        </span>
         {freshness ? (
           <span
             className={`text-xs whitespace-nowrap ${
