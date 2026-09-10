@@ -1,0 +1,56 @@
+---
+import "../styles/site.css";
+
+interface Props {
+  title: string;
+  description: string;
+  path: string;
+}
+const { title, description, path } = Astro.props;
+const nav = [
+  { href: "/docs/", label: "docs" },
+  { href: "/changelog/", label: "changelog" },
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={`https://threadhop.parzival.computer${path}`} />
+    <meta name="theme-color" content="#0b0d0c" />
+    <link rel="icon" href="data:," />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Inter+Tight:wght@800&family=JetBrains+Mono:wght@400;600&display=swap"
+    />
+  </head>
+  <body>
+    <div class="wrap">
+      <nav class="nav">
+        <a class="mark" href="/"><span class="bar">▍</span>threadhop</a>
+        <ul>
+          {nav.map((n) => (
+            <li><a href={n.href} aria-current={path.startsWith(n.href) ? "page" : undefined}>{n.label}</a></li>
+          ))}
+          <li><a class="ext" href="https://github.com/parzival1l/threadhop">github ↗</a></li>
+          <li><a class="btn" href="/#install">install</a></li>
+        </ul>
+      </nav>
+
+      <slot />
+
+      <footer class="foot">
+        <span>threadhop · built in the terminal · MIT</span>
+        <span><a href="https://parzival.computer">parzival.computer</a> · <a href="https://github.com/parzival1l/threadhop">github</a></span>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,192 @@
+---
+import "../styles/site.css";
+import TuiMock from "../components/TuiMock.astro";
+
+const install = "curl -LsSf https://threadhop.parzival.computer/install.sh | bash";
+const title = "ThreadHop — every chat you've had, one terminal, searchable";
+const description =
+  "ThreadHop indexes every coding-agent transcript on your machine — Claude Code, Codex, OpenCode, pi, Cursor, Antigravity, Gemini CLI — into one local SQLite store, searches them in milliseconds, and lets any session borrow another's context with a single ticket.";
+
+const agents = [
+  ["Claude Code", "claude"], ["Codex", "codex"], ["OpenCode", "opencode"], ["pi", "pi"],
+  ["Cursor", "cursor"], ["Antigravity", "antigravity"], ["Gemini CLI", "gemini"],
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content="https://threadhop.parzival.computer/" />
+    <meta name="theme-color" content="#0b0d0c" />
+    <link rel="icon" href="data:," />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Inter+Tight:wght@800&family=JetBrains+Mono:wght@400;600&display=swap"
+    />
+  </head>
+  <body>
+    <div class="wrap">
+      <nav class="nav">
+        <a class="mark" href="/"><span class="bar">▍</span>threadhop</a>
+        <ul>
+          <li><a href="/docs/">docs</a></li>
+          <li><a href="/changelog/">changelog</a></li>
+          <li><a class="ext" href="https://github.com/parzival1l/threadhop">github ↗</a></li>
+          <li><a class="btn" href="#install">install</a></li>
+        </ul>
+      </nav>
+
+      <header class="hero">
+        <div class="kicker">the session manager for coding agents</div>
+        <h1>Every chat you've had.<br />One terminal. <span class="accent">Searchable.</span></h1>
+        <p class="lede">{description}</p>
+
+        <div class="install-row">
+          <button class="install" id="install" type="button" data-cmd={install} aria-label="copy install command">
+            <span class="prompt">$</span><span>{install}</span><span class="copy">⧉</span>
+          </button>
+          <span class="install-meta">macOS · SQLite + FTS5 · MIT — <a href="/docs/#install">manual install →</a></span>
+        </div>
+
+        <div class="strip">
+          <div class="agents">
+            <span>reads transcripts from</span>
+            {agents.map(([label, key]) => <span class="pill" style={`--c: var(--p-${key})`}>{label}</span>)}
+          </div>
+        </div>
+      </header>
+
+      <section class="stats-band" aria-label="at a glance">
+        <div><div class="n">7</div><div class="l">agent CLIs read</div></div>
+        <div><div class="n">1</div><div class="l">local SQLite index</div></div>
+        <div><div class="n">0</div><div class="l">bytes leave your machine</div></div>
+        <div><div class="n">201</div><div class="l">tests passing</div></div>
+      </section>
+
+      <TuiMock />
+
+      <section class="features">
+        <div class="feature">
+          <div class="num">01</div>
+          <div>
+            <h2>Search everything you ever said to an agent.<span class="arrow">→</span></h2>
+            <p>Every transcript on the machine is indexed into one SQLite FTS5 table as it changes. Press <b>/</b>, type, and results jump you to the exact message — across projects, across agents, in milliseconds.</p>
+          </div>
+          <div class="card">
+            <div class="row"><span><span class="acc">/</span> retry backoff <span class="cursor"></span></span><span class="dim">12 hits · 4 sessions</span></div>
+            <div style="margin-top:10px"><span class="dim">~/oss/astro · codex · 9h</span></div>
+            <div>…the glob loader needs <span class="hit">exponential backoff</span> on EBUSY, not a fixed <span class="hit">retry</span>…</div>
+            <div style="margin-top:8px"><span class="dim">~/oss/zed · claude · 3d</span></div>
+            <div>…rust-analyzer <span class="hit">retry</span>: keep the old server id until initialized lands…</div>
+          </div>
+        </div>
+
+        <div class="feature">
+          <div class="num">02</div>
+          <div>
+            <h2>Borrow context. Don't re-explain it.<span class="arrow">→</span></h2>
+            <p>One chat already worked it out. <b>prepare</b> freezes that session into a ticket — a short summary of the head plus the last exchanges verbatim. <b>receive</b> pastes it into any other chat, on any other agent. Reading a ticket costs zero LLM calls.</p>
+          </div>
+          <div class="card">
+            <div><span class="acc">!</span>threadhop prepare <span class="dim">--session 2c9e04b1</span></div>
+            <div class="dim">✓ tk_1a2b3c4d · head summarised · last 3 exchanges verbatim</div>
+            <div style="margin-top:10px"><span class="acc">!</span>threadhop receive tk_1a2b3c4d</div>
+            <div class="dim">→ 41 lines into the current chat · 0 LLM calls</div>
+          </div>
+        </div>
+
+        <div class="feature">
+          <div class="num">03</div>
+          <div>
+            <h2>Mark what matters.<span class="arrow">→</span></h2>
+            <p>Select a message or a range, then <b>copy</b> it with source labels, <b>export</b> it, or <b>bookmark</b> it — as a keeper or a research follow-up. Every session carries a status, and the board shows them as columns.</p>
+          </div>
+          <div class="card">
+            <div class="cols">
+              <div class="col"><h4>in_progress</h4><div>vim mode: dot-repeat</div><div>gpui text rendering</div><div>content layer caching</div></div>
+              <div class="col"><h4>in_review</h4><div class="sel">lsp restart flakiness</div><div>f-string lexer rewrite</div></div>
+              <div class="col"><h4>done</h4><div>view transitions bug</div><div>rule docs generator</div></div>
+            </div>
+            <div class="dim" style="margin-top:8px"><span class="acc2">★</span> 14 bookmarks · <span class="acc">⌕</span> 6 research</div>
+          </div>
+        </div>
+
+        <div class="feature">
+          <div class="num">04</div>
+          <div>
+            <h2>Lives where you already work.<span class="arrow">→</span></h2>
+            <p>Nothing to switch to. From inside any agent chat, <b>!threadhop …</b> runs instantly with no model turn, and the plugin adds <b>/threadhop:*</b> slash commands. The TUI is there when you want the whole picture.</p>
+          </div>
+          <div class="card">
+            <div><span class="acc">!</span>threadhop tag in_review</div>
+            <div class="dim">✓ tagged 7f3a91c2 as in_review</div>
+            <div style="margin-top:10px"><span class="acc">/</span>threadhop:bookmark <span class="dim">--note "cursor pass decision"</span></div>
+            <div class="dim">✓ bookmarked · kind=bookmark</div>
+          </div>
+        </div>
+
+        <div class="feature">
+          <div class="num">05</div>
+          <div>
+            <h2>Nothing leaves the machine.<span class="arrow">→</span></h2>
+            <p>Transcripts are read in place from each agent's own folder. The index, bookmarks and tickets live in <b>~/.config/threadhop</b>. No server, no account, no telemetry. The only network call is the one you asked your agent to make.</p>
+          </div>
+          <div class="card">
+            <div class="row"><span>~/.config/threadhop/sessions.db</span><span class="dim">sqlite · fts5</span></div>
+            <div class="row"><span>~/.config/threadhop/transfers/</span><span class="dim">tickets</span></div>
+            <div class="row"><span>~/.claude/projects · ~/.codex/sessions · …</span><span class="dim">read only</span></div>
+          </div>
+        </div>
+
+        <div class="feature next">
+          <div class="num">06</div>
+          <div>
+            <h2>Session groups.<span class="tag">next</span></h2>
+            <p>Five chats circling the same problem across three agents? Group them. ThreadHop reads the group as one thread — shared decisions, open questions, what changed between them — so you analyse the <b>investigation</b>, not the individual sessions.</p>
+          </div>
+          <div class="card">
+            <div class="row"><span class="hi">▸ group: subpixel text</span><span class="dim">5 sessions · 3 agents</span></div>
+            <div class="grp"><span class="dim">decisions</span> subpixel on · atlas per scale · cursor in selection pass</div>
+            <div class="grp"><span class="dim">open</span> does the atlas need eviction at 3×?</div>
+            <div class="grp"><span class="dim">disagrees</span> codex (1h) vs claude (3d) on glyph cache key</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="cta" id="install-cta">
+        <h2>Give your sessions a memory.</h2>
+        <p>One command. Your agents keep working exactly as they do — ThreadHop just reads what they write down.</p>
+        <div class="install-row">
+          <button class="install" type="button" data-cmd={install} aria-label="copy install command">
+            <span class="prompt">$</span><span>{install}</span><span class="copy">⧉</span>
+          </button>
+          <span class="install-meta">then: <code>/plugin marketplace add parzival1l/threadhop</code></span>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <span>threadhop · built in the terminal · MIT</span>
+        <span><a href="https://parzival.computer">parzival.computer</a> · <a href="https://github.com/parzival1l/threadhop">github</a></span>
+      </footer>
+    </div>
+
+    <script is:inline>
+      document.querySelectorAll(".install").forEach(function (b) {
+        b.addEventListener("click", function () {
+          navigator.clipboard.writeText(b.dataset.cmd).then(function () {
+            b.dataset.copied = "true";
+            setTimeout(function () { delete b.dataset.copied; }, 1400);
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
