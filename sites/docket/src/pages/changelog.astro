@@ -1,0 +1,37 @@
+---
+/**
+ * /changelog — rendered from docket's docs/CHANGELOG.md at build time.
+ * The site lives in a different repo than docket, so we fetch the file from
+ * GitHub main and fall back to the bundled copy in src/content if that fails.
+ */
+import { marked } from "marked";
+import Layout from "../components/Layout.astro";
+import fallback from "../content/CHANGELOG.md?raw";
+
+const SRC = "https://raw.githubusercontent.com/parzival1l/docket/main/docs/CHANGELOG.md";
+let md = fallback;
+let source = "bundled copy";
+try {
+  const res = await fetch(SRC, { signal: AbortSignal.timeout(8000) });
+  if (res.ok) {
+    const text = await res.text();
+    if (text.startsWith("# Changelog")) { md = text; source = "github main"; }
+  }
+} catch (e) {
+  console.warn("[changelog] fetch failed, using bundled copy:", (e as Error).message);
+}
+console.log(`[changelog] rendered from ${source}`);
+const html = await marked.parse(md, { gfm: true });
+---
+
+<Layout title="Changelog — docket" description="What changed in each docket release." path="/changelog/">
+  <header class="page-head">
+    <div class="kicker">changelog</div>
+    <h1>What changed.</h1>
+    <p class="lede">
+      Source of truth is <code>docs/CHANGELOG.md</code> in the docket repo — the same
+      sections the release workflow publishes as GitHub Release notes.
+    </p>
+  </header>
+  <article class="prose changelog" set:html={html} />
+</Layout>

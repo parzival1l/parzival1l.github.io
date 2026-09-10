@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // Cloudflare Workers with static assets only — no Worker script.
+  "name": "docket-site",
+  "compatibility_date": "2026-09-09",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page"
+  },
+  "routes": [
+    { "pattern": "docket.parzival.computer", "custom_domain": true }
+  ]
+}
