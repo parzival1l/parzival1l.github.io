@@ -1,0 +1,170 @@
+---
+/**
+ * /docs — deliberately one page. What ThreadHop does, how to install it,
+ * and every key / command / slash-command, grouped by surface.
+ */
+import Layout from "../components/Layout.astro";
+
+const install = "curl -LsSf https://threadhop.parzival.computer/install.sh | bash";
+
+type Row = { k: string; v: string };
+type Group = { id: string; title: string; blurb: string; rows: Row[] };
+
+const tui: Group[] = [
+  {
+    id: "search",
+    title: "Search",
+    blurb: "Full-text search (SQLite FTS5) across every indexed session. Results jump straight to the message.",
+    rows: [
+      { k: "/", v: "search all sessions — prefix-matched per keystroke" },
+      { k: "project: user: assistant:", v: "filters inside the query" },
+      { k: "↑ ↓ · Ctrl+N Ctrl+P", v: "move through results" },
+      { k: "Enter", v: "open the result in its transcript" },
+      { k: "Ctrl+F", v: "find within the current transcript" },
+      { k: "Ctrl+X", v: "clear query and history" },
+    ],
+  },
+  {
+    id: "highlights",
+    title: "Highlights",
+    blurb: "Select one message or a range, then copy, export, or bookmark it. Selection lives in the transcript pane.",
+    rows: [
+      { k: "l  /  h", v: "focus transcript / back to session list" },
+      { k: "m", v: "enter selection mode (starts at the last message)" },
+      { k: "j  k", v: "move between messages" },
+      { k: "v", v: "anchor a range and extend it" },
+      { k: "y", v: "copy the selection with source labels" },
+      { k: "e", v: "export the selection to /tmp/threadhop/<id>.md" },
+      { k: "Esc", v: "leave selection mode" },
+    ],
+  },
+  {
+    id: "bookmarks",
+    title: "Bookmarks",
+    blurb: "Pin a message for later. Two kinds: bookmark (keep) and research (follow up). One table shared by TUI, CLI and plugin.",
+    rows: [
+      { k: "Space", v: "toggle bookmark on the selected message" },
+      { k: "L", v: "edit the bookmark's note" },
+      { k: "b", v: "open the bookmark browser" },
+      { k: "Enter · L · d", v: "jump to message · edit note · delete" },
+    ],
+  },
+  {
+    id: "board",
+    title: "Board & status",
+    blurb: "Every session has a status. The sidebar groups by it; the board shows it as columns.",
+    rows: [
+      { k: "s  S", v: "cycle status forward / back — in_progress · in_review · done · archived" },
+      { k: "a  A", v: "archive session · show/hide archived" },
+      { k: "B", v: "open the kanban board" },
+      { k: "h l · j k", v: "move between columns · within a column" },
+      { k: "Shift+←  Shift+→", v: "move a card to the adjacent status" },
+    ],
+  },
+  {
+    id: "sessions",
+    title: "Sessions",
+    blurb: "The sidebar is live: it polls every 5 s and marks what's running (◐ working · ● active · ○ idle).",
+    rows: [
+      { k: "j  k", v: "move between sessions" },
+      { k: "Enter  /  /", v: "reply in place (sent with claude -p --resume)" },
+      { k: "n", v: "rename — the title is written back so the agent sees it too" },
+      { k: "g", v: "copy the resume command" },
+      { k: "J  K", v: "reorder" },
+      { k: "[  ]", v: "shrink / grow the sidebar" },
+      { k: "t  T", v: "next / previous theme — opencode, nord, gruvbox, catppuccin, tokyonight" },
+      { k: "?", v: "help overlay" },
+    ],
+  },
+];
+
+const cli: Row[] = [
+  { k: "threadhop", v: "open the TUI. --project <name>, --days <n> to filter" },
+  { k: "threadhop search '<terms>'", v: "FTS search from the shell. --project, --limit, --json" },
+  { k: "threadhop peek <session> [--last N | --range A:B | --grep RE]", v: "print cleaned exchanges from any session — no LLM call" },
+  { k: "threadhop prepare --session <id>", v: "freeze a session into a ticket: summarised head + verbatim tail. One haiku call, cached" },
+  { k: "threadhop receive <tk_id>", v: "print a ticket so the current chat can read it" },
+  { k: "threadhop tag <status>", v: "set the current session's status" },
+  { k: "threadhop bookmark [research] [--note …]", v: "bookmark the latest message in the current session" },
+  { k: "threadhop copy [N | all]", v: "copy the last N cleaned turns to the clipboard" },
+  { k: "threadhop update · changelog · future", v: "update in place · what's new · what's next" },
+];
+
+const plugin: Row[] = [
+  { k: "/threadhop:tag <status>", v: "tag the session you're in" },
+  { k: "/threadhop:bookmark [--note …]", v: "bookmark the latest message" },
+  { k: "/threadhop:copy [N | all]", v: "copy cleaned turns" },
+  { k: "/threadhop:handoff <session>", v: "generate a handoff brief from another session" },
+];
+---
+
+<Layout title="Docs — ThreadHop" description="Install ThreadHop and every key, command and slash-command it ships with." path="/docs/">
+  <header class="page-head">
+    <div class="kicker">docs</div>
+    <h1>One page. Everything it does.</h1>
+    <p class="lede">
+      ThreadHop is a terminal UI, a CLI and an agent plugin over one local SQLite
+      store. This page lists all three surfaces. Nothing here leaves your machine.
+    </p>
+  </header>
+
+  <section class="doc-section" id="install">
+    <h2>Install</h2>
+    <p>macOS. The installer brings in <code>uv</code> if you don't have it, clones to <code>~/.local/share/threadhop</code>, and links <code>threadhop</code> into <code>~/.local/bin</code>. Re-run it to update.</p>
+    <pre class="code"><span class="prompt">$</span> {install}</pre>
+    <p>Then, from inside any agent chat, add the plugin for the slash commands:</p>
+    <pre class="code">/plugin marketplace add parzival1l/threadhop
+/plugin install threadhop@threadhop</pre>
+  </section>
+
+  <section class="doc-section" id="borrow">
+    <h2>Borrow context between sessions</h2>
+    <p>The core move. In the chat that has the context:</p>
+    <pre class="code"><span class="bang">!</span>threadhop prepare
+<span class="dim">✓ ticket tk_1a2b3c4d · paste in the target chat: !threadhop receive tk_1a2b3c4d</span></pre>
+    <p>In the chat that needs it:</p>
+    <pre class="code"><span class="bang">!</span>threadhop receive tk_1a2b3c4d</pre>
+    <p>A ticket is a markdown file in <code>~/.config/threadhop/transfers/</code>: a short summary of the conversation's head plus the last few exchanges verbatim. Reading one costs zero LLM calls. To just look without a ticket: <code>!threadhop peek &lt;session&gt; --last 5</code>.</p>
+  </section>
+
+  <section class="doc-section" id="tui">
+    <h2>TUI</h2>
+    <div class="doc-groups">
+      {tui.map((g) => (
+        <div class="doc-group" id={g.id}>
+          <h3>{g.title}</h3>
+          <p>{g.blurb}</p>
+          <dl class="kv">
+            {g.rows.map((r) => (<><dt><code>{r.k}</code></dt><dd>{r.v}</dd></>))}
+          </dl>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="doc-section" id="cli">
+    <h2>CLI</h2>
+    <p>Every subcommand auto-detects the session you're in when run from inside an agent chat via <code>!</code> bash passthrough. Pass <code>--session &lt;id&gt;</code> from anywhere else.</p>
+    <dl class="kv wide">
+      {cli.map((r) => (<><dt><code>{r.k}</code></dt><dd>{r.v}</dd></>))}
+    </dl>
+  </section>
+
+  <section class="doc-section" id="plugin">
+    <h2>Plugin</h2>
+    <p>Thin wrappers over the CLI, so they run instantly with no model turn. Requires <code>threadhop</code> on your <code>$PATH</code>.</p>
+    <dl class="kv wide">
+      {plugin.map((r) => (<><dt><code>{r.k}</code></dt><dd>{r.v}</dd></>))}
+    </dl>
+  </section>
+
+  <section class="doc-section" id="data">
+    <h2>Where your data lives</h2>
+    <dl class="kv wide">
+      <dt><code>~/.config/threadhop/sessions.db</code></dt><dd>SQLite — sessions, messages + FTS5 index, bookmarks, status</dd>
+      <dt><code>~/.config/threadhop/transfers/</code></dt><dd>tickets, one markdown file each</dd>
+      <dt><code>~/.config/threadhop/config.json</code></dt><dd>theme, sidebar width</dd>
+    </dl>
+    <p>Transcripts are read in place from each agent's own directory. ThreadHop never writes to them except when you rename a session.</p>
+  </section>
+</Layout>

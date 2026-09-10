@@ -1,0 +1,30 @@
+---
+/**
+ * /changelog — rendered from the product repo's CHANGELOG.md.
+ * Fetched from GitHub at build time so this site (which lives in the blog
+ * repo, not the product repo) stays in sync. Falls back to a bundled copy.
+ */
+import Layout from "../components/Layout.astro";
+import { marked } from "marked";
+import fallback from "../content/CHANGELOG.md?raw";
+
+const SRC = "https://raw.githubusercontent.com/parzival1l/threadhop/main/CHANGELOG.md";
+let md = fallback;
+try {
+  const res = await fetch(SRC);
+  if (res.ok) md = await res.text();
+} catch {}
+const html = marked.parse(md, { gfm: true });
+---
+
+<Layout title="Changelog — ThreadHop" description="What changed in each ThreadHop release." path="/changelog/">
+  <header class="page-head">
+    <div class="kicker">changelog</div>
+    <h1>What changed.</h1>
+    <p class="lede">
+      Source of truth is <code>CHANGELOG.md</code> in the repo — the same file
+      <code>threadhop changelog</code> prints in your terminal.
+    </p>
+  </header>
+  <article class="prose changelog" set:html={html} />
+</Layout>
