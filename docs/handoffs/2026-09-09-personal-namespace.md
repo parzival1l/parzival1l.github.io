@@ -28,15 +28,40 @@ Personal house domain: apex is the author, each project is its own origin on a s
 - Correction to task 005: with `build_type: workflow`, GitHub ignores `public/CNAME`; the custom domain is configured in Settings → Pages. No CNAME file was added. See [GitHub documentation](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site).
 - `parzival.blog` / Squarespace references in the older migration task describe the previous proposal, superseded by this purchased domain and namespace decision.
 
+## Product sites live in this repo — `sites/<project>/`
+
+Decision (2026-09-09): product landing pages are **not** kept in the product
+repos, because people `git clone` those to install. Each site is an
+independent Astro project under `sites/` here, deployed by hand with
+`npm run deploy` from its folder. The blog's GitHub Actions workflow does not
+build or deploy `sites/`.
+
+- `sites/threadhop/` → `threadhop.parzival.computer` (Worker `threadhop-site`) — PR #17
+- `sites/docket/` → `docket.parzival.computer` (Worker `docket-site`) — PR #18
+
+Shared pattern: pure-static Astro (no adapter), `wrangler.jsonc` with
+`assets.directory: ./dist` + `custom_domain` route, `public/install.sh` copied
+from the product repo, `/changelog/` fetched from the product repo's
+CHANGELOG on GitHub `main` at build time (bundled fallback in `src/content/`),
+interactive product mock = build-time `<template>`s + vanilla JS.
+
 ## threadhop.parzival.computer — 2026-09-09
 
 - Live at `https://threadhop.parzival.computer` (`/`, `/docs/`, `/changelog/`, `/install.sh`).
-- Source: `threadhop/site/` (Astro 7, static output). Committed on the `migration/rust-port` branch as `b2f54c1`.
+- Source: `sites/threadhop/` (Astro 7, static output). Originally built in `threadhop/site/`; moved here and the product repo left untouched.
 - Hosting: **Cloudflare Workers with static assets**, not Pages — Cloudflare now recommends Workers for new projects. `wrangler.jsonc` has `assets.directory: ./dist` and a `custom_domain` route; no Worker script yet. Add `@astrojs/cloudflare` + `main` only when `/api` or live demos need on-demand rendering.
 - Deploy: `cd site && npm run deploy` (`astro build && wrangler deploy`). Wrangler is logged in via OAuth as the Cloudflare account owner. Worker name `threadhop-site`.
 - DNS: Wrangler created the `threadhop` record automatically when binding the custom domain (proxied, orange cloud). Apex/`www` remain DNS-only for GitHub Pages.
 - Design: Paper file `01M24J0V41AFEFFGNGG48ADZSH`, artboard "A · Phosphor — Hero" (palette later changed to blue/peach). The "interactive terminal" is the herdr.dev pattern — DOM + ~60 lines of vanilla JS, no PTY.
 - Tooling added this session: Paper MCP and Cloudflare MCPs in `~/.config/opencode/opencode.jsonc`; Cloudflare skills installed globally via `npx skills`.
+
+## docket.parzival.computer — 2026-09-09
+
+- Live at `https://docket.parzival.computer` (`/`, `/docs/`, `/changelog/`, `/install.sh`).
+- Source: `sites/docket/`. Linear.app-inspired: near-black, Inter 500 display, indigo accent; agent-marker row and stat band borrowed from the ThreadHop site.
+- Positioning: dispatch. Any agent runs `docket ready`, picks a task, `docket done` unblocks dependents. Deliberately no TDD / model talk.
+- Product shot is interactive: click a task → detail pane; `docket done T-N` moves dependents into Ready; sidebar filters; `j`/`k`. Fixture in `src/data/tasks.ts` (16 tasks, 3 groups, real dep rules).
+- Design: Paper file `01M24N1S4RK02FASCPCHGPS6GA`.
 
 ## Future projects
 
