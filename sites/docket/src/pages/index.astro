@@ -1,0 +1,129 @@
+---
+import Layout from "../components/Layout.astro";
+import DispatchMock from "../components/DispatchMock.astro";
+
+const install = "curl -LsSf https://docket.parzival.computer/install.sh | bash";
+const title = "docket — dispatch work to any agent";
+const description =
+  "A per-repo queue of tasks with clear acceptance and deps. Claude, Codex, OpenCode, Cursor — whoever is free runs docket ready, picks the next one, and ships it on the group's branch.";
+
+const agents = [
+  ["Claude Code", "claude"], ["Codex", "codex"], ["OpenCode", "opencode"], ["pi", "pi"],
+  ["Cursor", "cursor"], ["Antigravity", "antigravity"], ["Gemini CLI", "gemini"],
+];
+
+const steps = [
+  { cmd: "docket ready --json", who: "codex", why: "Returns T-7 — open, all deps done, highest priority first." },
+  { cmd: "docket start T-7", who: "codex", why: "Marks in_progress and records who picked it. Others see it leave the queue." },
+  { cmd: 'git commit -m "[T-7] retry failed parts"', who: "codex", why: "Commits carry the task id. Git stays the history." },
+  { cmd: "docket done T-7", who: "codex", why: "T-8 and T-9 become ready. The next free agent takes them." },
+  { cmd: "docket group close uploader-fixes", who: "claude", why: "One branch, one PR, four tasks. Summary aggregated from acceptance." },
+];
+---
+
+<Layout title={title} description={description} path="/">
+  <header class="hero">
+    <a class="pill-new" href="#dispatch"><span class="tag">New</span> Works with every coding agent →</a>
+    <h1>Dispatch work to any agent.</h1>
+    <p class="lede">
+      A per-repo queue of tasks with clear acceptance and deps. Claude, Codex, OpenCode, Cursor — whoever
+      is free runs <b>docket ready</b>, picks the next one, and ships it on the group's branch.
+    </p>
+    <div class="actions">
+      <a class="btn btn-white" href="/docs/#install">Install docket</a>
+      <a class="btn btn-outline" href="#dispatch">See how dispatch works →</a>
+    </div>
+    <div class="install-line">
+      <button type="button" id="install" data-cmd={install} aria-label="copy install command">$ {install}</button>
+      <span>· single static Rust binary · macOS &amp; Linux</span>
+    </div>
+    <div class="agents">
+      <span>any agent that runs a shell</span>
+      {agents.map(([label, key]) => <span class="agent" data-prov={key}>{label}</span>)}
+    </div>
+  </header>
+
+  <DispatchMock />
+
+  <section class="section">
+    <h2>A task tracker that refuses to be a workflow engine.<br /><span class="mute">Structure where agents need it, git for everything else.</span></h2>
+    <div class="figs">
+      <div class="fig">
+        <div class="num">Fig 0.1</div>
+        <h3>Acceptance-first</h3>
+        <p>Every task carries acceptance criteria and explicit deps. An agent picking it up knows what done means before it starts — no back-and-forth.</p>
+      </div>
+      <div class="fig">
+        <div class="num">Fig 0.2</div>
+        <h3>A queue, not a board</h3>
+        <p><code>docket ready</code> returns the next task whose deps are all done. Blocked is computed, never stored. Your agent pulls; nothing pushes.</p>
+      </div>
+      <div class="fig">
+        <div class="num">Fig 0.3</div>
+        <h3>One group, one PR</h3>
+        <p>Tasks batch into a group that maps to one branch and one PR. Commits carry <code>[T-N]</code>, so git history is the audit log.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section dispatch" id="dispatch">
+    <div>
+      <h2>Dispatch is one command.</h2>
+      <p>There's no orchestrator. Any agent — in any terminal, on any machine with the repo — asks for the next ready task, does it, marks it done. Deps unblock the next one. That's the whole protocol.</p>
+      <p class="dim">Because it's a CLI with <code>--json</code> everywhere, it works from a slash command, a hook, a cron, or a bash loop. Docket never talks to a model.</p>
+    </div>
+    <div class="steps">
+      {steps.map((s, i) => (
+        <div class="step">
+          <span class="n">{String(i + 1).padStart(2, "0")}</span>
+          <div>
+            <div class="cmd"><span class="p">$</span>{s.cmd}</div>
+            <p class="why">{s.why}</p>
+          </div>
+          <span class="badge" data-prov={s.who}>{s.who}</span>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="stats" aria-label="at a glance">
+    <div><div class="v">1</div><div class="l"><b>file</b> · .docket/db.sqlite</div></div>
+    <div><div class="v">2</div><div class="l"><b>tables</b> · tasks, groups</div></div>
+    <div><div class="v">0</div><div class="l"><b>servers</b>, accounts, model calls</div></div>
+    <div><div class="v mono">--json</div><div class="l">on every read command</div></div>
+  </section>
+
+  <section class="section plugin">
+    <div>
+      <h2>Works inside your agent.</h2>
+      <p>The Claude Code plugin exposes the CLI verbs as slash commands. It shells out to the <code>docket</code> binary on your <code>$PATH</code> — no model turn, no server.</p>
+    </div>
+    <div class="card">
+      <div class="label">In a session</div>
+      <div class="cmd"><span class="p">›</span>/docket:create-task <span class="c">— one-line ask → task with acceptance</span></div>
+      <div class="cmd"><span class="p">›</span>/docket:start T-N <span class="c">— pick it up, mark in_progress</span></div>
+      <div class="label">Install once</div>
+      <div class="cmd"><span class="p">›</span>/plugin marketplace add parzival1l/docket</div>
+      <div class="cmd"><span class="p">›</span>/plugin install docket@docket</div>
+    </div>
+  </section>
+
+  <section class="cta">
+    <h2>Give your agents a queue.</h2>
+    <a class="btn btn-white" href="/docs/#install">Install docket</a>
+    <span class="alt">or in Claude Code: <b>/plugin marketplace add parzival1l/docket</b></span>
+  </section>
+
+  <script is:inline>
+    (function () {
+      var b = document.getElementById("install");
+      if (!b) return;
+      b.addEventListener("click", function () {
+        navigator.clipboard.writeText(b.dataset.cmd).then(function () {
+          b.dataset.copied = "true";
+          setTimeout(function () { delete b.dataset.copied; }, 1500);
+        });
+      });
+    })();
+  </script>
+</Layout>

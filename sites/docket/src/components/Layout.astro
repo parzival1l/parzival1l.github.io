@@ -1,0 +1,62 @@
+---
+import "../styles/site.css";
+
+interface Props {
+  title: string;
+  description: string;
+  path: string;
+}
+const { title, description, path } = Astro.props;
+const nav = [
+  { href: "/#product", label: "Product" },
+  { href: "/#dispatch", label: "Dispatch" },
+  { href: "/docs/", label: "Docs" },
+  { href: "/changelog/", label: "Changelog" },
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={`https://docket.parzival.computer${path}`} />
+    <meta name="theme-color" content="#08090A" />
+    <link rel="icon" href="data:," />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap"
+    />
+  </head>
+  <body>
+    <div class="wrap">
+      <nav class="nav">
+        <div class="nav-left">
+          <a class="mark" href="/">docket</a>
+          <ul>
+            {nav.map((n) => (
+              <li><a href={n.href} aria-current={n.href.startsWith("/#") ? undefined : path.startsWith(n.href) ? "page" : undefined}>{n.label}</a></li>
+            ))}
+          </ul>
+        </div>
+        <ul class="nav-right">
+          <li><a href="https://github.com/parzival1l/docket">GitHub</a></li>
+          <li><a class="btn btn-white" href="/docs/#install">Install</a></li>
+        </ul>
+      </nav>
+
+      <slot />
+
+      <footer class="foot">
+        <span>docket · single static binary · MIT</span>
+        <span><a href="https://parzival.computer">parzival.computer</a> · <a href="https://github.com/parzival1l/docket">github</a></span>
+      </footer>
+    </div>
+  </body>
+</html>
