@@ -43,6 +43,13 @@ active plan and tasks.
   (`ReadingEntry`); the file header documents them too. A missing required
   field throws at build time, so a bad entry fails the deploy instead of
   shipping a broken row.
+- **Interactive posts** use JSX tags from `components/mdx-components.tsx`,
+  which `app/blog/[slug]/page.tsx` passes to `MDXRemote`. Only Client
+  Components hydrate; the rest of the post stays static HTML.
+  `<ModelComparison task="<id>" />` renders
+  `content/comparisons/<id>.yaml` (shape and validation in
+  `lib/comparisons.ts`, file header documents the fields). The table derives
+  each cell by comparing a model's groups against `expected`.
 - **Documentation** lives under `docs/` and follows the agentic-dev structure
   defined in ADR-001. Use CLAUDE.md (not README.md) for folder navigation.
 - **Footer is route-aware** (`components/site-footer.tsx`): the homepage

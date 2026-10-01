@@ -9,6 +9,7 @@ import { MDXRemote } from 'next-mdx-remote/rsc'
 import rehypeSlug from 'rehype-slug'
 import { getAllPosts, getPostBySlug, getPostHeadings } from '@/lib/posts'
 import { PostLayout } from '@/components/post-layout'
+import { mdxComponents } from '@/components/mdx-components'
 
 export function generateStaticParams() {
   // Include drafts so direct URLs still resolve in the static export.
@@ -56,6 +57,7 @@ export default async function PostPage({
     >
       <MDXRemote
         source={post.content}
+        components={mdxComponents}
         options={{ mdxOptions: { rehypePlugins: [rehypeSlug] } }}
       />
     </PostLayout>

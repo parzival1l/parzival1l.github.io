@@ -1,0 +1,168 @@
+# Task 1 of "Same task, different models". Rendered by <ModelComparison
+# task="explain-local-diff" /> in content/posts/same-task-different-models.mdx.
+#
+# PLACEHOLDER DATA: the repo, files, model answers, ranks and verdicts are
+# stand-ins until the real runs are transcribed.
+#
+#   prompt       required  what I asked the agent; quoted in the post
+#   landedLabel  optional  tag text for landed groups (default "already landed")
+#   expected     required  the right answer, as groups of files
+#   criteria     required  what every answer is judged on; the post lists them
+#                          as "label: detail"; `praise` marks the uncommon
+#                          ones and shows on the columns that pass
+#   models     required  one entry per model:
+#     rank      1 is best; the best and worst show by default
+#     verdict   my one-line call
+#     checks    criterion id -> true/false, one per criterion
+#     groups    the model's answer, transcribed as the groups it described
+#
+# Group `status` is `local` or `landed`. The table derives each cell (split,
+# mixed, left out, wrong status, invented files) by comparing a model's
+# groups against `expected`, so only transcribe what the model said.
+# File paths only drive that grading. Readers never see them, so keep
+# names, verdicts and details free of paths, repos, branches and PR numbers.
+# A missing required field fails the build.
+#
+# Quote any value that contains " #" (like a PR number). YAML reads an
+# unquoted " #" as the start of a comment and drops the rest of the line.
+
+prompt: Explain the local diff in this checkout. What am I in the middle of?
+landedLabel: on develop
+
+expected:
+  - name: Webhook retries
+    status: landed
+    files:
+      - src/webhooks/retry.ts
+      - src/webhooks/send.ts
+      - tests/webhooks/retry.test.ts
+  - name: Billing CSV export
+    status: local
+    files:
+      - src/billing/export.ts
+      - src/billing/columns.ts
+      - app/billing/ExportButton.tsx
+  - name: Dependency bump
+    status: local
+    files:
+      - package.json
+      - package-lock.json
+
+criteria:
+  - id: grouped
+    label: Grouped by task
+    detail: Sorted the changes into the 3 tasks they belong to.
+  - id: landed
+    label: Spotted landed work
+    detail: Noticed the webhook retries are already on develop.
+    praise: Told work already on develop apart from local-only changes.
+  - id: grounded
+    label: Nothing invented
+    detail: Described only changes that are really there.
+
+models:
+  - name: GPT-5.6
+    rank: 1
+    verdict: Every change in the right group, and it flagged the retry work as already on develop. Short and specific.
+    checks: { grouped: true, landed: true, grounded: true }
+    groups:
+      - name: Webhook retry backoff
+        status: landed
+        files: [src/webhooks/retry.ts, src/webhooks/send.ts, tests/webhooks/retry.test.ts]
+      - name: CSV export for invoices
+        status: local
+        files: [src/billing/export.ts, src/billing/columns.ts, app/billing/ExportButton.tsx]
+      - name: Dependency updates
+        status: local
+        files: [package.json, package-lock.json]
+
+  - name: Fable
+    rank: 2
+    verdict: The same answer as GPT-5.6, at three times the length.
+    checks: { grouped: true, landed: true, grounded: true }
+    groups:
+      - name: Retry handling for webhooks
+        status: landed
+        files: [src/webhooks/retry.ts, src/webhooks/send.ts, tests/webhooks/retry.test.ts]
+      - name: Billing export feature
+        status: local
+        files: [src/billing/export.ts, src/billing/columns.ts, app/billing/ExportButton.tsx]
+      - name: Package updates
+        status: local
+        files: [package.json, package-lock.json]
+
+  - name: Kimi K3
+    rank: 3
+    verdict: Caught the landed retry work, but split the export work into backend and UI.
+    checks: { grouped: false, landed: true, grounded: true }
+    groups:
+      - name: Webhook retries
+        status: landed
+        files: [src/webhooks/retry.ts, src/webhooks/send.ts, tests/webhooks/retry.test.ts]
+      - name: CSV export backend
+        status: local
+        files: [src/billing/export.ts, src/billing/columns.ts]
+      - name: Export button
+        status: local
+        files: [app/billing/ExportButton.tsx]
+      - name: Dependencies
+        status: local
+        files: [package.json, package-lock.json]
+
+  - name: Sonnet 5.5
+    rank: 4
+    verdict: Clean grouping, but it treated the retry work as new.
+    checks: { grouped: true, landed: false, grounded: true }
+    groups:
+      - name: Webhook retry logic
+        status: local
+        files: [src/webhooks/retry.ts, src/webhooks/send.ts, tests/webhooks/retry.test.ts]
+      - name: CSV export
+        status: local
+        files: [src/billing/export.ts, src/billing/columns.ts, app/billing/ExportButton.tsx]
+      - name: Dependency bump
+        status: local
+        files: [package.json, package-lock.json]
+
+  - name: Grok 4.6
+    rank: 5
+    verdict: Easy to read, but it folded the dependency bump into the export and missed that the retry work had landed.
+    checks: { grouped: false, landed: false, grounded: true }
+    groups:
+      - name: Webhook retries
+        status: local
+        files: [src/webhooks/retry.ts, src/webhooks/send.ts, tests/webhooks/retry.test.ts]
+      - name: Billing export and deps
+        status: local
+        files: [src/billing/export.ts, src/billing/columns.ts, app/billing/ExportButton.tsx, package.json, package-lock.json]
+
+  - name: Opus 5.5
+    rank: 6
+    verdict: Mixed the retry and export work, and described a schema change that isn't there.
+    checks: { grouped: false, landed: false, grounded: false }
+    groups:
+      - name: Webhooks and billing
+        status: local
+        files: [src/webhooks/retry.ts, src/webhooks/send.ts, src/billing/export.ts, src/billing/schema.ts]
+      - name: Export UI and tests
+        status: local
+        files: [app/billing/ExportButton.tsx, src/billing/columns.ts, tests/webhooks/retry.test.ts]
+      - name: Dependency bump
+        status: local
+        files: [package.json, package-lock.json]
+
+  - name: Qwen 3.8-27B
+    rank: 7
+    verdict: One flat list called "new billing features", plus a migration that doesn't exist.
+    checks: { grouped: false, landed: false, grounded: false }
+    groups:
+      - name: New billing features
+        status: local
+        files:
+          - src/webhooks/retry.ts
+          - src/webhooks/send.ts
+          - src/billing/export.ts
+          - src/billing/columns.ts
+          - app/billing/ExportButton.tsx
+          - package.json
+          - migrations/0042_add_export.sql
