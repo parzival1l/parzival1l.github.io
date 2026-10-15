@@ -151,23 +151,6 @@ export default function HomePage() {
 
       <section className="mb-16">
         <h2 className="mb-6 text-xs font-medium uppercase tracking-wider text-neutral-500">
-          Selected works
-        </h2>
-        <ul className="space-y-3">
-          {WORKS.map((w) => (
-            <li key={w.href}>
-              <a href={w.href} className={ROW} target="_blank" rel="noreferrer">
-                <PaperBadge />
-                <span className={ROW_TITLE}>{w.title}</span>
-                <span className={ROW_RAIL}>{w.year}</span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section>
-        <h2 className="mb-6 text-xs font-medium uppercase tracking-wider text-neutral-500">
           Recent posts
         </h2>
         <ul className="space-y-3">
@@ -189,6 +172,23 @@ export default function HomePage() {
             See all posts &rarr;
           </Link>
         </div>
+      </section>
+
+      <section>
+        <h2 className="mb-6 text-xs font-medium uppercase tracking-wider text-neutral-500">
+          Selected works
+        </h2>
+        <ul className="space-y-3">
+          {WORKS.map((w) => (
+            <li key={w.href}>
+              <a href={w.href} className={ROW} target="_blank" rel="noreferrer">
+                <PaperBadge />
+                <span className={ROW_TITLE}>{w.title}</span>
+                <span className={ROW_RAIL}>{w.year}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
       </section>
     </div>
   )
