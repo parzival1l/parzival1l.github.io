@@ -145,7 +145,7 @@ export function BlogFeed({
 
       <div className="min-w-0">
         <div className="mb-10 flex items-center justify-between gap-4">
-          <h1 className="text-2xl font-medium text-neutral-900">Blogs</h1>
+          <h1 className="text-2xl font-medium text-neutral-900">Blog</h1>
           <SearchBadge
             active={searchVisible}
             onToggle={() => setSearchOpen(o => !o)}

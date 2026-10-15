@@ -9,9 +9,8 @@ export interface ProjectData {
   /** GitHub repo slug, e.g. "parzival1l/tidyread". Drives the link and the
       last-commit nudge. */
   repo: string
-  /** Optional product site. When set, the card title links here and the
-      GitHub repo moves to a small secondary link; the last-commit nudge
-      still comes from `repo`. */
+  /** Optional product site. When set, the card title links here instead of
+      the repo. The small `github` link next to the title always shows. */
   url?: string
   /** Short facet chips: language, distribution, whatever earns the space. */
   tags: string[]
@@ -77,14 +76,12 @@ export function ProjectCard({ project }: { project: ProjectData }) {
           >
             {project.name}
           </a>
-          {project.url ? (
-            <a
-              href={`https://github.com/${project.repo}`}
-              className="text-xs text-neutral-500 underline-offset-4 hover:underline"
-            >
-              github
-            </a>
-          ) : null}
+          <a
+            href={`https://github.com/${project.repo}`}
+            className="text-xs text-neutral-500 underline-offset-4 hover:underline"
+          >
+            github
+          </a>
         </span>
         {freshness ? (
           <span
