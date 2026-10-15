@@ -116,14 +116,15 @@ export default function HomePage() {
             <span className="font-medium text-neutral-900">Ampliwork</span>
           </a>,
           where we&rsquo;re building the easiest way for enterprise teams to
-          ship their own agents, no code required. I write here about
-          multi-step agentic systems and context engineering.
+          ship their own agents, no code required. I write here about my
+          explorations in this space and the tools I build to make my
+          workflow better.
         </p>
         <p className="mt-4 text-base leading-relaxed text-neutral-700">
           Previously, I worked as a Machine Learning Engineer at
-          Femtherapeutics, then finished my master&rsquo;s at Concordia
-          University, where my thesis on structured information extraction
-          from LLMs became the PANER paper below.
+          Femtherapeutics, while finishing my master&rsquo;s at Concordia
+          University, where my thesis was on structured information
+          extraction from LLMs (became the PANER paper below).
         </p>
         <p className="mt-4 text-base leading-relaxed text-neutral-700">
           You can reach me at{' '}
