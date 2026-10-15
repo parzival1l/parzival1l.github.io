@@ -2,7 +2,7 @@ import { getAllPosts } from '@/lib/posts'
 import { BlogFeed, type BlogFeedPost } from '@/components/blog-feed'
 
 export const metadata = {
-  title: 'Blogs',
+  title: 'Blog',
 }
 
 /** A post's filterable tag set: categories first (they're the display chip),
