@@ -66,9 +66,9 @@ export function OasisScene() {
             right-drag · pan
             <br />
             space · {paused ? 'play' : 'pause'}
+            <br />f · focus car
             {mode === 'free' && (
               <>
-                <br />f · focus car
                 <br />c · cinematic
               </>
             )}

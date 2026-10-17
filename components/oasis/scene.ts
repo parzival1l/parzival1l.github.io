@@ -312,7 +312,45 @@ export function startOasis(
     if (next === 'cinematic') blend = 0
     onModeChange?.(next)
   }
-  controls.addEventListener('start', () => setMode('free'))
+  controls.addEventListener('start', () => {
+    focus = null
+    setMode('free')
+  })
+
+  // F glides the camera to a close view of the car, from whichever side the
+  // camera is on. Offsets are kept relative to the car, so the glide tracks
+  // it in flight.
+  const FOCUS_DISTANCE = 9
+  const FOCUS_TIME = 0.7
+  const FOCUS_TARGET = new THREE.Vector3(0, 0.5, 0)
+  let focus: { t: number; cam: THREE.Vector3; target: THREE.Vector3; endCam: THREE.Vector3 } | null = null
+  const startFocus = () => {
+    setMode('free')
+    // Drop any orbit, pan or zoom still easing out; it would carry the focus
+    // back off the car after the glide.
+    const inner = controls as unknown as {
+      _sphericalDelta: THREE.Spherical
+      _panOffset: THREE.Vector3
+      _scale: number
+      _performCursorZoom: boolean
+    }
+    inner._sphericalDelta.set(0, 0, 0)
+    inner._panOffset.set(0, 0, 0)
+    inner._scale = 1
+    inner._performCursorZoom = false
+    const cam = camera.position.clone().sub(car.position)
+    const dir = cam.clone().normalize()
+    if (!Number.isFinite(dir.x)) dir.set(0.5, 0.3, -1).normalize()
+    // Never end up looking straight down or from under the car.
+    dir.y = THREE.MathUtils.clamp(dir.y, 0.1, 0.6)
+    dir.normalize()
+    focus = {
+      t: 0,
+      cam,
+      target: controls.target.clone().sub(car.position),
+      endCam: dir.multiplyScalar(FOCUS_DISTANCE).add(FOCUS_TARGET),
+    }
+  }
 
   // OrbitControls only zooms as deep as its focus point, which sits by the
   // car. Before each scroll, push that point out (straight ahead, so the
@@ -344,11 +382,8 @@ export function startOasis(
       onPauseChange?.(paused)
     } else if (e.key.toLowerCase() === 'c') {
       setMode('cinematic')
-    } else if (e.key.toLowerCase() === 'f' && mode === 'free') {
-      // Bring the focus back to the car, keeping the camera's distance.
-      const shift = lookAt.set(car.position.x, car.position.y + 0.5, car.position.z).sub(controls.target)
-      controls.target.add(shift)
-      camera.position.add(shift)
+    } else if (e.key.toLowerCase() === 'f') {
+      startFocus()
     }
   }
   window.addEventListener('keydown', onKeyDown)
@@ -457,6 +492,13 @@ export function startOasis(
       // The focus point rides along too, rather than snapping back to the
       // car, so zooming and panning keep wherever the reader took them.
       controls.target.add(desired)
+      if (focus) {
+        focus.t = Math.min(focus.t + frameDt / FOCUS_TIME, 1)
+        const k = focus.t * focus.t * (3 - 2 * focus.t)
+        camera.position.copy(car.position).add(desired.lerpVectors(focus.cam, focus.endCam, k))
+        controls.target.copy(car.position).add(desired.lerpVectors(focus.target, FOCUS_TARGET, k))
+        if (focus.t === 1) focus = null
+      }
       controls.update()
       if (camera.position.y < 0.15) camera.position.y = 0.15
     }
