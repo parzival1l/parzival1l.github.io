@@ -80,7 +80,7 @@ export function OasisScene() {
             <br />
             space · {paused ? 'play' : 'pause'}
             <br />f · focus car
-            <br />m · sound {soundOn ? 'off' : 'on'}
+            <br />m · {soundOn ? 'mute' : 'sound on'}
             {mode === 'free' && (
               <>
                 <br />c · cinematic
@@ -108,7 +108,7 @@ export function OasisScene() {
             onClick={() => toggleSoundRef.current?.()}
             className="uppercase tracking-[0.2em] transition-colors hover:text-white"
           >
-            {soundOn ? 'sound on' : 'sound off'}
+            {soundOn ? '🔊 mute sound' : '🔇 turn sound on'}
           </button>
           <button
             type="button"
