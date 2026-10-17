@@ -23,7 +23,9 @@ import {
   buildFireworks,
   buildScoreboard,
   buildSparkles,
+  buildExitPad,
   buildStartGate,
+  EXIT_RADIUS,
   hangRing,
 } from './sky-props'
 import { createSound } from './sound'
@@ -39,6 +41,8 @@ type Options = {
   // The reader took the wheel (true) or pressed R to restart (false).
   onDriveChange?: (driving: boolean) => void
   onRings?: (passed: number, total: number) => void
+  // The reader drove onto the exit pad.
+  onExit?: () => void
   // Seconds into the loop to start at; handy for checking one phase.
   startAt?: number
 }
@@ -63,6 +67,9 @@ const CITY_AT = 21 + EXTRA / 2
 // The starting gate, in metres down the road from where each lap starts.
 // The car passes under it about 1.6 seconds in.
 const GATE_AT = 45
+// The exit pad, on the grass to the car's right just past the gate.
+const EXIT_X = -24
+const EXIT_AT = 95
 
 const smooth = (a: number, b: number, t: number) => {
   const x = Math.min(Math.max((t - a) / (b - a), 0), 1)
@@ -209,7 +216,7 @@ function buildThrusterMaterial() {
 
 export function startOasis(
   canvas: HTMLCanvasElement,
-  { onReady, onError, onModeChange, onPauseChange, onSoundChange, onDriveChange, onRings, startAt = 0 }: Options,
+  { onReady, onError, onModeChange, onPauseChange, onSoundChange, onDriveChange, onRings, onExit, startAt = 0 }: Options,
 ) {
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   let disposed = false
@@ -284,6 +291,9 @@ export function startOasis(
   // Each lap starts under a gate, with fireworks going off over it.
   const startGate = buildStartGate()
   scene.add(startGate.gate)
+  const exitPad = buildExitPad()
+  scene.add(exitPad.pad)
+  let exited = false
   const fireworks = buildFireworks()
   scene.add(fireworks.points)
   fireworks.material.uniforms.uPixel.value = renderer.getPixelRatio()
@@ -893,6 +903,19 @@ export function startOasis(
     // starts; a volley of shells bursts over it for the first seconds.
     const lapStart = elapsed - t
     startGate.gate.position.set(0, 0, gateZ)
+    exitPad.pad.position.set(EXIT_X, 0, lapZ + EXIT_AT)
+    exitPad.update(clock, camera)
+    if (
+      drive.on &&
+      !exited &&
+      car.position.y < 3 &&
+      Math.hypot(car.position.x - EXIT_X, car.position.z - (lapZ + EXIT_AT)) < EXIT_RADIUS
+    ) {
+      exited = true
+      drive.v = 0
+      sound.gate()
+      onExit?.()
+    }
     startGate.update(clock, t, GATE_TIME)
     // Fireworks: an opening volley the moment the lap starts, a second as
     // the car passes under the gate, and quick single shells between.

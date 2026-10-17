@@ -460,3 +460,83 @@ export function buildStartGate() {
     },
   }
 }
+
+// --- Exit pad --------------------------------------------------------------
+
+export const EXIT_RADIUS = 5
+
+function drawExitSign() {
+  const c = document.createElement('canvas')
+  c.width = 1024
+  c.height = 256
+  const g = c.getContext('2d')!
+  g.fillStyle = 'rgba(8, 10, 14, 0.85)'
+  g.fillRect(0, 0, c.width, c.height)
+  g.strokeStyle = '#ff5c7a'
+  g.lineWidth = 10
+  g.strokeRect(10, 10, c.width - 20, c.height - 20)
+  g.fillStyle = '#ffd6de'
+  g.textAlign = 'center'
+  g.textBaseline = 'middle'
+  g.font = 'bold 96px monospace'
+  g.fillText('EXIT · HOME', c.width / 2, 100)
+  g.font = '44px monospace'
+  g.fillStyle = '#ff8fa3'
+  g.fillText('drive onto the pad', c.width / 2, 190)
+  const t = new THREE.CanvasTexture(c)
+  t.colorSpace = THREE.SRGBColorSpace
+  return t
+}
+
+// A glowing pad on the ground with a column of light over it and a sign.
+// Driving onto it leaves the OASIS.
+export function buildExitPad() {
+  const pad = new THREE.Group()
+  const glow = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xff5c7a), toneMapped: false })
+  const ring = new THREE.Mesh(new THREE.RingGeometry(EXIT_RADIUS - 0.5, EXIT_RADIUS, 64), glow)
+  ring.rotation.x = -Math.PI / 2
+  ring.position.y = 0.03
+  const inner = new THREE.Mesh(
+    new THREE.CircleGeometry(EXIT_RADIUS - 0.5, 64),
+    new THREE.MeshBasicMaterial({ color: 0xff5c7a, transparent: true, opacity: 0.18, depthWrite: false }),
+  )
+  inner.rotation.x = -Math.PI / 2
+  inner.position.y = 0.02
+  const beam = new THREE.Mesh(
+    new THREE.CylinderGeometry(EXIT_RADIUS - 0.5, EXIT_RADIUS - 0.5, 30, 48, 1, true),
+    new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+      uniforms: { uTime: { value: 0 } },
+      vertexShader: /* glsl */ `
+        varying vec2 vUv;
+        void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+      fragmentShader: /* glsl */ `
+        uniform float uTime;
+        varying vec2 vUv;
+        void main() {
+          float fade = pow(1.0 - vUv.y, 2.5);
+          float bands = 0.75 + 0.25 * sin(vUv.y * 40.0 - uTime * 4.0);
+          gl_FragColor = vec4(vec3(1.0, 0.36, 0.48) * fade * bands * 0.5, 1.0);
+        }`,
+    }),
+  )
+  beam.position.y = 15
+  const sign = new THREE.Mesh(
+    new THREE.PlaneGeometry(8, 2),
+    new THREE.MeshBasicMaterial({ map: drawExitSign(), toneMapped: false, side: THREE.DoubleSide }),
+  )
+  sign.position.set(0, 7, 0)
+  pad.add(ring, inner, beam, sign)
+  return {
+    pad,
+    update(time: number, camera: THREE.Camera) {
+      ;(beam.material as THREE.ShaderMaterial).uniforms.uTime.value = time
+      glow.color.setRGB(1, 0.36, 0.48).multiplyScalar(1.6 + Math.sin(time * 4) * 0.5)
+      // The sign turns to face the camera, upright.
+      sign.rotation.y = Math.atan2(camera.position.x - pad.position.x, camera.position.z - pad.position.z)
+    },
+  }
+}

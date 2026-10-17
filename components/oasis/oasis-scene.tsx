@@ -19,6 +19,7 @@ export function OasisScene() {
   const [musicOpen, setMusicOpen] = useState(false)
   const [soundOn, setSoundOn] = useState(false)
   const [driving, setDriving] = useState(false)
+  const [exiting, setExiting] = useState(false)
   const [rings, setRings] = useState({ passed: 0, total: 5 })
   // A message across the top of the screen for each ring flown through.
   const [toast, setToast] = useState<{ text: string; id: number } | null>(null)
@@ -42,6 +43,7 @@ export function OasisScene() {
           onPauseChange: setPaused,
           onSoundChange: setSoundOn,
           onDriveChange: setDriving,
+          onExit: () => setExiting(true),
           onRings: (passed, total) => {
             setRings({ passed, total })
             if (passed === 0) return setToast(null)
@@ -68,6 +70,13 @@ export function OasisScene() {
       document.body.style.overflow = overflow
     }
   }, [])
+
+  // Fade to black, then go home.
+  useEffect(() => {
+    if (!exiting) return
+    const timer = setTimeout(() => router.push('/'), 900)
+    return () => clearTimeout(timer)
+  }, [exiting, router])
 
   useEffect(() => {
     if (!toast) return
@@ -104,6 +113,8 @@ export function OasisScene() {
               </>
             )}
             <br />r · restart
+            <br />
+            red pad · exit home
             <br />
             drag · orbit
             <br />
@@ -174,6 +185,11 @@ export function OasisScene() {
           </button>
         </div>
       )}
+      <div
+        className={`pointer-events-none absolute inset-0 flex items-center justify-center bg-black text-[15px] tracking-[0.3em] text-[#ffd6de] transition-opacity duration-700 ${exiting ? 'opacity-100' : 'opacity-0'}`}
+      >
+        {exiting && 'Logging out of the OASIS'}
+      </div>
       {status !== 'ready' && (
         <div className="absolute inset-0 flex items-center justify-center text-white/80">
           {status === 'loading' ? 'Entering the OASIS…' : 'The OASIS is offline.'}
