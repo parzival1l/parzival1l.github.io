@@ -10,6 +10,7 @@ import {
   CITY_EXTENT_X,
   CITY_HALF_LENGTH,
   aimSunLight,
+  streetTreeSpots,
   buildAtmosphere,
   buildGround,
   buildCity,
@@ -346,6 +347,69 @@ export function startOasis(
     },
   )
 
+  // Street trees: "Tree" by Quaternius (CC0), slimmed to about 1,100
+  // triangles. They are instanced in square chunks of the city, so whole
+  // chunks drop out when they're off screen or far from the camera.
+  const TREE_CHUNK = 300
+  const TREE_RANGE = 900
+  const treeSpots = streetTreeSpots()
+  const treeChunks: { group: THREE.Group; centre: THREE.Vector3 }[] = []
+  loader.load('/oasis/tree.glb', (gltf) => {
+    if (disposed) return
+    const parts: THREE.Mesh[] = []
+    gltf.scene.updateMatrixWorld(true)
+    gltf.scene.traverse((o) => {
+      if (!(o instanceof THREE.Mesh)) return
+      const m = o.material as THREE.MeshStandardMaterial
+      m.metalness = 0
+      m.roughness = 0.9
+      // Cut-out leaves instead of blended ones: they sort correctly and
+      // cast proper shadows when instanced.
+      if (m.transparent) {
+        m.transparent = false
+        m.alphaTest = 0.5
+        m.side = THREE.DoubleSide
+      }
+      o.geometry.applyMatrix4(o.matrixWorld)
+      parts.push(o)
+    })
+    const rand = (i: number) => {
+      const x = Math.sin(i * 12.9898) * 43758.5453
+      return x - Math.floor(x)
+    }
+    const byChunk = new Map<string, number[]>()
+    for (let i = 0; i < treeSpots.length; i += 2) {
+      const key = `${Math.floor(treeSpots[i] / TREE_CHUNK)},${Math.floor(treeSpots[i + 1] / TREE_CHUNK)}`
+      if (!byChunk.has(key)) byChunk.set(key, [])
+      byChunk.get(key)!.push(i)
+    }
+    const m = new THREE.Matrix4()
+    const q = new THREE.Quaternion()
+    const pos = new THREE.Vector3()
+    const size = new THREE.Vector3()
+    const up = new THREE.Vector3(0, 1, 0)
+    for (const spots of byChunk.values()) {
+      const group = new THREE.Group()
+      const centre = new THREE.Vector3()
+      for (const part of parts) {
+        const mesh = new THREE.InstancedMesh(part.geometry, part.material, spots.length)
+        spots.forEach((i, k) => {
+          const scale = 1 + rand(i) * 0.35
+          pos.set(treeSpots[i], 0, treeSpots[i + 1])
+          q.setFromAxisAngle(up, rand(i + 1) * Math.PI * 2)
+          mesh.setMatrixAt(k, m.compose(pos, q, size.setScalar(scale)))
+        })
+        mesh.castShadow = true
+        mesh.computeBoundingSphere()
+        group.add(mesh)
+      }
+      for (const i of spots) centre.x += treeSpots[i] / spots.length
+      for (const i of spots) centre.z += treeSpots[i + 1] / spots.length
+      city.add(group)
+      treeChunks.push({ group, centre })
+    }
+  })
+
   const composer = new EffectComposer(renderer)
   composer.addPass(new RenderPass(scene, camera))
   composer.addPass(new UnrealBloomPass(new THREE.Vector2(1, 1), 0.1, 0.2, 0.98))
@@ -659,6 +723,14 @@ export function startOasis(
       }
     }
     for (const l of lots) solid(l.x0, l.x1, l.z0 + cityZ, l.z1 + cityZ, l.h)
+    // Tree trunks block the car on the ground; it flies over the crowns.
+    if (y < 6) {
+      for (let i = 0; i < treeSpots.length; i += 2) {
+        const tx = treeSpots[i]
+        const tz = treeSpots[i + 1] + cityZ
+        if (Math.abs(tx - x) < 3 && Math.abs(tz - z) < 3) solid(tx - 0.4, tx + 0.4, tz - 0.4, tz + 0.4, 1e9)
+      }
+    }
     for (const side of [-1, 1]) solid(side * 11 - 0.9, side * 11 + 0.9, gateZ - 0.9, gateZ + 0.9, 11.5)
     // The edge of the map: the city's width, from just behind the start
     // line to just past the far end of the city.
@@ -806,6 +878,11 @@ export function startOasis(
       b.ring.update(clock, liveDt)
     }
     sparkles.material.uniforms.uTime.value = clock
+    for (const c of treeChunks) {
+      const dx = c.centre.x - camera.position.x
+      const dz = c.centre.z + cityZ - camera.position.z
+      c.group.visible = dx * dx + dz * dz < TREE_RANGE * TREE_RANGE
+    }
     carSparkles.material.uniforms.uTime.value = clock
 
     scoreboard.position.set(0, 330, (drive.on ? cityZ : car.position.z + 950))

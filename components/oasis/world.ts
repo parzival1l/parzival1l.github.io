@@ -24,6 +24,7 @@ const VERGE = ROAD_EDGE + 1.5 // gravel strip before the grass
 const BLOCK_X = 90 // block width across the road
 const BLOCK_Z = 70 // block length along the road
 const STREET = 22
+const SIDEWALK = 4 // each side of a street; the rest is roadway
 const COLUMNS = 7 // blocks on each side of the avenue
 const ROWS = 13
 const AVENUE_HALF = 22 // from the centre line to the first row of buildings
@@ -151,6 +152,43 @@ export function buildGround() {
         }
         bool inCity(vec3 p, vec2 z) {
           return abs(p.x) < ${CITY_HALF_WIDTH.toFixed(1)} && p.z > z.x && p.z < z.y;
+        }
+        // The streets between the blocks: two-lane asphalt with a double
+        // yellow line, crosswalks at each intersection, curbs and paved
+        // sidewalks. The grid repeats every tile, starting where
+        // the city begins.
+        vec3 cityGround(vec3 p, float start, float fine, vec3 asphalt) {
+          const float halfStreet = ${(STREET / 2).toFixed(2)};
+          const float roadway = ${(STREET / 2 - SIDEWALK).toFixed(2)};
+          float xr = abs(p.x) - ${AVENUE_HALF.toFixed(2)};
+          float zl = mod(p.z - start, ${(TILE_HALF_LENGTH * 2).toFixed(2)});
+          // Distance from the centre line of the nearest cross street, and of
+          // the nearest street running along the avenue.
+          float dz = abs(mod(zl + ${((BLOCK_Z + STREET) / 2).toFixed(2)}, ${(BLOCK_Z + STREET).toFixed(2)}) - ${((BLOCK_Z + STREET) / 2).toFixed(2)});
+          float dx = xr > 0.0
+            ? abs(mod(xr - ${(BLOCK_X + STREET / 2).toFixed(2)} + ${((BLOCK_X + STREET) / 2).toFixed(2)}, ${(BLOCK_X + STREET).toFixed(2)}) - ${((BLOCK_X + STREET) / 2).toFixed(2)})
+            : 1e3;
+          vec3 sidewalk = vec3(0.5, 0.49, 0.46) * (0.88 + 0.18 * fine);
+          float joints = max(band(fract(p.x / 1.5), 0.5, 0.02), band(fract(p.z / 1.5), 0.5, 0.02));
+          sidewalk *= 1.0 - 0.12 * joints;
+          float s = min(dz, dx);
+          // The avenue's wide sidewalks, crossed only by the cross streets.
+          if (xr <= 0.0) return dz < roadway ? asphalt : sidewalk;
+          // Inside a block, between and behind the buildings.
+          if (s >= halfStreet) return vec3(0.36, 0.35, 0.33) * (0.85 + 0.2 * fine);
+          if (s >= roadway) return s < roadway + 0.3 ? vec3(0.62, 0.6, 0.56) : sidewalk;
+          vec3 col = asphalt;
+          if (dz >= halfStreet || dx >= halfStreet) {
+            // Not an intersection: centre line, and a crosswalk where the
+            // street meets the next one.
+            float along = dx < dz ? dz : dx;
+            col = mix(col, vec3(0.88, 0.72, 0.22), band(s, 0.2, 0.07));
+            if (along < halfStreet + 3.0) {
+              float q = dx < dz ? p.x : p.z;
+              col = mix(asphalt, vec3(0.86, 0.84, 0.78), step(0.5, fract(q / 1.2)));
+            }
+          }
+          return col;
         }`,
       )
       .replace(
@@ -173,8 +211,8 @@ export function buildGround() {
           vec3 grass = mix(vec3(0.17, 0.22, 0.09), vec3(0.3, 0.3, 0.14), broad) * (0.85 + 0.25 * fine);
 
           vec3 col = x < ${ROAD_EDGE.toFixed(2)} ? road : (x < ${VERGE.toFixed(2)} ? gravel : grass);
-          if (x > ${ROAD_EDGE.toFixed(2)} && (inCity(p, uCityZ.xy) || inCity(p, uCityZ.zw))) {
-            col = vec3(0.36, 0.35, 0.33) * (0.85 + 0.2 * fine);
+          if (x > ${ROAD_EDGE.toFixed(2)} && inCity(p, uCityZ.xy)) {
+            col = cityGround(p, uCityZ.x, fine, asphalt);
           }
           diffuseColor.rgb = col;
         }`,
@@ -424,3 +462,48 @@ export function buildCity() {
 
 export const CITY_EXTENT_X = CITY_HALF_WIDTH
 
+// Where the street trees stand, as x, z pairs in the city's coordinates:
+// on the sidewalks of every street, two metres in from the curb, and along
+// the avenue. None stand in an intersection.
+const TREE_SPACING = 18
+export function streetTreeSpots() {
+  const spots: number[] = []
+  const pitchX = BLOCK_X + STREET
+  const pitchZ = BLOCK_Z + STREET
+  const inset = STREET / 2 - 2
+  // Trees along a stretch of sidewalk, from a to b, kept clear of its ends.
+  const row = (a: number, b: number, place: (t: number) => void) => {
+    const n = Math.max(1, Math.round((b - a - 8) / TREE_SPACING) + 1)
+    for (let i = 0; i < n; i++) place(n === 1 ? (a + b) / 2 : a + 4 + ((b - a - 8) * i) / (n - 1))
+  }
+  for (const tile of [-1, 1]) {
+    const o = tile * TILE_HALF_LENGTH
+    for (const side of [-1, 1]) {
+      for (let r = 0; r < ROWS; r++) {
+        const z0 = o + (r - (ROWS - 1) / 2) * pitchZ - BLOCK_Z / 2
+        // Streets running along the avenue, and the avenue itself.
+        for (let k = 0; k < COLUMNS; k++) {
+          const cx = AVENUE_HALF + BLOCK_X + STREET / 2 + k * pitchX
+          for (const x of [cx - inset, cx + inset]) {
+            if (x > CITY_HALF_WIDTH - 1) continue
+            row(z0, z0 + BLOCK_Z, (z) => spots.push(side * x, z))
+          }
+        }
+        row(z0, z0 + BLOCK_Z, (z) => spots.push(side * (AVENUE_HALF - 8), z))
+      }
+      // Cross streets. Where the tiles meet, only the first tile plants.
+      for (let k = 0; k <= ROWS; k++) {
+        if (tile < 0 && k === ROWS) continue
+        const cz = o - TILE_HALF_LENGTH + k * pitchZ
+        for (const z of [cz - inset, cz + inset]) {
+          if (Math.abs(z) > CITY_HALF_LENGTH - 1) continue
+          for (let c = 0; c < COLUMNS; c++) {
+            const x0 = AVENUE_HALF + c * pitchX
+            row(x0, x0 + BLOCK_X, (x) => spots.push(side * x, z))
+          }
+        }
+      }
+    }
+  }
+  return spots
+}
