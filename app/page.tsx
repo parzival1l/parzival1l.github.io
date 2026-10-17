@@ -50,6 +50,46 @@ function AmpliMark() {
   )
 }
 
+/** Halliday's key, as a small line icon. */
+function KeyIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true" fill="none">
+      <circle cx="7.5" cy="12" r="4" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="7.5" cy="12" r="1.3" fill="currentColor" />
+      <path
+        d="M11.5 12H21M17 12v3M20 12v2.5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+/** The way into the hidden /oasis/ page. Dark in both themes, so it reads
+ *  as a door into somewhere else rather than another link. */
+function OasisLink() {
+  return (
+    <Link
+      href="/oasis/"
+      className="group mt-6 inline-flex rounded-full bg-gradient-to-r from-[#ffc34d] via-[#ff6b3d] to-[#7fd8ff] p-px shadow-[0_0_0_0_rgba(255,195,77,0)] transition-shadow duration-300 hover:shadow-[0_0_24px_2px_rgba(255,140,80,0.35)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+    >
+      <span className="inline-flex items-center gap-2.5 rounded-full bg-[#0d0f12] px-4 py-2 font-mono text-xs uppercase tracking-[0.2em] text-[#ffe9a8]">
+        <span className="text-[#ffc34d]">
+          <KeyIcon />
+        </span>
+        Go to the OASIS
+        <span
+          aria-hidden="true"
+          className="transition-transform duration-200 motion-safe:group-hover:translate-x-0.5"
+        >
+          &rarr;
+        </span>
+      </span>
+    </Link>
+  )
+}
+
 const BIO_LINK =
   'underline decoration-neutral-300 underline-offset-4 hover:decoration-neutral-900'
 
@@ -147,6 +187,7 @@ export default function HomePage() {
           </a>
           .
         </p>
+        <OasisLink />
       </section>
 
       <section className="mb-16">
