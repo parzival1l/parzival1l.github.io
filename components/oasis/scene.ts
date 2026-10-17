@@ -42,8 +42,8 @@ const WHEEL_DROP = 0.06
 // The city sits under the middle of the cruise.
 const CITY_AT = 21
 // The starting gate, in metres down the road from where each lap starts.
-// The car passes under it about three seconds in.
-const GATE_AT = 85
+// The car passes under it about 1.6 seconds in.
+const GATE_AT = 45
 
 const smooth = (a: number, b: number, t: number) => {
   const x = Math.min(Math.max((t - a) / (b - a), 0), 1)
@@ -83,6 +83,8 @@ const DISTANCE = (() => {
   return table
 })()
 const LOOP_DISTANCE = DISTANCE[DISTANCE.length - 1]
+// When, in seconds into the lap, the car passes under the starting gate.
+const GATE_TIME = DISTANCE.findIndex((d) => d >= GATE_AT) * TABLE_STEP
 
 function distanceAt(elapsed: number) {
   const lap = Math.floor(elapsed / LOOP)
@@ -99,10 +101,10 @@ function distanceAt(elapsed: number) {
 type ShotKey = { t: number; az: number; h: number; d: number; look: [number, number] }
 const PI = Math.PI
 const SHOTS: ShotKey[] = [
-  { t: 0, az: PI, h: 2.6, d: 10, look: [4, 45] }, // behind, the starting gate ahead
-  { t: 2.2, az: PI + 0.12, h: 1.3, d: 6, look: [2.5, 22] }, // under the gate
-  { t: 3.4, az: PI + 0.25, h: 0.1, d: 2.6, look: [0.7, -1.8] }, // the PARZIVAL plate
-  { t: 4.6, az: PI + 0.5, h: 1.0, d: 5.5, look: [0.6, 0] }, // a turn around the car
+  { t: 0, az: PI, h: 2.4, d: 8, look: [4, 30] }, // behind, the starting gate ahead
+  { t: 1.3, az: PI + 0.15, h: 1.1, d: 5, look: [2, 14] }, // under the gate
+  { t: 2.3, az: PI + 0.25, h: 0.1, d: 2.6, look: [0.7, -1.8] }, // the PARZIVAL plate
+  { t: 3.6, az: PI + 0.5, h: 1.0, d: 5.5, look: [0.6, 0] }, // a turn around the car
   { t: 6.5, az: 2 * PI + 0.5, h: 0.5, d: 5.2, look: [0.5, 0] }, // side-on as the wheels fold
   { t: 9, az: 3 * PI + 0.5, h: 0.2, d: 6, look: [0.5, 0] },
   { t: 11.5, az: 3 * PI + 0.9, h: -3, d: 9, look: [0.4, 1] }, // from below as it climbs
@@ -236,7 +238,8 @@ export function startOasis(
   scene.add(fireworks.points)
   fireworks.material.uniforms.uPixel.value = renderer.getPixelRatio()
   const burstAt = new THREE.Vector3()
-  let nextBurst = 0
+  let nextBurst = -1
+  let passVolley = false
 
   const car = new THREE.Group()
   scene.add(car)
@@ -468,15 +471,29 @@ export function startOasis(
     const lapStart = elapsed - t
     const gateZ = Math.floor(elapsed / LOOP) * LOOP_DISTANCE + GATE_AT
     startGate.gate.position.set(0, 0, gateZ)
-    startGate.update(elapsed)
-    if (t < 6 && elapsed >= nextBurst) {
-      if (nextBurst < lapStart) nextBurst = lapStart
-      const k = Math.round((nextBurst - lapStart) / 0.32)
-      const side = k % 2 === 0 ? -1 : 1
-      burstAt.set(side * (10 + ((k * 37) % 40)), 32 + ((k * 53) % 40), gateZ + 15 + ((k * 71) % 60))
-      fireworks.launch(burstAt, elapsed)
-      nextBurst += 0.32
-    } else if (t >= 6) nextBurst = lapStart + LOOP
+    startGate.update(elapsed, t, GATE_TIME)
+    // Fireworks: an opening volley the moment the lap starts, a second as
+    // the car passes under the gate, and quick single shells between.
+    const volley = (k0: number, n: number) => {
+      for (let i = 0; i < n; i++) {
+        const k = k0 + i
+        const side = k % 2 === 0 ? -1 : 1
+        burstAt.set(side * (8 + ((k * 37) % 30)), 26 + ((k * 53) % 30), gateZ + 10 + ((k * 71) % 45))
+        fireworks.launch(burstAt, elapsed)
+      }
+    }
+    if (t < 4 && elapsed >= nextBurst) {
+      if (nextBurst < lapStart) {
+        nextBurst = lapStart
+        volley(0, 4)
+        passVolley = false
+      } else volley(Math.round((nextBurst - lapStart) / 0.22) + 4, 1)
+      nextBurst += 0.22
+    } else if (t >= 4) nextBurst = lapStart + LOOP
+    if (!passVolley && t >= GATE_TIME) {
+      volley(40, 4)
+      passVolley = true
+    }
     fireworks.material.uniforms.uTime.value = elapsed
     ground.cityZ.set(cityZ - CITY_HALF_LENGTH, cityZ + CITY_HALF_LENGTH, 1e9, 1e9)
 

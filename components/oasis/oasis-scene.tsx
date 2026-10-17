@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import type { CameraMode } from './scene'
@@ -84,12 +83,6 @@ export function OasisScene() {
           </div>
         </div>
       )}
-      <Link
-        href="/"
-        className="absolute bottom-5 left-5 transition-colors hover:text-white"
-      >
-        esc · log out
-      </Link>
       {status === 'ready' && (
         <div className="absolute bottom-5 right-5 flex flex-col items-end gap-3">
           {musicLoaded && (

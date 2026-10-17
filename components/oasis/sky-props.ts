@@ -134,7 +134,7 @@ export function buildBlimp() {
 
 // --- Fireworks -------------------------------------------------------------
 
-const BURSTS = 10
+const BURSTS = 24
 const SPARKS = 160
 const BURST_LIFE = 2.6
 const PALETTE = [0xffc34d, 0xff6b3d, 0xfff1c9, 0x7fd8ff, 0xff4d6d]
@@ -303,6 +303,8 @@ export function buildStartGate() {
   }
 
   // The sign, readable from both sides.
+  // Not tone mapped, so pushing its colour above 1 makes it flare through
+  // the bloom.
   const signMat = new THREE.MeshBasicMaterial({ map: drawGateSign(), toneMapped: false })
   for (const face of [-1, 1]) {
     const sign = new THREE.Mesh(new THREE.PlaneGeometry(GATE_SPAN - 3, (GATE_SPAN - 3) / 8), signMat)
@@ -339,13 +341,23 @@ export function buildStartGate() {
 
   const on = new THREE.Color(0xffd27a).multiplyScalar(2.2)
   const off = new THREE.Color(0x3a2a10)
+  const flash = new THREE.Color()
   return {
     gate,
-    // Lights chase across the gate in groups of three.
-    update(time: number) {
-      const step = Math.floor(time * 8)
+    // `lapTime` is seconds into the lap, `passTime` when the car goes under.
+    // The sign snaps on at the start of the lap, the lights chase fast, and
+    // everything flares as the car passes beneath.
+    update(time: number, lapTime: number, passTime: number) {
+      const snapOn = Math.min(lapTime / 0.12, 1)
+      const since = lapTime - passTime
+      const flare = since >= 0 ? Math.exp(-since * 5) : 0
+      // A short double blink before the car arrives.
+      const blink = lapTime > passTime - 0.5 && lapTime < passTime && Math.floor(lapTime * 12) % 2 === 0 ? 0.6 : 0
+      signMat.color.setScalar(snapOn * (1 + 2.2 * flare + blink))
+      const step = Math.floor(time * 16)
+      flash.copy(on).multiplyScalar(1 + 1.5 * flare)
       for (let i = 0; i < BULBS; i++) {
-        const c = (i + step) % 3 === 0 ? on : off
+        const c = flare > 0.2 || (i + step) % 3 === 0 ? flash : off
         bulbs.setColorAt(i, c)
         bulbs.setColorAt(i + BULBS, c)
       }
