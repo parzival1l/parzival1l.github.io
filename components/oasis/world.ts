@@ -312,20 +312,193 @@ function building(
     }
     box(parts, sw * 0.4, 4, sd * 0.4, x, top, z, ROOF, 2)
     lots.push({ x0: x - w / 2, x1: x + w / 2, z0: z - d / 2, z1: z + d / 2, h: top })
+    return { tower, h }
   } else {
     // A stone cornice along the roofline, and plant on the roof.
     // (Its top sits just above the roof, so the two don't flicker.)
     box(parts, w + 0.8, 0.9, d + 0.8, x, h - 0.8, z, STONE, 2)
     if (rand() < 0.6) box(parts, w * 0.25, 2.5, d * 0.25, x + (rand() - 0.5) * w * 0.4, h, z, ROOF, 2)
     lots.push({ x0: x - w / 2 - 0.4, x1: x + w / 2 + 0.4, z0: z - d / 2 - 0.4, z1: z + d / 2 + 0.4, h: h + 0.1 })
+    return { tower, h }
   }
+}
+
+// --- Company signs ---------------------------------------------------------
+
+// Firms from Ready Player One's world, the author's own, and invented ones.
+const COMPANIES: { name: string; bg: string; fg: string; accent: string }[] = [
+  { name: 'IOI', bg: '#0b1a33', fg: '#ffffff', accent: '#3d8bff' },
+  { name: 'GREGARIOUS GAMES', bg: '#2a0d3a', fg: '#ffd6f5', accent: '#ff5cc8' },
+  { name: 'AMPLIWORK', bg: '#101418', fg: '#f4f4f4', accent: '#7fd8ff' },
+  { name: 'DISTRACTED GLOBE', bg: '#1a0f2e', fg: '#c9b6ff', accent: '#8f6bff' },
+  { name: "AECH'S GARAGE", bg: '#2b1608', fg: '#ffcf8a', accent: '#ff8a1f' },
+  { name: 'HALLIDAY & MORROW', bg: '#14231a', fg: '#e8f5d0', accent: '#b6e36b' },
+  { name: 'COPPER KEY COFFEE', bg: '#3a1e12', fg: '#ffd7b0', accent: '#d9773a' },
+  { name: 'JADE KEY JEWELERS', bg: '#0d2b25', fg: '#c6ffe9', accent: '#2fe0a6' },
+  { name: 'CRYSTAL KEY HOTEL', bg: '#0f2233', fg: '#e3f4ff', accent: '#9fe1ff' },
+  { name: 'PARZIVAL LABS', bg: '#0d0f12', fg: '#ffe9a8', accent: '#ffc34d' },
+  { name: 'ART3MIS STUDIO', bg: '#2e0b14', fg: '#ffd1dc', accent: '#ff4d6d' },
+  { name: 'DAITO & SHO', bg: '#1f1f1f', fg: '#ffffff', accent: '#e8442e' },
+  { name: 'OASIS BANK', bg: '#0f1c2e', fg: '#ffffff', accent: '#ffc34d' },
+  { name: 'SIXERS SUPPLY CO', bg: '#262626', fg: '#d9d9d9', accent: '#9aa0a6' },
+  { name: 'PIXEL PIZZA', bg: '#b3261e', fg: '#fff3d6', accent: '#ffd23f' },
+  { name: '8-BIT BURGERS', bg: '#1d3557', fg: '#f1faee', accent: '#e63946' },
+  { name: 'RETRO RECORDS', bg: '#22223b', fg: '#f2e9e4', accent: '#c9ada7' },
+  { name: 'GALAXY CINEMA', bg: '#0b0b2b', fg: '#fff7c2', accent: '#ffd400' },
+  { name: 'NOVA PHARMACY', bg: '#0e5e3a', fg: '#ffffff', accent: '#7cff9e' },
+  { name: 'MIDTOWN DELI', bg: '#f2e8cf', fg: '#7a1f1f', accent: '#bc4749' },
+  { name: 'QUANTUM MOTORS', bg: '#111827', fg: '#e5e7eb', accent: '#60a5fa' },
+  { name: 'NEON NOODLES', bg: '#14001f', fg: '#ff9cf2', accent: '#00f0ff' },
+  { name: 'STACKS BOOKSHOP', bg: '#2d3a2e', fg: '#f6efd2', accent: '#d4a373' },
+  { name: 'HIGH SCORE ARCADE', bg: '#000000', fg: '#39ff14', accent: '#ff2079' },
+  { name: 'FLUX CAPACITOR LTD', bg: '#1b1b1b', fg: '#fff3b0', accent: '#ffb703' },
+  { name: 'GRID CAPITAL', bg: '#0a2540', fg: '#ffffff', accent: '#00d4ff' },
+  { name: 'CATACLYST INSURANCE', bg: '#2f2f3a', fg: '#ececf1', accent: '#a3a3ff' },
+  { name: 'ZEMECKIS CUBE', bg: '#3b0d0d', fg: '#ffe0e0', accent: '#ff6b6b' },
+  { name: 'PLAYER ONE FITNESS', bg: '#003049', fg: '#fcbf49', accent: '#f77f00' },
+  { name: 'ADVENTURE CAFE', bg: '#283618', fg: '#fefae0', accent: '#dda15e' },
+  { name: 'LUDUS ACADEMY', bg: '#1e2a4a', fg: '#f0f4ff', accent: '#8ab4ff' },
+  { name: 'OOLOGIST BAKERY', bg: '#fff1e6', fg: '#6b2d0f', accent: '#e07a5f' },
+]
+const SIGN_COLS = 4
+const SIGN_ROWS = 16 // two styles per company
+
+// Where one sign goes: centre, outward normal (x, z), size, atlas cell and
+// whether it's a lit crown sign on a tower or a shop sign over the door.
+type SignSpot = { x: number; y: number; z: number; nx: number; nz: number; w: number; h: number; cell: number; crown: boolean }
+
+function placeSign(
+  signs: SignSpot[],
+  rand: () => number,
+  tower: boolean,
+  height: number,
+  x: number,
+  z: number,
+  w: number,
+  d: number,
+  faces: [number, number][],
+) {
+  if (faces.length === 0) return
+  const [nx, nz] = faces[Math.floor(rand() * faces.length)]
+  const facade = nx !== 0 ? d : w
+  const company = Math.floor(rand() * COMPANIES.length)
+  const out = (nx !== 0 ? w : d) / 2 + 0.15
+  if (tower && rand() < 0.55) {
+    // A big lit sign near the top of the shaft, below any setbacks.
+    const sw = Math.min(facade * 0.8, 28)
+    const sh = sw / 4
+    signs.push({ x: x + nx * out, y: height - sh / 2 - 2, z: z + nz * out, nx, nz, w: sw, h: sh, cell: company * 2, crown: true })
+  }
+  if (rand() < 0.75) {
+    // A shop sign over the ground floor.
+    const sw = Math.min(facade * 0.7, 11)
+    const sh = sw / 4
+    signs.push({ x: x + nx * out, y: 4.4 + sh / 2, z: z + nz * out, nx, nz, w: sw, h: sh, cell: company * 2 + 1, crown: false })
+  }
+}
+
+function drawSigns() {
+  const cw = 512
+  const ch = 128
+  const c = document.createElement('canvas')
+  c.width = cw * SIGN_COLS
+  c.height = ch * SIGN_ROWS
+  const g = c.getContext('2d')!
+  g.textAlign = 'center'
+  g.textBaseline = 'middle'
+  COMPANIES.forEach((co, i) => {
+    for (const style of [0, 1]) {
+      const cell = i * 2 + style
+      const x = (cell % SIGN_COLS) * cw
+      const y = Math.floor(cell / SIGN_COLS) * ch
+      const fit = (text: string, size: number, weight: string, max: number) => {
+        let s = size
+        do {
+          g.font = `${weight} ${s}px "Helvetica Neue", Arial, sans-serif`
+          s -= 2
+        } while (g.measureText(text).width > max && s > 20)
+      }
+      if (style === 0) {
+        // Crown sign: dark panel, glowing letters, an accent rule.
+        g.fillStyle = '#07080b'
+        g.fillRect(x, y, cw, ch)
+        g.fillStyle = co.accent
+        g.fillRect(x + 24, y + ch - 22, cw - 48, 6)
+        fit(co.name, 76, '800', cw - 50)
+        g.shadowColor = co.accent
+        g.shadowBlur = 18
+        g.fillStyle = co.fg
+        g.fillText(co.name, x + cw / 2, y + ch / 2 - 6)
+        g.shadowBlur = 0
+      } else {
+        // Shop sign: painted board in the firm's colours.
+        g.fillStyle = co.bg
+        g.fillRect(x, y, cw, ch)
+        g.strokeStyle = co.accent
+        g.lineWidth = 8
+        g.strokeRect(x + 8, y + 8, cw - 16, ch - 16)
+        fit(co.name, 64, '700', cw - 60)
+        g.fillStyle = co.fg
+        g.fillText(co.name, x + cw / 2, y + ch / 2 + 2)
+      }
+    }
+  })
+  const t = new THREE.CanvasTexture(c)
+  t.colorSpace = THREE.SRGBColorSpace
+  t.anisotropy = 8
+  return t
+}
+
+function buildSigns(spots: SignSpot[]) {
+  const geometry = (crown: boolean) => {
+    const list = spots.filter((s) => s.crown === crown)
+    const pos = new Float32Array(list.length * 12)
+    const uv = new Float32Array(list.length * 8)
+    const index: number[] = []
+    list.forEach((s, k) => {
+      // Seen from outside, the sign's right is up × normal.
+      const rx = s.nz
+      const rz = -s.nx
+      const corners = [
+        [-1, -1],
+        [1, -1],
+        [1, 1],
+        [-1, 1],
+      ]
+      const u0 = (s.cell % SIGN_COLS) / SIGN_COLS
+      const v1 = 1 - Math.floor(s.cell / SIGN_COLS) / SIGN_ROWS
+      const v0 = v1 - 1 / SIGN_ROWS
+      corners.forEach(([a, b], c) => {
+        pos.set([s.x + (rx * a * s.w) / 2, s.y + (b * s.h) / 2, s.z + (rz * a * s.w) / 2], (k * 4 + c) * 3)
+        uv.set([a < 0 ? u0 : u0 + 1 / SIGN_COLS, b < 0 ? v0 : v1], (k * 4 + c) * 2)
+      })
+      const o = k * 4
+      index.push(o, o + 1, o + 2, o, o + 2, o + 3)
+    })
+    const g = new THREE.BufferGeometry()
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3))
+    g.setAttribute('uv', new THREE.BufferAttribute(uv, 2))
+    g.setIndex(index)
+    g.computeVertexNormals()
+    return g
+  }
+  const map = drawSigns()
+  // Crown signs are lit, bright enough to catch a little bloom; shop signs
+  // are painted boards.
+  const crownMaterial = new THREE.MeshBasicMaterial({ map, toneMapped: false })
+  crownMaterial.color.setScalar(1.25)
+  const shopMaterial = new THREE.MeshBasicMaterial({ map })
+  shopMaterial.color.setScalar(0.85)
+  return { crown: geometry(true), shop: geometry(false), crownMaterial, shopMaterial }
 }
 
 // A building's footprint and roof height, for collisions.
 export type CityLot = { x0: number; x1: number; z0: number; z1: number; h: number }
 
-function buildCityGeometry(lots: CityLot[]) {
+function buildCityGeometry(lots: CityLot[], signs: SignSpot[]) {
   const rand = mulberry32(7)
+  // A separate stream for signs, so adding them leaves the city unchanged.
+  const signRand = mulberry32(99)
   const parts: THREE.BufferGeometry[] = []
   const pitchX = BLOCK_X + STREET
   const pitchZ = BLOCK_Z + STREET
@@ -345,7 +518,15 @@ function buildCityGeometry(lots: CityLot[]) {
             const ld = BLOCK_Z / 2
             const lx = bx - BLOCK_X / 2 + lw * (i + 0.5)
             const lz = bz - BLOCK_Z / 2 + ld * (j + 0.5)
-            building(parts, rand, lx, lz, lw - 1.5, ld - 1.5, downtown, lots)
+            const b = building(parts, rand, lx, lz, lw - 1.5, ld - 1.5, downtown, lots)
+            // Each lot is on the block's edge on at least one side; those
+            // sides face a street.
+            const faces: [number, number][] = []
+            if (j === 0) faces.push([0, -1])
+            if (j === 1) faces.push([0, 1])
+            if (i === 0) faces.push([-1, 0])
+            if (i === across - 1) faces.push([1, 0])
+            placeSign(signs, signRand, b.tower, b.h, lx, lz, lw - 1.5, ld - 1.5, faces)
           }
         }
       }
@@ -439,8 +620,10 @@ function buildingMaterial() {
 // the city's own coordinates.
 export function buildCity() {
   const tileLots: CityLot[] = []
-  const geometry = buildCityGeometry(tileLots)
+  const signSpots: SignSpot[] = []
+  const geometry = buildCityGeometry(tileLots, signSpots)
   const material = buildingMaterial()
+  const signs = buildSigns(signSpots)
   const group = new THREE.Group()
   const lots: CityLot[] = []
   for (const side of [-1, 1]) {
@@ -448,6 +631,7 @@ export function buildCity() {
     mesh.position.z = side * TILE_HALF_LENGTH
     // The far tile is turned around, so it doesn't read as a repeat.
     if (side > 0) mesh.rotation.y = Math.PI
+    mesh.add(new THREE.Mesh(signs.crown, signs.crownMaterial), new THREE.Mesh(signs.shop, signs.shopMaterial))
     group.add(mesh)
     for (const l of tileLots) {
       lots.push(
@@ -462,9 +646,10 @@ export function buildCity() {
 
 export const CITY_EXTENT_X = CITY_HALF_WIDTH
 
-// Where the street trees stand, as x, z pairs in the city's coordinates:
-// on the sidewalks of every street, two metres in from the curb, and along
-// the avenue. None stand in an intersection.
+// Where the street trees stand, as x, z, row triples in the city's
+// coordinates: on the sidewalks of every street, two metres in from the
+// curb, and along the avenue. None stand in an intersection. Trees along
+// one stretch of sidewalk share a row number, so a row can be one species.
 const TREE_SPACING = 18
 export function streetTreeSpots() {
   const spots: number[] = []
@@ -472,9 +657,11 @@ export function streetTreeSpots() {
   const pitchZ = BLOCK_Z + STREET
   const inset = STREET / 2 - 2
   // Trees along a stretch of sidewalk, from a to b, kept clear of its ends.
+  let rowId = 0
   const row = (a: number, b: number, place: (t: number) => void) => {
     const n = Math.max(1, Math.round((b - a - 8) / TREE_SPACING) + 1)
     for (let i = 0; i < n; i++) place(n === 1 ? (a + b) / 2 : a + 4 + ((b - a - 8) * i) / (n - 1))
+    rowId++
   }
   for (const tile of [-1, 1]) {
     const o = tile * TILE_HALF_LENGTH
@@ -486,10 +673,10 @@ export function streetTreeSpots() {
           const cx = AVENUE_HALF + BLOCK_X + STREET / 2 + k * pitchX
           for (const x of [cx - inset, cx + inset]) {
             if (x > CITY_HALF_WIDTH - 1) continue
-            row(z0, z0 + BLOCK_Z, (z) => spots.push(side * x, z))
+            row(z0, z0 + BLOCK_Z, (z) => spots.push(side * x, z, rowId))
           }
         }
-        row(z0, z0 + BLOCK_Z, (z) => spots.push(side * (AVENUE_HALF - 8), z))
+        row(z0, z0 + BLOCK_Z, (z) => spots.push(side * (AVENUE_HALF - 8), z, rowId))
       }
       // Cross streets. Where the tiles meet, only the first tile plants.
       for (let k = 0; k <= ROWS; k++) {
@@ -499,7 +686,7 @@ export function streetTreeSpots() {
           if (Math.abs(z) > CITY_HALF_LENGTH - 1) continue
           for (let c = 0; c < COLUMNS; c++) {
             const x0 = AVENUE_HALF + c * pitchX
-            row(x0, x0 + BLOCK_X, (x) => spots.push(side * x, z))
+            row(x0, x0 + BLOCK_X, (x) => spots.push(side * x, z, rowId))
           }
         }
       }
@@ -507,3 +694,39 @@ export function streetTreeSpots() {
   }
   return spots
 }
+
+// The street grid, in the city's coordinates, for traffic and walkers.
+// The grid is symmetric, so the turned-around tile shares it.
+export function cityLayout() {
+  const pitchX = BLOCK_X + STREET
+  const pitchZ = BLOCK_Z + STREET
+  // Centre lines of the streets running along the avenue (x > 0 side; the
+  // other side mirrors them), and of the cross streets inside the city.
+  const alongX: number[] = []
+  for (let k = 0; k < COLUMNS; k++) alongX.push(AVENUE_HALF + BLOCK_X + STREET / 2 + k * pitchX)
+  const crossZ: number[] = []
+  for (let k = 1; k < ROWS * 2; k++) crossZ.push(-CITY_HALF_LENGTH + k * pitchZ)
+  const blocks: { x0: number; x1: number; z0: number; z1: number }[] = []
+  for (const tile of [-1, 1]) {
+    for (const side of [-1, 1]) {
+      for (let c = 0; c < COLUMNS; c++) {
+        for (let r = 0; r < ROWS; r++) {
+          const bx = side * (AVENUE_HALF + c * pitchX + BLOCK_X / 2)
+          const bz = tile * TILE_HALF_LENGTH + (r - (ROWS - 1) / 2) * pitchZ
+          blocks.push({ x0: bx - BLOCK_X / 2, x1: bx + BLOCK_X / 2, z0: bz - BLOCK_Z / 2, z1: bz + BLOCK_Z / 2 })
+        }
+      }
+    }
+  }
+  return {
+    alongX,
+    crossZ,
+    blocks,
+    halfWidth: CITY_HALF_WIDTH,
+    halfLength: CITY_HALF_LENGTH,
+    streetHalf: STREET / 2,
+    roadwayHalf: STREET / 2 - SIDEWALK,
+    avenueHalf: AVENUE_HALF,
+  }
+}
+export type CityLayout = ReturnType<typeof cityLayout>
