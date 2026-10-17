@@ -6,6 +6,14 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js'
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js'
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js'
+import {
+  CITY_HALF_LENGTH,
+  aimSunLight,
+  buildAtmosphere,
+  buildGround,
+  buildCity,
+  buildSunLight,
+} from './world'
 
 export type CameraMode = 'cinematic' | 'free'
 
@@ -18,44 +26,88 @@ type Options = {
   startAt?: number
 }
 
-// One loop of the flight, in seconds. Take-off: hover up off the road, fold
-// the wheels flat, then climb. Landing runs the same steps in reverse, so the
-// wheels are down and still before they touch the road.
-const LOOP = 23
+// One loop of the flight, in seconds. The car drives toward Times Square,
+// hovers, folds its wheels, climbs over the rooftops, flies the length of
+// Broadway, comes down on the far side and lands, wheels first.
+const LOOP = 40
 const WHEEL_RADIUS = 0.334
 const GROUND_SPEED = 28
-const AIR_SPEED = 42
-const CRUISE_ALTITUDE = 5
-
-const HAZE = new THREE.Color(0.22, 0.02, 0.24)
+const AIR_SPEED = 70
+// Clear of the tallest towers (about 190 m).
+const CRUISE_ALTITUDE = 240
+const HOVER_HEIGHT = 0.55
+const WHEEL_TUCK = 0.14
+const WHEEL_DROP = 0.06
+// The city sits under the middle of the cruise.
+const CITY_AT = 21
 
 const smooth = (a: number, b: number, t: number) => {
   const x = Math.min(Math.max((t - a) / (b - a), 0), 1)
   return x * x * (3 - 2 * x)
 }
 
-const HOVER_HEIGHT = 0.55
-const WHEEL_TUCK = 0.14
-const WHEEL_DROP = 0.06
+function flightState(t: number) {
+  const hover = smooth(5, 6, t) - smooth(36.5, 37.5, t)
+  const fold = smooth(6, 7.5, t) - smooth(34.5, 36, t)
+  const lift = smooth(7.5, 16, t) - smooth(26, 34.5, t)
+  const cruise = smooth(16, 17.5, t) - smooth(24.5, 26, t)
+  const phase = (t - 16) * 0.55
+  // A small dip as the tyres take the weight.
+  const touchdown = Math.sin(Math.PI * smooth(37.3, 38.1, t)) * -0.04
+  return {
+    hover,
+    fold,
+    lift,
+    cruise,
+    x: Math.sin(phase) * 6 * cruise,
+    y: HOVER_HEIGHT * hover + CRUISE_ALTITUDE * lift + touchdown,
+    roll: -Math.cos(phase) * 0.35 * cruise,
+    speed: THREE.MathUtils.lerp(GROUND_SPEED, AIR_SPEED, lift),
+    thrust: fold * (0.55 + 0.45 * Math.min(lift * 3, 1)),
+  }
+}
+
+// Distance travelled since the start of a loop, sampled once so the car's
+// position (and the city's) follows from the clock alone.
+const TABLE_STEP = 0.01
+const DISTANCE = (() => {
+  const n = Math.ceil(LOOP / TABLE_STEP) + 1
+  const table = new Float32Array(n)
+  for (let i = 1; i < n; i++) {
+    table[i] = table[i - 1] + flightState((i - 0.5) * TABLE_STEP).speed * TABLE_STEP
+  }
+  return table
+})()
+const LOOP_DISTANCE = DISTANCE[DISTANCE.length - 1]
+
+function distanceAt(elapsed: number) {
+  const lap = Math.floor(elapsed / LOOP)
+  const f = (elapsed - lap * LOOP) / TABLE_STEP
+  const i = Math.min(Math.floor(f), DISTANCE.length - 2)
+  return lap * LOOP_DISTANCE + THREE.MathUtils.lerp(DISTANCE[i], DISTANCE[i + 1], f - i)
+}
 
 // The cinematic camera's shot list, timed to the flight loop. Each key is the
 // camera's place around the car: `az` is the angle around it (0 in front,
 // PI behind), `h` the height above it, `d` the distance, and `look` the point
-// on the car it aims at. The camera eases through the keys, so it never holds
-// still.
+// it aims at, as height above the car and distance ahead of it. The camera
+// eases through the keys, so it never holds still.
 type ShotKey = { t: number; az: number; h: number; d: number; look: [number, number] }
 const PI = Math.PI
 const SHOTS: ShotKey[] = [
   { t: 0, az: PI + 0.25, h: 0.05, d: 2.4, look: [0.7, -1.8] }, // the PARZIVAL plate
   { t: 2.5, az: PI - 0.2, h: 0.5, d: 3.6, look: [0.7, -1.2] },
-  { t: 4, az: PI + 0.5, h: 1.0, d: 5.5, look: [0.6, 0] }, // a full turn around the car
+  { t: 4, az: PI + 0.5, h: 1.0, d: 5.5, look: [0.6, 0] }, // a turn around the car
   { t: 6.5, az: 2 * PI + 0.5, h: 0.5, d: 5.2, look: [0.5, 0] }, // side-on as the wheels fold
   { t: 9, az: 3 * PI + 0.5, h: 0.2, d: 6, look: [0.5, 0] },
-  { t: 11, az: 3 * PI + 0.9, h: -2.5, d: 7, look: [0.4, 0.5] }, // from below as it climbs
-  { t: 13, az: 3 * PI - 1.3, h: 0.2, d: 8, look: [0.4, 0] }, // tracking alongside in flight
-  { t: 16, az: 3 * PI - 2.4, h: 0.8, d: 8, look: [0.4, 0.5] }, // ahead of it, coming down
-  { t: 19, az: 3 * PI - 2.7, h: 0.5, d: 6, look: [0.4, 0] },
-  { t: 21.5, az: 3 * PI - 0.5, h: 0.6, d: 4.5, look: [0.6, -0.8] },
+  { t: 11.5, az: 3 * PI + 0.9, h: -3, d: 9, look: [0.4, 1] }, // from below as it climbs
+  { t: 15, az: 3 * PI - 0.35, h: 6, d: 14, look: [-6, 30] }, // behind it, the city ahead
+  { t: 19, az: 3 * PI - 0.4, h: 18, d: 40, look: [-20, 60] }, // over the rooftops
+  { t: 23, az: 3 * PI - 1.4, h: 6, d: 22, look: [-10, 0] }, // alongside, towers below
+  { t: 27, az: 2 * PI + 0.4, h: 3, d: 14, look: [0, 0] }, // ahead, coming down
+  { t: 31, az: 2 * PI + 1.2, h: 1.5, d: 10, look: [0.4, 0] },
+  { t: 35, az: 2 * PI + 2.0, h: 0.6, d: 6, look: [0.4, 0] }, // side-on as the wheels unfold
+  { t: 37.5, az: 2 * PI + 2.9, h: 0.6, d: 4.5, look: [0.6, -0.8] },
 ]
 
 function shotAt(t: number) {
@@ -83,30 +135,6 @@ function shotAt(t: number) {
     d: cr(p0.d, p1.d, p2.d, p3.d),
     lookY: cr(p0.look[0], p1.look[0], p2.look[0], p3.look[0]),
     lookZ: cr(p0.look[1], p1.look[1], p2.look[1], p3.look[1]),
-  }
-}
-
-function flightState(t: number) {
-  const hover = smooth(5, 6, t) - smooth(20.5, 21.5, t)
-  const fold = smooth(6, 7.5, t) - smooth(18.5, 20, t)
-  const lift = smooth(7.5, 10, t) - smooth(15.5, 18.5, t)
-  const cruise = smooth(10, 11.5, t) - smooth(14, 15.5, t)
-  const phase = (t - 10) * 0.6
-  // A small dip as the tyres take the weight.
-  const touchdown = Math.sin(Math.PI * smooth(21.3, 22.1, t)) * -0.04
-  return {
-    hover,
-    fold,
-    lift,
-    cruise,
-    x: Math.sin(phase) * 4 * cruise,
-    y: HOVER_HEIGHT * hover + CRUISE_ALTITUDE * lift + touchdown,
-    roll: -Math.cos(phase) * 0.3 * cruise,
-    pitch:
-      -(smooth(7.5, 8.7, t) - smooth(9, 10, t)) * 0.12 +
-      (smooth(15.5, 16.5, t) - smooth(17.5, 18.5, t)) * 0.08,
-    speed: THREE.MathUtils.lerp(GROUND_SPEED, AIR_SPEED, lift),
-    thrust: fold * (0.55 + 0.45 * lift),
   }
 }
 
@@ -147,190 +175,6 @@ function buildThrusterMaterial() {
   })
 }
 
-function buildEnvironment(renderer: THREE.WebGLRenderer) {
-  const scene = new THREE.Scene()
-  scene.add(
-    new THREE.Mesh(
-      new THREE.SphereGeometry(50, 32, 16),
-      new THREE.ShaderMaterial({
-        side: THREE.BackSide,
-        vertexShader: /* glsl */ `
-          varying vec3 vP;
-          void main() { vP = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-        fragmentShader: /* glsl */ `
-          varying vec3 vP;
-          void main() {
-            float h = normalize(vP).y;
-            vec3 top = vec3(0.03, 0.0, 0.1);
-            vec3 horizon = vec3(1.0, 0.25, 0.65);
-            vec3 ground = vec3(0.04, 0.0, 0.08);
-            vec3 c = h > 0.0 ? mix(horizon, top, pow(h, 0.5)) : mix(horizon * 0.5, ground, pow(-h, 0.4));
-            gl_FragColor = vec4(c, 1.0);
-          }`,
-      }),
-    ),
-  )
-  const panel = (color: THREE.Color, position: THREE.Vector3, w: number, h: number) => {
-    const mesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(w, h),
-      new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide }),
-    )
-    mesh.position.copy(position)
-    mesh.lookAt(0, 0, 0)
-    scene.add(mesh)
-  }
-  panel(new THREE.Color(0x00e5ff).multiplyScalar(4), new THREE.Vector3(-30, 8, 0), 24, 6)
-  panel(new THREE.Color(0xff2bd6).multiplyScalar(4), new THREE.Vector3(30, 8, 0), 24, 6)
-  panel(new THREE.Color(0xffffff).multiplyScalar(2.5), new THREE.Vector3(0, 40, 0), 40, 20)
-
-  const pmrem = new THREE.PMREMGenerator(renderer)
-  const target = pmrem.fromScene(scene, 0.02)
-  pmrem.dispose()
-  scene.traverse((o) => {
-    if (o instanceof THREE.Mesh) {
-      o.geometry.dispose()
-      o.material.dispose()
-    }
-  })
-  return target
-}
-
-function buildSky() {
-  return new THREE.Mesh(
-    new THREE.SphereGeometry(900, 32, 16),
-    new THREE.ShaderMaterial({
-      side: THREE.BackSide,
-      depthWrite: false,
-      uniforms: { uHaze: { value: HAZE } },
-      vertexShader: /* glsl */ `
-        varying vec3 vDir;
-        void main() { vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-      fragmentShader: /* glsl */ `
-        uniform vec3 uHaze;
-        varying vec3 vDir;
-        float hash(vec3 p) { return fract(sin(dot(p, vec3(12.9898, 78.233, 45.164))) * 43758.5453); }
-        void main() {
-          float h = max(vDir.y, 0.0);
-          vec3 c = mix(uHaze, vec3(0.005, 0.0, 0.02), pow(h, 0.35));
-          vec3 cell = floor(vDir * 260.0);
-          float star = step(0.9975, hash(cell)) * smoothstep(0.05, 0.3, h);
-          c += vec3(star) * 1.5;
-          gl_FragColor = vec4(c, 1.0);
-        }`,
-    }),
-  )
-}
-
-function buildSun() {
-  const material = new THREE.ShaderMaterial({
-    transparent: true,
-    depthWrite: false,
-    uniforms: { uTime: { value: 0 } },
-    vertexShader: /* glsl */ `
-      varying vec2 vUv;
-      void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-    fragmentShader: /* glsl */ `
-      uniform float uTime;
-      varying vec2 vUv;
-      void main() {
-        vec2 p = vUv * 2.0 - 1.0;
-        if (length(p) > 1.0) discard;
-        float y = vUv.y;
-        if (y < 0.48) {
-          float band = fract(y * 16.0 - uTime * 0.35);
-          float gap = mix(0.04, 0.55, (0.48 - y) / 0.48);
-          if (band < gap) discard;
-        }
-        vec3 c = mix(vec3(1.0, 0.08, 0.5), vec3(1.0, 0.85, 0.25), smoothstep(0.1, 0.95, y));
-        gl_FragColor = vec4(c * 1.05, 1.0);
-      }`,
-  })
-  return new THREE.Mesh(new THREE.PlaneGeometry(220, 220), material)
-}
-
-function buildGrid() {
-  const material = new THREE.ShaderMaterial({
-    uniforms: { uCenter: { value: new THREE.Vector3() }, uHaze: { value: HAZE } },
-    vertexShader: /* glsl */ `
-      varying vec3 vW;
-      void main() {
-        vec4 w = modelMatrix * vec4(position, 1.0);
-        vW = w.xyz;
-        gl_Position = projectionMatrix * viewMatrix * w;
-      }`,
-    fragmentShader: /* glsl */ `
-      uniform vec3 uCenter;
-      uniform vec3 uHaze;
-      varying vec3 vW;
-      void main() {
-        vec2 c = vW.xz / 4.0;
-        vec2 g = abs(fract(c - 0.5) - 0.5) / fwidth(c);
-        float grid = 1.0 - min(min(g.x, g.y), 1.0);
-
-        float fx = fwidth(vW.x);
-        float edge = 1.0 - min(max(abs(abs(vW.x) - 3.2) - 0.06, 0.0) / fx, 1.0);
-        float dash = step(0.5, fract(vW.z / 6.0)) * (1.0 - min(max(abs(vW.x) - 0.06, 0.0) / fx, 1.0));
-        float road = 1.0 - step(3.2, abs(vW.x));
-
-        float d = length(vW.xz - uCenter.xz);
-        float fade = 1.0 - smoothstep(30.0, 280.0, d);
-
-        vec3 col = vec3(0.012, 0.0, 0.03);
-        col = mix(col, vec3(0.0, 0.0, 0.01), road);
-        col += vec3(1.0, 0.12, 0.85) * 0.9 * grid * fade * (1.0 - road);
-        col += vec3(0.1, 0.9, 1.0) * 1.2 * (edge + dash * 0.5) * fade;
-        col = mix(col, uHaze, smoothstep(140.0, 320.0, d));
-        gl_FragColor = vec4(col, 1.0);
-      }`,
-  })
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(700, 700), material)
-  mesh.rotation.x = -Math.PI / 2
-  return mesh
-}
-
-// City blocks line both sides of the road. The scan is one block of
-// Manhattan around the Flatiron (229 m wide, 317 m deep); copies repeat
-// along the road, turned alternately so the repeat is harder to spot, and
-// leapfrog ahead as the car passes them. The road stays open down the middle
-// so the sun shows at the end of it.
-const BLOCK_WIDTH = 229
-const BLOCK_DEPTH = 317
-const BLOCKS_PER_SIDE = 3
-const CITY_SPAN = BLOCK_DEPTH * BLOCKS_PER_SIDE
-const ROAD_CLEARANCE = 42
-
-function buildCity(source: THREE.Object3D) {
-  source.traverse((o) => {
-    if (!(o instanceof THREE.Mesh)) return
-    const m = o.material as THREE.MeshStandardMaterial
-    // Night-time: darken the daylight scan, and let its own texture glow
-    // faintly pink so windows and facades read against the haze.
-    m.color.setScalar(0.2)
-    m.emissiveMap = m.map
-    m.emissive.set(0xff6ad5).multiplyScalar(0.16)
-    m.roughness = 0.9
-    m.metalness = 0
-  })
-  const blocks = Array.from({ length: BLOCKS_PER_SIDE * 2 }, (_, i) => {
-    const block = source.clone()
-    const side = i % 2 === 0 ? 1 : -1
-    block.rotation.y = (Math.floor(i / 2) + (side > 0 ? 0 : 1)) % 2 === 0 ? 0 : Math.PI
-    return { block, side, z: Math.floor(i / 2) * BLOCK_DEPTH }
-  })
-  return blocks
-}
-
-function placeCity(blocks: ReturnType<typeof buildCity>, carZ: number) {
-  for (const b of blocks) {
-    const rel = (((b.z - carZ + BLOCK_DEPTH) % CITY_SPAN) + CITY_SPAN) % CITY_SPAN
-    b.block.position.set(
-      b.side * (ROAD_CLEARANCE + BLOCK_WIDTH / 2),
-      0.15,
-      carZ - BLOCK_DEPTH / 2 + rel,
-    )
-  }
-}
-
 export function startOasis(
   canvas: HTMLCanvasElement,
   { onReady, onError, onModeChange, onPauseChange, startAt = 0 }: Options,
@@ -341,21 +185,27 @@ export function startOasis(
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
   renderer.toneMapping = THREE.ACESFilmicToneMapping
-  renderer.toneMappingExposure = 1.0
+  renderer.toneMappingExposure = 0.75
+  renderer.shadowMap.enabled = true
+  renderer.shadowMap.type = THREE.PCFShadowMap
 
   const scene = new THREE.Scene()
-  const env = buildEnvironment(renderer)
-  scene.environment = env.texture
+  const atmosphere = buildAtmosphere(renderer)
+  scene.environment = atmosphere.env.texture
+  scene.fog = atmosphere.fog
 
-  const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 2000)
+  const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 12000)
   camera.position.set(0, 2.5, -8)
 
-  const sky = buildSky()
-  const sun = buildSun()
-  const grid = buildGrid()
-  scene.add(sky, sun, grid)
-  scene.fog = new THREE.Fog(HAZE, 140, 700)
-  let city: ReturnType<typeof buildCity> = []
+  const ground = buildGround()
+  const light = buildSunLight()
+  scene.add(atmosphere.sky, ground.mesh, light.sun, light.sun.target, light.fill)
+
+  // One city per loop. When a loop ends, it jumps ahead to sit under the
+  // next loop's cruise; by then it is far behind the car and lost in haze.
+  const city = new THREE.Group()
+  city.add(buildCity())
+  scene.add(city)
 
   const car = new THREE.Group()
   scene.add(car)
@@ -388,6 +238,7 @@ export function startOasis(
       if (disposed) return
       car.add(gltf.scene)
       gltf.scene.traverse((o) => {
+        if (o instanceof THREE.Mesh) o.castShadow = true
         // Each wheel loads as a group of per-material meshes (Wheel_FL_1, ...);
         // only the group itself should turn.
         if (!/^Wheel_(FL|FR|RL|RR)$/.test(o.name)) return
@@ -401,7 +252,7 @@ export function startOasis(
       })
       loaded = true
       if (process.env.NODE_ENV === 'development') {
-        Object.assign(window, { __oasis: { camera, controls, car, wheels, THREE } })
+        Object.assign(window, { __oasis: { camera, controls, car, wheels, city, THREE } })
       }
       onReady()
     },
@@ -410,16 +261,10 @@ export function startOasis(
       if (!disposed) onError(err)
     },
   )
-  // The car doesn't wait for the city; the blocks appear once they load.
-  loader.load('/oasis/city.glb', (gltf) => {
-    if (disposed) return
-    city = buildCity(gltf.scene)
-    for (const b of city) scene.add(b.block)
-  })
 
   const composer = new EffectComposer(renderer)
   composer.addPass(new RenderPass(scene, camera))
-  composer.addPass(new UnrealBloomPass(new THREE.Vector2(1, 1), 0.55, 0.35, 0.85))
+  composer.addPass(new UnrealBloomPass(new THREE.Vector2(1, 1), 0.1, 0.2, 0.98))
   composer.addPass(new OutputPass())
 
   const controls = new OrbitControls(camera, canvas)
@@ -427,7 +272,7 @@ export function startOasis(
   controls.dampingFactor = 0.08
   controls.enablePan = false
   controls.minDistance = 2.2
-  controls.maxDistance = 40
+  controls.maxDistance = 150
   controls.zoomSpeed = 0.8
 
   let mode: CameraMode = 'cinematic'
@@ -467,8 +312,8 @@ export function startOasis(
   const desired = new THREE.Vector3()
   const lookAt = new THREE.Vector3()
   const previous = new THREE.Vector3()
-  let elapsed = reducedMotion ? 12 : startAt
-  let carZ = 0
+  const cityLead = DISTANCE[Math.round(CITY_AT / TABLE_STEP)]
+  let elapsed = reducedMotion ? 21 : startAt
   let last = performance.now()
 
   renderer.setAnimationLoop(() => {
@@ -477,12 +322,16 @@ export function startOasis(
     last = now
     const dt = reducedMotion || paused || !loaded ? 0 : frameDt
     elapsed += dt
-    const s = flightState(elapsed % LOOP)
+    const t = elapsed % LOOP
+    const s = flightState(t)
+    const carZ = distanceAt(elapsed)
 
     previous.copy(car.position)
-    carZ += s.speed * dt
     car.position.set(s.x, s.y + Math.sin(elapsed * 9) * 0.012 * s.fold, carZ)
-    car.rotation.set(s.pitch, 0, s.roll, 'YXZ')
+    // Pitch follows the flight path: nose up on the climb, down on descent.
+    const ahead = flightState(Math.min(t + 0.05, LOOP))
+    const climb = Math.atan2(ahead.y - s.y, Math.max(distanceAt(elapsed + 0.05) - carZ, 1e-3))
+    car.rotation.set(-climb * 0.8, 0, s.roll, 'YXZ')
 
     for (const w of wheels) {
       w.node.rotation.x += (s.speed * dt * (1 - s.hover)) / WHEEL_RADIUS
@@ -502,8 +351,13 @@ export function startOasis(
     thrusterMaterial.uniforms.uTime.value = elapsed
     hubMaterial.opacity = Math.min(s.thrust * 1.2, 0.85)
 
+    // This loop's city sits under the middle of the cruise.
+    const cityZ = Math.floor(elapsed / LOOP) * LOOP_DISTANCE + cityLead
+    city.position.set(0, 0, cityZ)
+    ground.cityZ.set(cityZ - CITY_HALF_LENGTH, cityZ + CITY_HALF_LENGTH, 1e9, 1e9)
+
     if (mode === 'cinematic') {
-      const shot = shotAt(elapsed % LOOP)
+      const shot = shotAt(t)
       desired.set(
         car.position.x + Math.sin(shot.az) * shot.d,
         Math.max(car.position.y + shot.h, 0.25),
@@ -526,13 +380,11 @@ export function startOasis(
       if (camera.position.y < 0.15) camera.position.y = 0.15
     }
 
-    grid.position.set(0, 0, Math.round(carZ / 4) * 4)
-    ;(grid.material as THREE.ShaderMaterial).uniforms.uCenter.value.set(0, 0, carZ)
-    sky.position.copy(camera.position)
-    sun.position.set(0, 55, carZ + 520)
-    sun.lookAt(sun.position.x, sun.position.y, carZ)
-    ;(sun.material as THREE.ShaderMaterial).uniforms.uTime.value = elapsed
-    placeCity(city, carZ)
+    // Keep the ground and sky centred on the car; the ground's pattern is
+    // drawn in world space, so it doesn't slide.
+    ground.mesh.position.set(0, 0, Math.round(carZ / 100) * 100)
+    atmosphere.sky.position.copy(camera.position)
+    aimSunLight(light.sun, car.position)
 
     composer.render()
   })
@@ -553,10 +405,9 @@ export function startOasis(
         }
       }
     })
-    env.dispose()
+    atmosphere.env.dispose()
     draco.dispose()
     composer.dispose()
     renderer.dispose()
   }
 }
-

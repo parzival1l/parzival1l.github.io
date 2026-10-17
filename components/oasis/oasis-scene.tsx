@@ -49,7 +49,7 @@ export function OasisScene() {
   }, [router])
 
   return (
-    <div className="fixed inset-0 z-[100] bg-[#05000a] font-mono text-[11px] uppercase tracking-[0.2em] text-cyan-200/80">
+    <div className="fixed inset-0 z-[100] bg-[#0d0f12] font-mono text-[11px] uppercase tracking-[0.2em] text-white/80">
       <canvas
         ref={canvasRef}
         className="block h-full w-full cursor-grab touch-none active:cursor-grabbing"
@@ -58,7 +58,7 @@ export function OasisScene() {
       {status === 'ready' && (
         <div className="pointer-events-none absolute right-5 top-5 text-right leading-6">
           <div>{paused ? 'Paused' : mode === 'free' ? 'Free camera' : 'Cinematic'}</div>
-          <div className="text-cyan-200/50">
+          <div className="text-white/50">
             drag · orbit
             <br />
             scroll · zoom
@@ -74,12 +74,12 @@ export function OasisScene() {
       )}
       <Link
         href="/"
-        className="absolute bottom-5 left-5 transition-colors hover:text-cyan-100"
+        className="absolute bottom-5 left-5 transition-colors hover:text-white"
       >
         esc · log out
       </Link>
       {status !== 'ready' && (
-        <div className="absolute inset-0 flex items-center justify-center text-pink-300/90">
+        <div className="absolute inset-0 flex items-center justify-center text-white/80">
           {status === 'loading' ? 'Entering the OASIS…' : 'The OASIS is offline.'}
         </div>
       )}
