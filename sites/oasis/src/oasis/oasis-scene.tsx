@@ -1,6 +1,5 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import type { CameraMode } from './scene'
 import type { District } from './districts'
@@ -13,7 +12,8 @@ type Status = 'loading' | 'ready' | 'error'
 const SOUNDTRACK_EMBED =
   'https://open.spotify.com/embed/album/166LfpstziUpezunLrOxUR?utm_source=generator&theme=0'
 
-export function OasisScene() {
+// `homeUrl` is where the exit pad and Esc take the reader.
+export function OasisScene({ homeUrl }: { homeUrl: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [status, setStatus] = useState<Status>('loading')
   const [mode, setMode] = useState<CameraMode>('cinematic')
@@ -33,7 +33,6 @@ export function OasisScene() {
   // Once opened, the player stays mounted while hidden, so the music keeps
   // playing when the panel closes.
   const [musicLoaded, setMusicLoaded] = useState(false)
-  const router = useRouter()
 
   useEffect(() => {
     let cancelled = false
@@ -82,9 +81,9 @@ export function OasisScene() {
   // Fade to black, then go home.
   useEffect(() => {
     if (!exiting) return
-    const timer = setTimeout(() => router.push('/'), 900)
+    const timer = setTimeout(() => window.location.assign(homeUrl), 900)
     return () => clearTimeout(timer)
-  }, [exiting, router])
+  }, [exiting, homeUrl])
 
   useEffect(() => {
     if (!toast) return
@@ -104,14 +103,14 @@ export function OasisScene() {
       if (e.key === 'Escape') {
         // Esc closes the map first, and leaves the OASIS after.
         if (mapOpen) setMapOpen(false)
-        else router.push('/')
+        else window.location.assign(homeUrl)
       } else if (e.key.toLowerCase() === 'n') {
         setMapOpen((open) => !open)
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [router, mapOpen])
+  }, [homeUrl, mapOpen])
 
   return (
     <div className="fixed inset-0 z-[100] bg-[#0d0f12] font-mono text-[11px] uppercase tracking-[0.2em] text-white/80">

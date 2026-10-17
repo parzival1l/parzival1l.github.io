@@ -358,7 +358,7 @@ export function startOasis(
         wheels.push({ node: o, side: o.position.x > 0 ? 1 : -1, home: o.position.clone(), hub, jet })
       })
       loaded = true
-      if (process.env.NODE_ENV === 'development') {
+      if (import.meta.env.DEV) {
         Object.assign(window, { __oasis: { camera, controls, car, wheels, city, sound, drive, blimps, lots, THREE, renderer, composer, scene } })
       }
       onReady()
