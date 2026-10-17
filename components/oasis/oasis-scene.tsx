@@ -17,6 +17,8 @@ export function OasisScene() {
   const [mode, setMode] = useState<CameraMode>('cinematic')
   const [paused, setPaused] = useState(false)
   const [musicOpen, setMusicOpen] = useState(false)
+  const [soundOn, setSoundOn] = useState(false)
+  const toggleSoundRef = useRef<(() => void) | null>(null)
   // Once opened, the player stays mounted while hidden, so the music keeps
   // playing when the panel closes.
   const [musicLoaded, setMusicLoaded] = useState(false)
@@ -29,13 +31,16 @@ export function OasisScene() {
       .then(({ startOasis }) => {
         if (cancelled || !canvasRef.current) return
         const startAt = Number(new URLSearchParams(window.location.search).get('t')) || 0
-        stop = startOasis(canvasRef.current, {
+        const scene = startOasis(canvasRef.current, {
           onReady: () => setStatus('ready'),
           onError: () => setStatus('error'),
           onModeChange: setMode,
           onPauseChange: setPaused,
+          onSoundChange: setSoundOn,
           startAt,
         })
+        stop = scene
+        toggleSoundRef.current = scene.toggleSound
       })
       .catch(() => setStatus('error'))
 
@@ -75,6 +80,7 @@ export function OasisScene() {
             <br />
             space · {paused ? 'play' : 'pause'}
             <br />f · focus car
+            <br />m · sound {soundOn ? 'off' : 'on'}
             {mode === 'free' && (
               <>
                 <br />c · cinematic
@@ -96,6 +102,14 @@ export function OasisScene() {
               className={`rounded-xl border-0 shadow-2xl ${musicOpen ? '' : 'hidden'}`}
             />
           )}
+          <button
+            type="button"
+            aria-pressed={soundOn}
+            onClick={() => toggleSoundRef.current?.()}
+            className="uppercase tracking-[0.2em] transition-colors hover:text-white"
+          >
+            {soundOn ? 'sound on' : 'sound off'}
+          </button>
           <button
             type="button"
             aria-expanded={musicOpen}

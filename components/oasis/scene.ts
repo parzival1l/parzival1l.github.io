@@ -15,6 +15,7 @@ import {
   buildSunLight,
 } from './world'
 import { buildBlimp, buildFireworks, buildScoreboard, buildStartGate } from './sky-props'
+import { createSound } from './sound'
 
 export type CameraMode = 'cinematic' | 'free'
 
@@ -23,6 +24,7 @@ type Options = {
   onError: (err: unknown) => void
   onModeChange?: (mode: CameraMode) => void
   onPauseChange?: (paused: boolean) => void
+  onSoundChange?: (on: boolean) => void
   // Seconds into the loop to start at; handy for checking one phase.
   startAt?: number
 }
@@ -98,22 +100,24 @@ function distanceAt(elapsed: number) {
 // PI behind), `h` the height above it, `d` the distance, and `look` the point
 // it aims at, as height above the car and distance ahead of it. The camera
 // eases through the keys, so it never holds still.
-type ShotKey = { t: number; az: number; h: number; d: number; look: [number, number] }
+// `look` is [height, ahead, across]; across defaults to 0.
+type ShotKey = { t: number; az: number; h: number; d: number; look: [number, number, number?] }
 const PI = Math.PI
 const SHOTS: ShotKey[] = [
   { t: 0, az: PI, h: 2.4, d: 8, look: [4, 30] }, // behind, the starting gate ahead
   { t: 1.3, az: PI + 0.15, h: 1.1, d: 5, look: [2, 14] }, // under the gate
   { t: 2.3, az: PI + 0.25, h: 0.1, d: 2.6, look: [0.7, -1.8] }, // the PARZIVAL plate
   { t: 3.6, az: PI + 0.5, h: 1.0, d: 5.5, look: [0.6, 0] }, // a turn around the car
-  { t: 6.5, az: 2 * PI + 0.5, h: 0.5, d: 5.2, look: [0.5, 0] }, // side-on as the wheels fold
-  { t: 9, az: 3 * PI + 0.5, h: 0.2, d: 6, look: [0.5, 0] },
-  { t: 11.5, az: 3 * PI + 0.9, h: -3, d: 9, look: [0.4, 1] }, // from below as it climbs
+  { t: 5.2, az: 1.5 * PI + 0.45, h: 0.05, d: 3, look: [0.25, 1.2, -0.75] }, // close on the front wheel
+  { t: 7, az: 1.5 * PI + 0.2, h: 0.15, d: 2.7, look: [0.2, 1.2, -0.75] }, // as it folds flat
+  { t: 9.4, az: 1.5 * PI - 0.1, h: -4.5, d: 4, look: [0, 0.2] }, // underneath, the thrusters firing
+  { t: 12, az: 2 * PI + 0.6, h: -3, d: 9, look: [0.4, 1] }, // from below as it climbs
   { t: 15, az: 3 * PI - 0.35, h: 6, d: 14, look: [-6, 30] }, // behind it, the city ahead
   { t: 19, az: 3 * PI - 0.4, h: 18, d: 40, look: [-20, 60] }, // over the rooftops
   { t: 23, az: 3 * PI - 1.4, h: 6, d: 22, look: [-10, 0] }, // alongside, towers below
   { t: 27, az: 2 * PI + 0.4, h: 3, d: 14, look: [0, 0] }, // ahead, coming down
   { t: 31, az: 2 * PI + 1.2, h: 1.5, d: 10, look: [0.4, 0] },
-  { t: 35, az: 2 * PI + 2.0, h: 0.6, d: 6, look: [0.4, 0] }, // side-on as the wheels unfold
+  { t: 35, az: 2.5 * PI + 0.45, h: 0.1, d: 3, look: [0.2, 1.2, 0.75] }, // close on a wheel as it unfolds
   { t: 37.5, az: 2 * PI + 2.9, h: 0.6, d: 4.5, look: [0.6, -0.8] },
 ]
 
@@ -142,6 +146,7 @@ function shotAt(t: number) {
     d: cr(p0.d, p1.d, p2.d, p3.d),
     lookY: cr(p0.look[0], p1.look[0], p2.look[0], p3.look[0]),
     lookZ: cr(p0.look[1], p1.look[1], p2.look[1], p3.look[1]),
+    lookX: cr(p0.look[2] ?? 0, p1.look[2] ?? 0, p2.look[2] ?? 0, p3.look[2] ?? 0),
   }
 }
 
@@ -184,7 +189,7 @@ function buildThrusterMaterial() {
 
 export function startOasis(
   canvas: HTMLCanvasElement,
-  { onReady, onError, onModeChange, onPauseChange, startAt = 0 }: Options,
+  { onReady, onError, onModeChange, onPauseChange, onSoundChange, startAt = 0 }: Options,
 ) {
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   let disposed = false
@@ -286,7 +291,7 @@ export function startOasis(
       })
       loaded = true
       if (process.env.NODE_ENV === 'development') {
-        Object.assign(window, { __oasis: { camera, controls, car, wheels, city, THREE } })
+        Object.assign(window, { __oasis: { camera, controls, car, wheels, city, sound, THREE } })
       }
       onReady()
     },
@@ -382,6 +387,12 @@ export function startOasis(
   }
   window.addEventListener('wheel', onWheel, { capture: true, passive: true })
 
+  const sound = createSound()
+  const toggleSound = () => {
+    sound.setEnabled(!sound.enabled)
+    onSoundChange?.(sound.enabled)
+  }
+
   let paused = false
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.metaKey || e.ctrlKey || e.altKey) return
@@ -389,8 +400,11 @@ export function startOasis(
       e.preventDefault()
       paused = !paused
       onPauseChange?.(paused)
+      sound.setPaused(paused)
     } else if (e.key.toLowerCase() === 'c') {
       setMode('cinematic')
+    } else if (e.key.toLowerCase() === 'm') {
+      toggleSound()
     } else if (e.key.toLowerCase() === 'f') {
       startFocus()
     }
@@ -414,6 +428,7 @@ export function startOasis(
   const cityLead = DISTANCE[Math.round(CITY_AT / TABLE_STEP)]
   let elapsed = reducedMotion ? 21 : startAt
   let last = performance.now()
+  let prevT = (reducedMotion ? 21 : startAt) % LOOP
 
   renderer.setAnimationLoop(() => {
     const now = performance.now()
@@ -424,6 +439,21 @@ export function startOasis(
     const t = elapsed % LOOP
     const s = flightState(t)
     const carZ = distanceAt(elapsed)
+
+    // One sound for each moment of the flight, fired as the lap clock
+    // passes it.
+    if (dt > 0 && t > prevT) {
+      const at = (x: number) => prevT < x && t >= x
+      if (at(5)) sound.hover(true)
+      if (at(6)) sound.wheelsFold(true, 1.5)
+      if (at(7.5)) sound.boost()
+      if (at(26)) sound.descend()
+      if (at(34.5)) sound.wheelsFold(false, 1.5)
+      if (at(36.5)) sound.hover(false)
+      if (at(37.4)) sound.touchdown()
+    }
+    prevT = t
+    sound.update(s)
 
     previous.copy(car.position)
     car.position.set(s.x, s.y + Math.sin(elapsed * 9) * 0.012 * s.fold, carZ)
@@ -480,6 +510,7 @@ export function startOasis(
         const side = k % 2 === 0 ? -1 : 1
         burstAt.set(side * (8 + ((k * 37) % 30)), 26 + ((k * 53) % 30), gateZ + 10 + ((k * 71) % 45))
         fireworks.launch(burstAt, elapsed)
+        sound.firework(camera.position.distanceTo(burstAt))
       }
     }
     if (t < 4 && elapsed >= nextBurst) {
@@ -492,6 +523,7 @@ export function startOasis(
     } else if (t >= 4) nextBurst = lapStart + LOOP
     if (!passVolley && t >= GATE_TIME) {
       volley(40, 4)
+      sound.gate()
       passVolley = true
     }
     fireworks.material.uniforms.uTime.value = elapsed
@@ -510,7 +542,7 @@ export function startOasis(
         camera.position.add(lookAt.subVectors(car.position, previous))
         camera.position.add(desired.sub(camera.position).multiplyScalar(blend * blend))
       } else camera.position.copy(desired)
-      lookAt.set(car.position.x, car.position.y + shot.lookY, carZ + shot.lookZ)
+      lookAt.set(car.position.x + shot.lookX, car.position.y + shot.lookY, carZ + shot.lookZ)
       camera.lookAt(lookAt)
       controls.target.copy(lookAt)
     } else {
@@ -539,8 +571,9 @@ export function startOasis(
     composer.render()
   })
 
-  return () => {
+  const stop = () => {
     disposed = true
+    sound.dispose()
     renderer.setAnimationLoop(null)
     window.removeEventListener('resize', resize)
     window.removeEventListener('keydown', onKeyDown)
@@ -561,4 +594,5 @@ export function startOasis(
     composer.dispose()
     renderer.dispose()
   }
+  return Object.assign(stop, { toggleSound })
 }
