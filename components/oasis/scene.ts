@@ -7,6 +7,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js'
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js'
 import {
+  CITY_EXTENT_X,
   CITY_HALF_LENGTH,
   aimSunLight,
   buildAtmosphere,
@@ -14,10 +15,19 @@ import {
   buildCity,
   buildSunLight,
 } from './world'
-import { buildBlimp, buildFireworks, buildScoreboard, buildStartGate } from './sky-props'
+import {
+  RING_DROP,
+  RING_RADIUS,
+  buildBlimp,
+  buildFireworks,
+  buildScoreboard,
+  buildSparkles,
+  buildStartGate,
+  hangRing,
+} from './sky-props'
 import { createSound } from './sound'
 
-export type CameraMode = 'cinematic' | 'free'
+export type CameraMode = 'cinematic' | 'free' | 'drive'
 
 type Options = {
   onReady: () => void
@@ -25,14 +35,20 @@ type Options = {
   onModeChange?: (mode: CameraMode) => void
   onPauseChange?: (paused: boolean) => void
   onSoundChange?: (on: boolean) => void
+  // The reader took the wheel (true) or pressed R to restart (false).
+  onDriveChange?: (driving: boolean) => void
+  onRings?: (passed: number, total: number) => void
   // Seconds into the loop to start at; handy for checking one phase.
   startAt?: number
 }
 
-// One loop of the flight, in seconds. The car drives toward Times Square,
+// One loop of the flight, in seconds. The car drives toward the city,
 // hovers, folds its wheels, climbs over the rooftops, flies the length of
-// Broadway, comes down on the far side and lands, wheels first.
-const LOOP = 40
+// the city, comes down on the far side and lands, wheels first.
+// The city is two tiles long; EXTRA is the cruise time the second adds.
+const EXTRA = 17
+const late = (t: number) => t + EXTRA
+const LOOP = late(40)
 const WHEEL_RADIUS = 0.334
 const GROUND_SPEED = 28
 const AIR_SPEED = 70
@@ -42,7 +58,7 @@ const HOVER_HEIGHT = 0.55
 const WHEEL_TUCK = 0.14
 const WHEEL_DROP = 0.06
 // The city sits under the middle of the cruise.
-const CITY_AT = 21
+const CITY_AT = 21 + EXTRA / 2
 // The starting gate, in metres down the road from where each lap starts.
 // The car passes under it about 1.6 seconds in.
 const GATE_AT = 45
@@ -53,13 +69,13 @@ const smooth = (a: number, b: number, t: number) => {
 }
 
 function flightState(t: number) {
-  const hover = smooth(5, 6, t) - smooth(36.5, 37.5, t)
-  const fold = smooth(6, 7.5, t) - smooth(34.5, 36, t)
-  const lift = smooth(7.5, 16, t) - smooth(26, 34.5, t)
-  const cruise = smooth(16, 17.5, t) - smooth(24.5, 26, t)
+  const hover = smooth(5, 6, t) - smooth(late(36.5), late(37.5), t)
+  const fold = smooth(6, 7.5, t) - smooth(late(34.5), late(36), t)
+  const lift = smooth(7.5, 16, t) - smooth(late(26), late(34.5), t)
+  const cruise = smooth(16, 17.5, t) - smooth(late(24.5), late(26), t)
   const phase = (t - 16) * 0.55
   // A small dip as the tyres take the weight.
-  const touchdown = Math.sin(Math.PI * smooth(37.3, 38.1, t)) * -0.04
+  const touchdown = Math.sin(Math.PI * smooth(late(37.3), late(38.1), t)) * -0.04
   return {
     hover,
     fold,
@@ -115,10 +131,13 @@ const SHOTS: ShotKey[] = [
   { t: 15, az: 3 * PI - 0.35, h: 6, d: 14, look: [-6, 30] }, // behind it, the city ahead
   { t: 19, az: 3 * PI - 0.4, h: 18, d: 40, look: [-20, 60] }, // over the rooftops
   { t: 23, az: 3 * PI - 1.4, h: 6, d: 22, look: [-10, 0] }, // alongside, towers below
-  { t: 27, az: 2 * PI + 0.4, h: 3, d: 14, look: [0, 0] }, // ahead, coming down
-  { t: 31, az: 2 * PI + 1.2, h: 1.5, d: 10, look: [0.4, 0] },
-  { t: 35, az: 2.5 * PI + 0.45, h: 0.1, d: 3, look: [0.2, 1.2, 0.75] }, // close on a wheel as it unfolds
-  { t: 37.5, az: 2 * PI + 2.9, h: 0.6, d: 4.5, look: [0.6, -0.8] },
+  { t: 28, az: 3 * PI - 2.3, h: 25, d: 60, look: [-30, 40] }, // wide, from ahead and above
+  { t: 33, az: 3 * PI - 0.6, h: 9, d: 24, look: [-8, 25] }, // behind, the second half of the city
+  { t: late(23), az: 3 * PI - 1.4, h: 6, d: 22, look: [-10, 0] }, // alongside again
+  { t: late(27), az: 2 * PI + 0.4, h: 3, d: 14, look: [0, 0] }, // ahead, coming down
+  { t: late(31), az: 2 * PI + 1.2, h: 1.5, d: 10, look: [0.4, 0] },
+  { t: late(35), az: 2.5 * PI + 0.45, h: 0.1, d: 3, look: [0.2, 1.2, 0.75] }, // close on a wheel as it unfolds
+  { t: late(37.5), az: 2 * PI + 2.9, h: 0.6, d: 4.5, look: [0.6, -0.8] },
 ]
 
 function shotAt(t: number) {
@@ -189,7 +208,7 @@ function buildThrusterMaterial() {
 
 export function startOasis(
   canvas: HTMLCanvasElement,
-  { onReady, onError, onModeChange, onPauseChange, onSoundChange, startAt = 0 }: Options,
+  { onReady, onError, onModeChange, onPauseChange, onSoundChange, onDriveChange, onRings, startAt = 0 }: Options,
 ) {
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   let disposed = false
@@ -216,21 +235,46 @@ export function startOasis(
   // One city per loop. When a loop ends, it jumps ahead to sit under the
   // next loop's cruise; by then it is far behind the car and lost in haze.
   const city = new THREE.Group()
-  city.add(buildCity())
+  const { group: cityTiles, lots } = buildCity()
+  city.add(cityTiles)
   scene.add(city)
 
-  // Blimps ride with the city, drifting slowly across it.
+  // Five blimps ride with the city, each with a ring slung underneath for
+  // the reader to fly through. They drift a little back and forth along
+  // their heading. Each one rises, if it must, until its ring clears the
+  // roofs it drifts over.
+  const BLIMP_DRIFT = 30
   const blimps = [
-    { at: new THREE.Vector3(-260, 170, -120), heading: 0.5 },
-    { at: new THREE.Vector3(320, 230, 260), heading: -2.4 },
-    { at: new THREE.Vector3(-120, 300, 520), heading: 2.0 },
-  ].map(({ at, heading }) => {
+    { x: 40, y: 140, z: -1080, heading: 0.2 },
+    { x: -260, y: 170, z: -600, heading: 0.7 },
+    { x: 180, y: 120, z: 0, heading: -0.5 },
+    { x: -120, y: 160, z: 600, heading: 2.6 },
+    { x: 320, y: 150, z: 1080, heading: -2.9 },
+  ].map(({ x, y, z, heading }, i) => {
+    const reach = BLIMP_DRIFT + RING_RADIUS + 20
+    let roofs = 0
+    for (const l of lots) {
+      const dx = Math.max(l.x0 - x, 0, x - l.x1)
+      const dz = Math.max(l.z0 - z, 0, z - l.z1)
+      if (Math.hypot(dx, dz) < reach) roofs = Math.max(roofs, l.h)
+    }
+    const at = new THREE.Vector3(x, Math.max(y, roofs + RING_DROP + RING_RADIUS + 25), z)
     const mesh = buildBlimp()
     mesh.position.copy(at)
     mesh.rotation.y = heading
     city.add(mesh)
-    return { mesh, at, heading }
+    // `side` is which face of the ring the car was on last frame.
+    return { mesh, at, heading, phase: i * 1.7, ring: hangRing(mesh), side: 0 }
   })
+  const RINGS = blimps.length
+  let ringsPassed = 0
+  // Sparkles burst at the ring, and around the car itself, riding along
+  // with it so the chase camera sees them.
+  const sparkles = buildSparkles()
+  const carSparkles = buildSparkles()
+  scene.add(sparkles.points)
+  for (const sp of [sparkles, carSparkles]) sp.material.uniforms.uPixel.value = renderer.getPixelRatio()
+  const carSparkleAt = new THREE.Vector3(0, 0.6, 0)
 
   // Halliday's high-score board hangs in the sky ahead of the car.
   const scoreboard = buildScoreboard()
@@ -248,6 +292,7 @@ export function startOasis(
 
   const car = new THREE.Group()
   scene.add(car)
+  car.add(carSparkles.points)
   const wheels: {
     node: THREE.Object3D
     side: number
@@ -291,7 +336,7 @@ export function startOasis(
       })
       loaded = true
       if (process.env.NODE_ENV === 'development') {
-        Object.assign(window, { __oasis: { camera, controls, car, wheels, city, sound, THREE } })
+        Object.assign(window, { __oasis: { camera, controls, car, wheels, city, sound, drive, blimps, lots, THREE } })
       }
       onReady()
     },
@@ -393,22 +438,114 @@ export function startOasis(
     onSoundChange?.(sound.enabled)
   }
 
+  // The reader's own driving and flying. The car is a hover car: on the
+  // road it steers like a car, in the air it turns on the spot and holds
+  // its height until told to climb or sink.
+  const DRIVE = {
+    road: { accel: 12, brake: 30, reverse: 8, coast: 4, drag: 0.006, max: 35, maxReverse: 10 },
+    air: { accel: 24, brake: 30, reverse: 10, coast: 6, drag: 0.0032, max: 85, maxReverse: 15 },
+    steer: 0.55, // front-wheel lock, radians
+    roadTurn: 1.2, // most the car turns on the road, radians a second
+    airTurn: 1.0, // radians a second
+    climb: 28, // m/s
+    ceiling: 420,
+    radius: 1.6, // the car, as a circle, for collisions
+  }
+  const WHEELBASE = 2.4
+  const drive = { on: false, v: 0, yaw: 0, steer: 0, y: 0, vy: 0, fold: 0, folded: false, air: false, roll: 0, bump: -1 }
+  const KEYS: Record<string, string> = {
+    KeyW: 'up',
+    ArrowUp: 'up',
+    KeyS: 'down',
+    ArrowDown: 'down',
+    KeyA: 'left',
+    ArrowLeft: 'left',
+    KeyD: 'right',
+    ArrowRight: 'right',
+    KeyE: 'rise',
+    KeyQ: 'sink',
+  }
+  const held = new Set<string>()
+
+  // Hand the car to the reader wherever it is in the flight.
+  const takeWheel = () => {
+    const s = flightState(elapsed % LOOP)
+    Object.assign(drive, {
+      on: true,
+      v: s.speed,
+      yaw: 0,
+      steer: 0,
+      y: car.position.y,
+      vy: 0,
+      fold: s.fold,
+      folded: s.fold > 0.5,
+      air: car.position.y > 0.3,
+      roll: s.roll,
+    })
+    for (const b of blimps) b.side = 0
+    focus = null
+    setMode('drive')
+    onDriveChange?.(true)
+  }
+
+  // R: back to the starting line, and the cinematic flight from the top.
+  const restart = () => {
+    drive.on = false
+    held.clear()
+    elapsed = 0
+    prevT = 0
+    nextBurst = -1
+    passVolley = false
+    ringsPassed = 0
+    for (const b of blimps) b.ring.reset()
+    onRings?.(0, RINGS)
+    focus = null
+    if (paused) {
+      paused = false
+      onPauseChange?.(false)
+      sound.setPaused(false)
+    }
+    mode = 'free'
+    setMode('cinematic')
+    // Cut straight to the opening shot, rather than gliding there.
+    blend = 1
+    onDriveChange?.(false)
+  }
+
   let paused = false
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.metaKey || e.ctrlKey || e.altKey) return
+    const key = KEYS[e.code]
+    if (key) {
+      e.preventDefault()
+      held.add(key)
+      if (!drive.on && loaded && !reducedMotion) takeWheel()
+      return
+    }
+    if (e.repeat) return
     if (e.code === 'Space') {
       e.preventDefault()
       paused = !paused
       onPauseChange?.(paused)
       sound.setPaused(paused)
     } else if (e.key.toLowerCase() === 'c') {
-      setMode('cinematic')
+      setMode(drive.on ? 'drive' : 'cinematic')
+    } else if (e.key.toLowerCase() === 'r') {
+      restart()
     } else if (e.key.toLowerCase() === 'm') {
       toggleSound()
     } else if (e.key.toLowerCase() === 'f') {
       startFocus()
     }
   }
+  const onKeyUp = (e: KeyboardEvent) => {
+    const key = KEYS[e.code]
+    if (key) held.delete(key)
+  }
+  // Keys released while the tab is in the background never send keyup.
+  const onBlur = () => held.clear()
+  window.addEventListener('keyup', onKeyUp)
+  window.addEventListener('blur', onBlur)
   window.addEventListener('keydown', onKeyDown)
 
   const resize = () => {
@@ -426,82 +563,260 @@ export function startOasis(
   const lookAt = new THREE.Vector3()
   const previous = new THREE.Vector3()
   const cityLead = DISTANCE[Math.round(CITY_AT / TABLE_STEP)]
-  let elapsed = reducedMotion ? 21 : startAt
+  let elapsed = reducedMotion ? CITY_AT : startAt
+  // `elapsed` is the lap clock and stops while the reader drives; `clock`
+  // never stops, so fireworks, lights and blimps keep moving.
+  let clock = elapsed
   let last = performance.now()
-  let prevT = (reducedMotion ? 21 : startAt) % LOOP
+  let prevT = elapsed % LOOP
+
+  const updateWheels = (spin: number, fold: number, steer: number, thrust: number) => {
+    for (const w of wheels) {
+      w.node.rotation.x += spin
+      // Front wheels steer (only while they're down).
+      w.node.rotation.y = w.home.z > 0 ? steer * (1 - fold) : 0
+      w.node.rotation.z = -w.side * (Math.PI / 2) * fold
+      // Folded flat, the wheel tucks in under the sill, hub facing the road.
+      w.node.position.set(w.home.x - w.side * WHEEL_TUCK * fold, w.home.y - WHEEL_DROP * fold, w.home.z)
+      const underside = w.node.position.y - 0.17
+      w.hub.position.set(w.node.position.x, underside - 0.005, w.home.z)
+      w.jet.position.set(w.node.position.x, underside, w.home.z)
+      w.jet.scale.set(1, 0.3 + 0.7 * thrust, 1)
+    }
+    thrusterMaterial.uniforms.uPower.value = thrust
+    thrusterMaterial.uniforms.uTime.value = clock
+    hubMaterial.opacity = Math.min(thrust * 1.2, 0.85)
+  }
+
+  // One step of the reader's driving. W/S throttle, brake and reverse; A/D
+  // steer; E lifts off and climbs, Q sinks and lands. Buildings, the gate's
+  // posts and the edge of the map stop the car; it can land on a roof.
+  const ringPoint = new THREE.Vector3()
+  const stepDrive = (dt: number, cityZ: number, gateZ: number, lapZ: number) => {
+    const input = (k: string) => (held.has(k) ? 1 : 0)
+    const throttle = input('up') - input('down')
+    const turn = input('left') - input('right')
+    const p = drive.air ? DRIVE.air : DRIVE.road
+    let v = drive.v
+    if (throttle > 0) v += (v < 0 ? p.brake : p.accel) * dt
+    else if (throttle < 0) v -= (v > 0 ? p.brake : p.reverse) * dt
+    else v -= Math.sign(v) * Math.min(Math.abs(v), p.coast * dt)
+    v -= v * Math.abs(v) * p.drag * dt
+    v = THREE.MathUtils.clamp(v, -p.maxReverse, p.max)
+    if (drive.air) {
+      drive.steer += (0 - drive.steer) * Math.min(1, dt * 8)
+      drive.yaw += turn * DRIVE.airTurn * dt
+    } else {
+      // Less lock at speed, so the car stays controllable; it turns about
+      // its rear axle like a car.
+      const lock = DRIVE.steer / (1 + Math.abs(v) / 18)
+      drive.steer += (turn * lock - drive.steer) * Math.min(1, dt * 8)
+      const rate = (v / WHEELBASE) * Math.tan(drive.steer)
+      drive.yaw += THREE.MathUtils.clamp(rate, -DRIVE.roadTurn, DRIVE.roadTurn) * dt
+    }
+
+    // Height: E climbs (and lifts off the road), Q sinks.
+    const lift = input('rise') - input('sink')
+    if (!drive.air && lift > 0) {
+      drive.air = true
+      sound.hover(true)
+    }
+    if (drive.air) drive.vy += (lift * DRIVE.climb - drive.vy) * Math.min(1, dt * 3)
+    else drive.vy = 0
+    const prevY = drive.y
+    let y = Math.min(drive.y + drive.vy * dt, DRIVE.ceiling)
+
+    let x = car.position.x + Math.sin(drive.yaw) * v * dt
+    let z = car.position.z + Math.cos(drive.yaw) * v * dt
+    let hit = false
+    let floor = 0
+    const r = DRIVE.radius
+    const solid = (x0: number, x1: number, z0: number, z1: number, top: number) => {
+      const cx = THREE.MathUtils.clamp(x, x0, x1)
+      const cz = THREE.MathUtils.clamp(z, z0, z1)
+      const dx = x - cx
+      const dz = z - cz
+      const d2 = dx * dx + dz * dz
+      if (d2 >= r * r) return
+      // Coming down from above: it's a roof to stand on.
+      if (prevY >= top - 0.3) {
+        floor = Math.max(floor, top)
+        return
+      }
+      hit = true
+      if (d2 > 1e-8) {
+        const d = Math.sqrt(d2)
+        x = cx + (dx / d) * r
+        z = cz + (dz / d) * r
+      } else {
+        // Centre inside the box: leave by the nearest side.
+        const out = [x - x0, x1 - x, z - z0, z1 - z]
+        const k = out.indexOf(Math.min(...out))
+        if (k === 0) x = x0 - r
+        else if (k === 1) x = x1 + r
+        else if (k === 2) z = z0 - r
+        else z = z1 + r
+      }
+    }
+    for (const l of lots) solid(l.x0, l.x1, l.z0 + cityZ, l.z1 + cityZ, l.h)
+    for (const side of [-1, 1]) solid(side * 11 - 0.9, side * 11 + 0.9, gateZ - 0.9, gateZ + 0.9, 11.5)
+    // The edge of the map: the city's width, from just behind the start
+    // line to just past the far end of the city.
+    const zMin = lapZ - 30
+    const zMax = cityZ + CITY_HALF_LENGTH + 60
+    if (Math.abs(x) > CITY_EXTENT_X - r) {
+      x = Math.sign(x) * (CITY_EXTENT_X - r)
+      hit = true
+    }
+    if (z < zMin || z > zMax) {
+      z = THREE.MathUtils.clamp(z, zMin, zMax)
+      hit = true
+    }
+    if (hit) {
+      if (Math.abs(v) > 4 && clock - drive.bump > 0.35) {
+        sound.touchdown()
+        drive.bump = clock
+      }
+      v = -v * 0.2
+    }
+    drive.v = v
+
+    // Settle on the road or a roof. Sinking onto it lands the car; driving
+    // off a roof's edge leaves it hovering.
+    if (y <= floor) {
+      y = floor
+      if (drive.air && drive.vy <= 0 && lift < 0) {
+        drive.air = false
+        sound.touchdown()
+      }
+      drive.vy = Math.max(drive.vy, 0)
+    } else if (!drive.air) {
+      drive.air = true
+    }
+    drive.y = y
+
+    // The wheels fold flat as the car climbs away from whatever is under
+    // it, and swing back down as it comes within a few metres.
+    const foldTo = drive.air ? smooth(0.5, 5, y - floor) : 0
+    drive.fold += (foldTo - drive.fold) * Math.min(1, dt * 2.5)
+    if (foldTo > 0.5 !== drive.folded) {
+      drive.folded = foldTo > 0.5
+      sound.wheelsFold(drive.folded, 1.2)
+    }
+
+    const bank = drive.air ? -turn * 0.35 * Math.min(Math.abs(v) / 20, 1) : 0
+    drive.roll += (bank - drive.roll) * Math.min(1, dt * 4)
+    const pitch = drive.air ? Math.atan2(drive.vy, Math.max(Math.abs(v), 12)) * 0.8 : 0
+    const bob = drive.air ? Math.sin(clock * 9) * 0.012 * drive.fold : 0
+    car.position.set(x, y + bob, z)
+    car.rotation.set(-pitch, drive.yaw, drive.roll, 'YXZ')
+    const thrust = drive.air ? 0.3 + 0.7 * drive.fold * Math.min(0.55 + Math.abs(drive.vy) / DRIVE.climb + Math.abs(v) / p.max, 1) : 0
+    updateWheels(drive.air ? 0 : (v * dt) / WHEEL_RADIUS, drive.fold, drive.steer, thrust)
+    sound.update({
+      speed: Math.abs(v),
+      hover: drive.air ? 1 : 0,
+      fold: drive.fold,
+      lift: Math.min(y / CRUISE_ALTITUDE, 1),
+      thrust,
+    })
+
+    // Rings: the car passes one when it crosses the ring's plane inside it.
+    for (const b of blimps) {
+      if (b.ring.done) continue
+      b.ring.ring.updateWorldMatrix(true, false)
+      const local = b.ring.ring.worldToLocal(ringPoint.copy(car.position).setY(car.position.y + 0.6))
+      const side = Math.sign(local.z)
+      const inside = Math.hypot(local.x, local.y) < RING_RADIUS - 0.4 && Math.abs(local.z) < 8
+      if (b.side !== 0 && side !== 0 && side !== b.side && inside) {
+        b.ring.pass()
+        ringsPassed++
+        onRings?.(ringsPassed, RINGS)
+        sound.sparkle()
+        b.ring.ring.getWorldPosition(burstAt)
+        for (let k = 0; k < 6; k++) {
+          const a = (k / 6) * Math.PI * 2
+          const at = k === 0 ? burstAt : ringPoint.set(Math.cos(a) * RING_RADIUS, Math.sin(a) * RING_RADIUS, 0)
+          if (k > 0) b.ring.ring.localToWorld(at)
+          sparkles.launch(at, clock)
+        }
+        for (let k = 0; k < 3; k++) carSparkles.launch(carSparkleAt, clock + k * 0.25)
+        if (ringsPassed === RINGS) {
+          sound.complete()
+          for (let k = 0; k < 5; k++) {
+            burstAt.set(car.position.x + (k - 2) * 25, car.position.y + 30 + (k % 2) * 15, car.position.z + 60)
+            fireworks.launch(burstAt, clock)
+          }
+        }
+      }
+      b.side = side || b.side
+    }
+  }
 
   renderer.setAnimationLoop(() => {
     const now = performance.now()
     const frameDt = Math.min((now - last) / 1000, 0.05)
     last = now
-    const dt = reducedMotion || paused || !loaded ? 0 : frameDt
+    const liveDt = reducedMotion || paused || !loaded ? 0 : frameDt
+    const dt = drive.on ? 0 : liveDt
+    clock += liveDt
     elapsed += dt
     const t = elapsed % LOOP
-    const s = flightState(t)
-    const carZ = distanceAt(elapsed)
-
-    // One sound for each moment of the flight, fired as the lap clock
-    // passes it.
-    if (dt > 0 && t > prevT) {
-      const at = (x: number) => prevT < x && t >= x
-      if (at(5)) sound.hover(true)
-      if (at(6)) sound.wheelsFold(true, 1.5)
-      if (at(7.5)) sound.boost()
-      if (at(26)) sound.descend()
-      if (at(34.5)) sound.wheelsFold(false, 1.5)
-      if (at(36.5)) sound.hover(false)
-      if (at(37.4)) sound.touchdown()
-    }
-    prevT = t
-    sound.update(s)
-
+    const lapZ = Math.floor(elapsed / LOOP) * LOOP_DISTANCE
+    const cityZ = lapZ + cityLead
+    const gateZ = lapZ + GATE_AT
     previous.copy(car.position)
-    car.position.set(s.x, s.y + Math.sin(elapsed * 9) * 0.012 * s.fold, carZ)
-    // Pitch follows the flight path: nose up on the climb, down on descent.
-    const ahead = flightState(Math.min(t + 0.05, LOOP))
-    const climb = Math.atan2(ahead.y - s.y, Math.max(distanceAt(elapsed + 0.05) - carZ, 1e-3))
-    car.rotation.set(-climb * 0.8, 0, s.roll, 'YXZ')
 
-    for (const w of wheels) {
-      w.node.rotation.x += (s.speed * dt * (1 - s.hover)) / WHEEL_RADIUS
-      w.node.rotation.z = -w.side * (Math.PI / 2) * s.fold
-      // Folded flat, the wheel tucks in under the sill, hub facing the road.
-      w.node.position.set(
-        w.home.x - w.side * WHEEL_TUCK * s.fold,
-        w.home.y - WHEEL_DROP * s.fold,
-        w.home.z,
-      )
-      const underside = w.node.position.y - 0.17
-      w.hub.position.set(w.node.position.x, underside - 0.005, w.home.z)
-      w.jet.position.set(w.node.position.x, underside, w.home.z)
-      w.jet.scale.set(1, 0.3 + 0.7 * s.thrust, 1)
+    if (drive.on) {
+      stepDrive(liveDt, cityZ, gateZ, lapZ)
+    } else {
+      const s = flightState(t)
+      const carZ = distanceAt(elapsed)
+      // One sound for each moment of the flight, fired as the lap clock
+      // passes it.
+      if (dt > 0 && t > prevT) {
+        const at = (x: number) => prevT < x && t >= x
+        if (at(5)) sound.hover(true)
+        if (at(6)) sound.wheelsFold(true, 1.5)
+        if (at(7.5)) sound.boost()
+        if (at(late(26))) sound.descend()
+        if (at(late(34.5))) sound.wheelsFold(false, 1.5)
+        if (at(late(36.5))) sound.hover(false)
+        if (at(late(37.4))) sound.touchdown()
+      }
+      prevT = t
+      sound.update(s)
+
+      car.position.set(s.x, s.y + Math.sin(elapsed * 9) * 0.012 * s.fold, carZ)
+      // Pitch follows the flight path: nose up on the climb, down on descent.
+      const ahead = flightState(Math.min(t + 0.05, LOOP))
+      const climb = Math.atan2(ahead.y - s.y, Math.max(distanceAt(elapsed + 0.05) - carZ, 1e-3))
+      car.rotation.set(-climb * 0.8, 0, s.roll, 'YXZ')
+      updateWheels((s.speed * dt * (1 - s.hover)) / WHEEL_RADIUS, s.fold, 0, s.thrust)
     }
-    thrusterMaterial.uniforms.uPower.value = s.thrust
-    thrusterMaterial.uniforms.uTime.value = elapsed
-    hubMaterial.opacity = Math.min(s.thrust * 1.2, 0.85)
 
     // This loop's city sits under the middle of the cruise.
-    const cityZ = Math.floor(elapsed / LOOP) * LOOP_DISTANCE + cityLead
     city.position.set(0, 0, cityZ)
     for (const b of blimps) {
-      const drift = elapsed * 2.2
+      const drift = Math.sin(clock * 0.05 + b.phase) * BLIMP_DRIFT
       b.mesh.position.set(
         b.at.x + Math.sin(b.heading) * drift,
-        b.at.y + Math.sin(elapsed * 0.3 + b.at.x) * 2,
+        b.at.y + Math.sin(clock * 0.3 + b.phase) * 2,
         b.at.z + Math.cos(b.heading) * drift,
       )
+      b.ring.update(clock, liveDt)
     }
+    sparkles.material.uniforms.uTime.value = clock
+    carSparkles.material.uniforms.uTime.value = clock
 
-    scoreboard.position.set(0, 330, carZ + 950)
-    scoreboard.rotation.y = Math.PI + Math.sin(elapsed * 0.15) * 0.25
-    ;(scoreboard.material as THREE.ShaderMaterial).uniforms.uTime.value = elapsed
+    scoreboard.position.set(0, 330, (drive.on ? cityZ : car.position.z + 950))
+    scoreboard.rotation.y = Math.PI + Math.sin(clock * 0.15) * 0.25
+    ;(scoreboard.material as THREE.ShaderMaterial).uniforms.uTime.value = clock
 
     // The gate stands GATE_AT metres down the road from where each lap
     // starts; a volley of shells bursts over it for the first seconds.
     const lapStart = elapsed - t
-    const gateZ = Math.floor(elapsed / LOOP) * LOOP_DISTANCE + GATE_AT
     startGate.gate.position.set(0, 0, gateZ)
-    startGate.update(elapsed, t, GATE_TIME)
+    startGate.update(clock, t, GATE_TIME)
     // Fireworks: an opening volley the moment the lap starts, a second as
     // the car passes under the gate, and quick single shells between.
     const volley = (k0: number, n: number) => {
@@ -509,27 +824,49 @@ export function startOasis(
         const k = k0 + i
         const side = k % 2 === 0 ? -1 : 1
         burstAt.set(side * (8 + ((k * 37) % 30)), 26 + ((k * 53) % 30), gateZ + 10 + ((k * 71) % 45))
-        fireworks.launch(burstAt, elapsed)
+        fireworks.launch(burstAt, clock)
         sound.firework(camera.position.distanceTo(burstAt))
       }
     }
-    if (t < 4 && elapsed >= nextBurst) {
-      if (nextBurst < lapStart) {
-        nextBurst = lapStart
-        volley(0, 4)
-        passVolley = false
-      } else volley(Math.round((nextBurst - lapStart) / 0.22) + 4, 1)
-      nextBurst += 0.22
-    } else if (t >= 4) nextBurst = lapStart + LOOP
-    if (!passVolley && t >= GATE_TIME) {
-      volley(40, 4)
-      sound.gate()
-      passVolley = true
+    if (!drive.on) {
+      if (t < 4 && elapsed >= nextBurst) {
+        if (nextBurst < lapStart) {
+          nextBurst = lapStart
+          volley(0, 4)
+          passVolley = false
+        } else volley(Math.round((nextBurst - lapStart) / 0.22) + 4, 1)
+        nextBurst += 0.22
+      } else if (t >= 4) nextBurst = lapStart + LOOP
+      if (!passVolley && t >= GATE_TIME) {
+        volley(40, 4)
+        sound.gate()
+        passVolley = true
+      }
     }
-    fireworks.material.uniforms.uTime.value = elapsed
+    fireworks.material.uniforms.uTime.value = clock
     ground.cityZ.set(cityZ - CITY_HALF_LENGTH, cityZ + CITY_HALF_LENGTH, 1e9, 1e9)
 
-    if (mode === 'cinematic') {
+    if (mode === 'drive') {
+      // A chase camera behind the car. It rides along with the car, then
+      // eases round behind it, pulling back with speed and height.
+      const back = 7 + Math.abs(drive.v) * 0.06 + drive.fold * 3
+      camera.position.add(lookAt.subVectors(car.position, previous))
+      desired.set(
+        car.position.x - Math.sin(drive.yaw) * back,
+        car.position.y + 1.6 + back * 0.18,
+        car.position.z - Math.cos(drive.yaw) * back,
+      )
+      camera.position.lerp(desired, 1 - Math.exp(-frameDt * 4))
+      if (camera.position.y < 0.3) camera.position.y = 0.3
+      lookAt.set(
+        car.position.x + Math.sin(drive.yaw) * 4,
+        car.position.y + 1,
+        car.position.z + Math.cos(drive.yaw) * 4,
+      )
+      camera.lookAt(lookAt)
+      controls.target.copy(lookAt)
+    } else if (mode === 'cinematic') {
+      const carZ = car.position.z
       const shot = shotAt(t)
       desired.set(
         car.position.x + Math.sin(shot.az) * shot.d,
@@ -564,7 +901,7 @@ export function startOasis(
 
     // Keep the ground and sky centred on the car; the ground's pattern is
     // drawn in world space, so it doesn't slide.
-    ground.mesh.position.set(0, 0, Math.round(carZ / 100) * 100)
+    ground.mesh.position.set(0, 0, Math.round(car.position.z / 100) * 100)
     atmosphere.sky.position.copy(camera.position)
     aimSunLight(light.sun, car.position)
 
@@ -577,6 +914,8 @@ export function startOasis(
     renderer.setAnimationLoop(null)
     window.removeEventListener('resize', resize)
     window.removeEventListener('keydown', onKeyDown)
+    window.removeEventListener('keyup', onKeyUp)
+    window.removeEventListener('blur', onBlur)
     window.removeEventListener('wheel', onWheel, { capture: true })
     controls.dispose()
     scene.traverse((o) => {

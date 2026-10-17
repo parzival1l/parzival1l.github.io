@@ -18,6 +18,10 @@ export function OasisScene() {
   const [paused, setPaused] = useState(false)
   const [musicOpen, setMusicOpen] = useState(false)
   const [soundOn, setSoundOn] = useState(false)
+  const [driving, setDriving] = useState(false)
+  const [rings, setRings] = useState({ passed: 0, total: 5 })
+  // A message across the top of the screen for each ring flown through.
+  const [toast, setToast] = useState<{ text: string; id: number } | null>(null)
   const toggleSoundRef = useRef<(() => void) | null>(null)
   // Once opened, the player stays mounted while hidden, so the music keeps
   // playing when the panel closes.
@@ -37,6 +41,18 @@ export function OasisScene() {
           onModeChange: setMode,
           onPauseChange: setPaused,
           onSoundChange: setSoundOn,
+          onDriveChange: setDriving,
+          onRings: (passed, total) => {
+            setRings({ passed, total })
+            if (passed === 0) return setToast(null)
+            setToast({
+              text:
+                passed === total
+                  ? `You have gone through all ${total} out of ${total}`
+                  : `You have gone through ${passed} out of ${total}`,
+              id: Date.now(),
+            })
+          },
           startAt,
         })
         stop = scene
@@ -52,6 +68,12 @@ export function OasisScene() {
       document.body.style.overflow = overflow
     }
   }, [])
+
+  useEffect(() => {
+    if (!toast) return
+    const timer = setTimeout(() => setToast(null), toast.text.includes('all') ? 5000 : 2600)
+    return () => clearTimeout(timer)
+  }, [toast])
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -70,8 +92,19 @@ export function OasisScene() {
       <div className="pointer-events-none absolute left-5 top-5">OASIS · Parzival</div>
       {status === 'ready' && (
         <div className="pointer-events-none absolute right-5 top-5 text-right leading-6">
-          <div>{paused ? 'Paused' : mode === 'free' ? 'Free camera' : 'Cinematic'}</div>
+          <div>
+            {paused ? 'Paused' : mode === 'free' ? 'Free camera' : mode === 'drive' ? 'Driving' : 'Cinematic'}
+          </div>
           <div className="text-white/50">
+            w a s d · {driving ? 'drive' : 'take the wheel'}
+            <br />e · {driving ? 'lift off · climb' : 'then lift off'}
+            {driving && (
+              <>
+                <br />q · sink · land
+              </>
+            )}
+            <br />r · restart
+            <br />
             drag · orbit
             <br />
             scroll · zoom to cursor
@@ -83,9 +116,27 @@ export function OasisScene() {
             <br />m · {soundOn ? 'mute' : 'sound on'}
             {mode === 'free' && (
               <>
-                <br />c · cinematic
+                <br />c · {driving ? 'chase camera' : 'cinematic'}
               </>
             )}
+          </div>
+        </div>
+      )}
+      {status === 'ready' && driving && (
+        <div className="pointer-events-none absolute bottom-5 left-5 leading-6">
+          <div className="text-white/50">Fly through the rings under the blimps</div>
+          <div className="text-[13px] text-[#ffc34d]">
+            Rings {rings.passed} / {rings.total}
+          </div>
+        </div>
+      )}
+      {toast && (
+        <div
+          key={toast.id}
+          className="pointer-events-none absolute inset-x-0 top-[18%] flex justify-center [animation:oasis-toast_0.5s_ease-out]"
+        >
+          <div className="rounded-full bg-black/55 px-7 py-3 text-[15px] tracking-[0.3em] text-[#ffe9a8] backdrop-blur-sm [text-shadow:0_0_14px_rgba(255,195,77,0.7)]">
+            {toast.text}
           </div>
         </div>
       )}

@@ -243,6 +243,27 @@ export function createSound() {
       burst(at, 0.14, 'bandpass', 1200, 1.4)
     },
 
+    // Flying through a ring: a shower of high bell notes.
+    sparkle() {
+      if (!ctx) return
+      const at = ctx.currentTime
+      for (let i = 0; i < 12; i++) {
+        const f = 1800 + Math.random() * 2800
+        tone(at + i * 0.03, 'sine', f, f * 1.01, 0.035, 0.6)
+      }
+      ;[1046.5, 1318.5, 1568].forEach((f, i) => tone(at + i * 0.06, 'triangle', f, f, 0.06, 0.5))
+    },
+
+    // All five rings: a held major chord under a rising run.
+    complete() {
+      if (!ctx) return
+      const at = ctx.currentTime + 0.3
+      ;[523.25, 659.25, 783.99, 1046.5, 1318.5, 1568].forEach((f, i) =>
+        tone(at + i * 0.09, 'triangle', f, f, 0.06, 0.4),
+      )
+      ;[261.63, 329.63, 392].forEach((f) => tone(at + 0.55, 'triangle', f, f, 0.07, 2.2))
+    },
+
     // Tyres taking the car's weight again.
     touchdown() {
       if (!ctx) return

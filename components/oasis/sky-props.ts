@@ -134,23 +134,57 @@ export function buildBlimp() {
 
 // --- Fireworks -------------------------------------------------------------
 
-const BURSTS = 24
-const SPARKS = 160
-const BURST_LIFE = 2.6
-const PALETTE = [0xffc34d, 0xff6b3d, 0xfff1c9, 0x7fd8ff, 0xff4d6d]
+type BurstStyle = {
+  bursts: number
+  sparks: number
+  life: number // seconds
+  reach: number // metres the sparks fly out
+  gravity: number
+  size: number
+  twinkle: number // 0 steady, 1 flickering
+  palette: number[]
+}
+
+const FIREWORKS: BurstStyle = {
+  bursts: 24,
+  sparks: 160,
+  life: 2.6,
+  reach: 38,
+  gravity: 4.5,
+  size: 900,
+  twinkle: 0,
+  palette: [0xffc34d, 0xff6b3d, 0xfff1c9, 0x7fd8ff, 0xff4d6d],
+}
+
+// The small glittering burst when the car flies through a ring.
+const SPARKLE: BurstStyle = {
+  bursts: 12,
+  sparks: 200,
+  life: 1.8,
+  reach: 9,
+  gravity: 1.5,
+  size: 150,
+  twinkle: 1,
+  palette: [0xffe9a8, 0xffffff, 0xffc34d, 0x9ff3ff],
+}
 
 // Each burst is a shell that explodes into a sphere of sparks, which slow,
 // fall and fade. All bursts share one Points mesh; timing runs on the GPU.
-export function buildFireworks() {
+export function buildFireworks(style: BurstStyle = FIREWORKS) {
+  const { bursts: BURSTS, sparks: SPARKS, life: BURST_LIFE, palette: PALETTE } = style
   const count = BURSTS * SPARKS
   const dir = new Float32Array(count * 3)
   const burst = new Float32Array(count)
   const color = new Float32Array(count * 3)
+  const seed = new Float32Array(count)
   const c = new THREE.Color()
   for (let b = 0; b < BURSTS; b++) {
     c.set(PALETTE[b % PALETTE.length])
     for (let i = 0; i < SPARKS; i++) {
       const k = b * SPARKS + i
+      seed[k] = Math.random()
+      // Sparkles mix their colours within each burst.
+      if (style.twinkle > 0) c.set(PALETTE[Math.floor(Math.random() * PALETTE.length)])
       const u = Math.random() * 2 - 1
       const th = Math.random() * Math.PI * 2
       const r = Math.sqrt(1 - u * u)
@@ -165,6 +199,7 @@ export function buildFireworks() {
   geometry.setAttribute('aDir', new THREE.BufferAttribute(dir, 3))
   geometry.setAttribute('aBurst', new THREE.BufferAttribute(burst, 1))
   geometry.setAttribute('aColor', new THREE.BufferAttribute(color, 3))
+  geometry.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1))
   const centres = Array.from({ length: BURSTS }, () => new THREE.Vector4(0, 0, 0, -10))
   const material = new THREE.ShaderMaterial({
     transparent: true,
@@ -184,6 +219,7 @@ export function buildFireworks() {
       attribute vec3 aDir;
       attribute float aBurst;
       attribute vec3 aColor;
+      attribute float aSeed;
       varying vec3 vColor;
       varying float vFade;
       void main() {
@@ -191,13 +227,14 @@ export function buildFireworks() {
         float age = uTime - c.w;
         float live = step(0.0, age) * step(age, ${BURST_LIFE.toFixed(1)});
         // Fast out, then drag and gravity.
-        float travel = 38.0 * (1.0 - exp(-age * 2.2));
-        vec3 p = c.xyz + aDir * travel + vec3(0.0, -4.5 * age * age, 0.0);
+        float travel = ${style.reach.toFixed(1)} * (1.0 - exp(-age * 2.2));
+        vec3 p = c.xyz + aDir * travel + vec3(0.0, -${style.gravity.toFixed(1)} * age * age, 0.0);
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
         gl_Position = projectionMatrix * mv;
-        vFade = live * (1.0 - smoothstep(0.6, ${BURST_LIFE.toFixed(1)}, age));
+        float flicker = mix(1.0, step(0.45, fract(aSeed * 13.0 + uTime * (6.0 + aSeed * 10.0))), ${style.twinkle.toFixed(1)});
+        vFade = live * flicker * (1.0 - smoothstep(0.6, ${BURST_LIFE.toFixed(1)}, age));
         vColor = aColor;
-        gl_PointSize = live * uPixel * 900.0 / -mv.z;
+        gl_PointSize = live * uPixel * ${style.size.toFixed(1)} / -mv.z;
       }`,
     fragmentShader: /* glsl */ `
       varying vec3 vColor;
@@ -218,6 +255,64 @@ export function buildFireworks() {
     launch(at: THREE.Vector3, time: number) {
       centres[next].set(at.x, at.y, at.z, time)
       next = (next + 1) % BURSTS
+    },
+  }
+}
+
+export function buildSparkles() {
+  return buildFireworks(SPARKLE)
+}
+
+// --- Rings -----------------------------------------------------------------
+
+export const RING_RADIUS = 11
+// From the blimp's centre down to the ring's centre.
+export const RING_DROP = 36
+const RING_IDLE = new THREE.Color(0x5fe3ff)
+const RING_DONE = new THREE.Color(0xffc34d)
+
+// A glowing ring slung on two cables under a blimp, square to its length,
+// so the car flies through it along the blimp's heading. It glows through
+// the haze, so it can be found from across the city.
+export function hangRing(blimp: THREE.Group) {
+  const material = new THREE.MeshBasicMaterial({ color: RING_IDLE.clone(), toneMapped: false, fog: false })
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(RING_RADIUS, 0.7, 16, 96), material)
+  ring.position.set(0, -RING_DROP, 0)
+  blimp.add(ring)
+  const cable = new THREE.MeshStandardMaterial({ color: 0x2a2d31, roughness: 0.7 })
+  const top = new THREE.Vector3()
+  const bottom = new THREE.Vector3()
+  for (const side of [-1, 1]) {
+    const a = side * 0.35
+    top.set(side * 4.5, -7.5, 0)
+    bottom.set(Math.sin(a) * RING_RADIUS, -RING_DROP + Math.cos(a) * RING_RADIUS, 0)
+    const length = top.distanceTo(bottom)
+    const line = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, length, 6), cable)
+    line.position.copy(top).add(bottom).multiplyScalar(0.5)
+    line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), top.sub(bottom).normalize())
+    blimp.add(line)
+  }
+  let flash = 0
+  let done = false
+  return {
+    ring,
+    get done() {
+      return done
+    },
+    pass() {
+      done = true
+      flash = 1
+    },
+    reset() {
+      done = false
+      flash = 0
+    },
+    // Unpassed rings pulse cyan; passed ones turn gold after a white flash.
+    update(time: number, dt: number) {
+      flash = Math.max(flash - dt * 1.5, 0)
+      if (done) material.color.copy(RING_DONE).multiplyScalar(1.6).lerp(new THREE.Color(6, 6, 6), flash)
+      else material.color.copy(RING_IDLE).multiplyScalar(2 + Math.sin(time * 3) * 0.6)
+      ring.scale.setScalar(1 + flash * 0.15)
     },
   }
 }

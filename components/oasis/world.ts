@@ -27,7 +27,10 @@ const STREET = 22
 const COLUMNS = 7 // blocks on each side of the avenue
 const ROWS = 13
 const AVENUE_HALF = 22 // from the centre line to the first row of buildings
-export const CITY_HALF_LENGTH = (ROWS * (BLOCK_Z + STREET)) / 2
+// One generated tile of city. The city is two tiles end to end, the second
+// a copy of the first turned half a turn.
+const TILE_HALF_LENGTH = (ROWS * (BLOCK_Z + STREET)) / 2
+export const CITY_HALF_LENGTH = TILE_HALF_LENGTH * 2
 const CITY_HALF_WIDTH = AVENUE_HALF + COLUMNS * (BLOCK_X + STREET)
 
 // The brightest the sky gets, before tone mapping. At the scene's exposure
@@ -241,6 +244,7 @@ function building(
   w: number,
   d: number,
   downtown: number,
+  lots: CityLot[],
 ) {
   const tower = rand() < 0.08 + 0.4 * downtown
   // About half the towers are pre-war stone and brick, not glass.
@@ -269,15 +273,20 @@ function building(
       top += sh
     }
     box(parts, sw * 0.4, 4, sd * 0.4, x, top, z, ROOF, 2)
+    lots.push({ x0: x - w / 2, x1: x + w / 2, z0: z - d / 2, z1: z + d / 2, h: top })
   } else {
     // A stone cornice along the roofline, and plant on the roof.
     // (Its top sits just above the roof, so the two don't flicker.)
     box(parts, w + 0.8, 0.9, d + 0.8, x, h - 0.8, z, STONE, 2)
     if (rand() < 0.6) box(parts, w * 0.25, 2.5, d * 0.25, x + (rand() - 0.5) * w * 0.4, h, z, ROOF, 2)
+    lots.push({ x0: x - w / 2 - 0.4, x1: x + w / 2 + 0.4, z0: z - d / 2 - 0.4, z1: z + d / 2 + 0.4, h: h + 0.1 })
   }
 }
 
-function buildCityGeometry() {
+// A building's footprint and roof height, for collisions.
+export type CityLot = { x0: number; x1: number; z0: number; z1: number; h: number }
+
+function buildCityGeometry(lots: CityLot[]) {
   const rand = mulberry32(7)
   const parts: THREE.BufferGeometry[] = []
   const pitchX = BLOCK_X + STREET
@@ -288,7 +297,7 @@ function buildCityGeometry() {
         const bx = side * (AVENUE_HALF + c * pitchX + BLOCK_X / 2)
         const bz = (r - (ROWS - 1) / 2) * pitchZ
         // Taller near the middle of the city and close to the avenue.
-        const dz = Math.abs(bz) / CITY_HALF_LENGTH
+        const dz = Math.abs(bz) / TILE_HALF_LENGTH
         const downtown = Math.max(0, 1 - Math.hypot(dz, c / COLUMNS) * 1.15)
         // Split each block into lots: two rows deep, two to four across.
         const across = 2 + Math.floor(rand() * 3)
@@ -298,7 +307,7 @@ function buildCityGeometry() {
             const ld = BLOCK_Z / 2
             const lx = bx - BLOCK_X / 2 + lw * (i + 0.5)
             const lz = bz - BLOCK_Z / 2 + ld * (j + 0.5)
-            building(parts, rand, lx, lz, lw - 1.5, ld - 1.5, downtown)
+            building(parts, rand, lx, lz, lw - 1.5, ld - 1.5, downtown, lots)
           }
         }
       }
@@ -388,8 +397,30 @@ function buildingMaterial() {
   return material
 }
 
+// The whole city, centred on the origin, and every building's footprint in
+// the city's own coordinates.
 export function buildCity() {
-  const mesh = new THREE.Mesh(buildCityGeometry(), buildingMaterial())
-  mesh.receiveShadow = false
-  return mesh
+  const tileLots: CityLot[] = []
+  const geometry = buildCityGeometry(tileLots)
+  const material = buildingMaterial()
+  const group = new THREE.Group()
+  const lots: CityLot[] = []
+  for (const side of [-1, 1]) {
+    const mesh = new THREE.Mesh(geometry, material)
+    mesh.position.z = side * TILE_HALF_LENGTH
+    // The far tile is turned around, so it doesn't read as a repeat.
+    if (side > 0) mesh.rotation.y = Math.PI
+    group.add(mesh)
+    for (const l of tileLots) {
+      lots.push(
+        side < 0
+          ? { ...l, z0: l.z0 - TILE_HALF_LENGTH, z1: l.z1 - TILE_HALF_LENGTH }
+          : { x0: -l.x1, x1: -l.x0, z0: TILE_HALF_LENGTH - l.z1, z1: TILE_HALF_LENGTH - l.z0, h: l.h },
+      )
+    }
+  }
+  return { group, lots }
 }
+
+export const CITY_EXTENT_X = CITY_HALF_WIDTH
+
