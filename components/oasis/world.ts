@@ -2,17 +2,17 @@ import * as THREE from 'three'
 import { Sky } from 'three/addons/objects/Sky.js'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 
-// Late-afternoon sun over the far end of the road (+Z), a little to the
-// right, high enough that it doesn't sit in the middle of every shot.
-const SUN_ELEVATION = THREE.MathUtils.degToRad(16)
-const SUN_AZIMUTH = THREE.MathUtils.degToRad(-12)
+// Golden hour, after the film's race through a "gritty and dirty" New York:
+// a low sun behind cloud, over the far end of the road (+Z) and to the right.
+const SUN_ELEVATION = THREE.MathUtils.degToRad(5)
+const SUN_AZIMUTH = THREE.MathUtils.degToRad(-28)
 const SUN_DIRECTION = new THREE.Vector3(
   Math.sin(SUN_AZIMUTH) * Math.cos(SUN_ELEVATION),
   Math.sin(SUN_ELEVATION),
   Math.cos(SUN_AZIMUTH) * Math.cos(SUN_ELEVATION),
 )
 // Matches the sky just above the horizon, so distant ground fades into it.
-const FOG_COLOR = new THREE.Color(0.63, 0.66, 0.7)
+const FOG_COLOR = new THREE.Color(0.42, 0.33, 0.27)
 
 // Highway cross-section, in metres from the centre line.
 const LANE = 3.6
@@ -32,15 +32,19 @@ const CITY_HALF_WIDTH = AVENUE_HALF + COLUMNS * (BLOCK_X + STREET)
 
 function configureSky(sky: Sky) {
   const u = sky.material.uniforms
-  u.turbidity.value = 2.5
-  u.rayleigh.value = 1.1
+  // Dusty air reddens the low sun and the horizon.
+  u.turbidity.value = 9
+  u.rayleigh.value = 2.4
   // A tight, faint glow around the sun instead of a blown-out halo.
-  u.mieCoefficient.value = 0.0012
-  u.mieDirectionalG.value = 0.72
+  u.mieCoefficient.value = 0.002
+  u.mieDirectionalG.value = 0.75
   // The stock sun disc is hundreds of times brighter than the sky; keep a
   // visible disc without flooding the frame.
-  u.showSunDisc.value = 0.012
-  u.cloudCoverage.value = 0.3
+  u.showSunDisc.value = 0.01
+  // Heavy, broken cloud.
+  u.cloudCoverage.value = 0.62
+  u.cloudDensity.value = 0.7
+  u.cloudScale.value = 0.00028
   u.sunPosition.value.copy(SUN_DIRECTION)
 }
 
@@ -61,12 +65,12 @@ export function buildAtmosphere(renderer: THREE.WebGLRenderer) {
   envSky.geometry.dispose()
   envSky.material.dispose()
 
-  const fog = new THREE.Fog(FOG_COLOR, 300, 3200)
+  const fog = new THREE.Fog(FOG_COLOR, 250, 2600)
   return { sky, env, fog }
 }
 
 export function buildSunLight() {
-  const sun = new THREE.DirectionalLight(0xffe0b8, 2.6)
+  const sun = new THREE.DirectionalLight(0xffb070, 2.4)
   sun.castShadow = true
   sun.shadow.mapSize.set(2048, 2048)
   const cam = sun.shadow.camera
@@ -78,7 +82,7 @@ export function buildSunLight() {
   cam.far = 900
   sun.shadow.bias = -0.0005
   sun.shadow.normalBias = 0.03
-  const fill = new THREE.HemisphereLight(0xc4d6f0, 0x5a5040, 0.7)
+  const fill = new THREE.HemisphereLight(0x8f9ab8, 0x3a3028, 0.45)
   return { sun, fill }
 }
 
@@ -348,7 +352,7 @@ function buildingMaterial() {
             pane = mix(pane, vec3(0.55, 0.5, 0.4), step(0.93, v) * (curtain ? 0.0 : 1.0));
             diffuseColor.rgb = mix(diffuseColor.rgb, pane, glassMask);
           }
-          if (!wall && vStyle < 1.5) diffuseColor.rgb = vec3(0.16, 0.155, 0.15);
+          if (!wall) diffuseColor.rgb = vec3(0.16, 0.155, 0.15) * (0.85 + 0.3 * wHash(floor(vLocal.xz * 0.2)));
         }`,
       )
       .replace(

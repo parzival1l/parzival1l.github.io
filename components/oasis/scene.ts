@@ -14,6 +14,7 @@ import {
   buildCity,
   buildSunLight,
 } from './world'
+import { buildBlimp, buildFireworks, buildScoreboard } from './sky-props'
 
 export type CameraMode = 'cinematic' | 'free'
 
@@ -185,7 +186,7 @@ export function startOasis(
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
   renderer.toneMapping = THREE.ACESFilmicToneMapping
-  renderer.toneMappingExposure = 0.75
+  renderer.toneMappingExposure = 0.6
   renderer.shadowMap.enabled = true
   renderer.shadowMap.type = THREE.PCFShadowMap
 
@@ -206,6 +207,30 @@ export function startOasis(
   const city = new THREE.Group()
   city.add(buildCity())
   scene.add(city)
+
+  // Blimps ride with the city, drifting slowly across it.
+  const blimps = [
+    { at: new THREE.Vector3(-260, 170, -120), heading: 0.5 },
+    { at: new THREE.Vector3(320, 230, 260), heading: -2.4 },
+    { at: new THREE.Vector3(-120, 300, 520), heading: 2.0 },
+  ].map(({ at, heading }) => {
+    const mesh = buildBlimp()
+    mesh.position.copy(at)
+    mesh.rotation.y = heading
+    city.add(mesh)
+    return { mesh, at, heading }
+  })
+
+  // Halliday's high-score board hangs in the sky ahead of the car.
+  const scoreboard = buildScoreboard()
+  scene.add(scoreboard)
+
+  // Fireworks start each lap of the race.
+  const fireworks = buildFireworks()
+  scene.add(fireworks.points)
+  fireworks.material.uniforms.uPixel.value = renderer.getPixelRatio()
+  const burstAt = new THREE.Vector3()
+  let nextBurst = 0
 
   const car = new THREE.Group()
   scene.add(car)
@@ -354,6 +379,30 @@ export function startOasis(
     // This loop's city sits under the middle of the cruise.
     const cityZ = Math.floor(elapsed / LOOP) * LOOP_DISTANCE + cityLead
     city.position.set(0, 0, cityZ)
+    for (const b of blimps) {
+      const drift = elapsed * 2.2
+      b.mesh.position.set(
+        b.at.x + Math.sin(b.heading) * drift,
+        b.at.y + Math.sin(elapsed * 0.3 + b.at.x) * 2,
+        b.at.z + Math.cos(b.heading) * drift,
+      )
+    }
+
+    scoreboard.position.set(0, 330, carZ + 950)
+    scoreboard.rotation.y = Math.PI + Math.sin(elapsed * 0.15) * 0.25
+    ;(scoreboard.material as THREE.ShaderMaterial).uniforms.uTime.value = elapsed
+
+    // A volley of shells over the road for the first seconds of each lap.
+    const lapStart = elapsed - t
+    if (t < 6 && elapsed >= nextBurst) {
+      if (nextBurst < lapStart) nextBurst = lapStart
+      const k = Math.round((nextBurst - lapStart) / 0.45)
+      const side = k % 2 === 0 ? -1 : 1
+      burstAt.set(side * (30 + ((k * 37) % 50)), 70 + ((k * 53) % 60), carZ + 180 + ((k * 71) % 120))
+      fireworks.launch(burstAt, elapsed)
+      nextBurst += 0.45
+    } else if (t >= 6) nextBurst = lapStart + LOOP
+    fireworks.material.uniforms.uTime.value = elapsed
     ground.cityZ.set(cityZ - CITY_HALF_LENGTH, cityZ + CITY_HALF_LENGTH, 1e9, 1e9)
 
     if (mode === 'cinematic') {
