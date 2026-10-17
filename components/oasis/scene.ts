@@ -30,6 +30,7 @@ import {
   hangRing,
 } from './sky-props'
 import { createSound } from './sound'
+import { type District, districtAt } from './districts'
 import { buildPedestrians, buildTraffic, buildTrees } from './street-life'
 
 export type CameraMode = 'cinematic' | 'free' | 'drive'
@@ -45,6 +46,8 @@ type Options = {
   onRings?: (passed: number, total: number) => void
   // The reader drove onto the exit pad.
   onExit?: () => void
+  // The car crossed into another district (null: outside the city).
+  onDistrict?: (district: District | null) => void
   // Seconds into the loop to start at; handy for checking one phase.
   startAt?: number
 }
@@ -218,7 +221,7 @@ function buildThrusterMaterial() {
 
 export function startOasis(
   canvas: HTMLCanvasElement,
-  { onReady, onError, onModeChange, onPauseChange, onSoundChange, onDriveChange, onRings, onExit, startAt = 0 }: Options,
+  { onReady, onError, onModeChange, onPauseChange, onSoundChange, onDriveChange, onRings, onExit, onDistrict, startAt = 0 }: Options,
 ) {
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   let disposed = false
@@ -364,6 +367,7 @@ export function startOasis(
   // loads on its own after the car, so the scene starts without them.
   const treeSpots = streetTreeSpots()
   const layout = cityLayout()
+  let districtId: string | null = null
   let trees: ReturnType<typeof buildTrees> | null = null
   let traffic: ReturnType<typeof buildTraffic> | null = null
   let walkers: ReturnType<typeof buildPedestrians> | null = null
@@ -873,6 +877,11 @@ export function startOasis(
     startGate.gate.position.set(0, 0, gateZ)
     exitPad.pad.position.set(EXIT_X, 0, lapZ + EXIT_AT)
     exitPad.update(clock, camera)
+    const here = districtAt(car.position.x, car.position.z - cityZ, layout.halfWidth, layout.halfLength)
+    if ((here?.id ?? null) !== districtId) {
+      districtId = here?.id ?? null
+      onDistrict?.(here)
+    }
     if (
       drive.on &&
       !exited &&
@@ -1001,5 +1010,25 @@ export function startOasis(
     composer.dispose()
     renderer.dispose()
   }
-  return Object.assign(stop, { toggleSound })
+  // For the map: the city's plan, which never changes, and where things
+  // are now. Everything is in the city's coordinates, in metres.
+  const mapPlan = {
+    blocks: layout.blocks,
+    halfWidth: layout.halfWidth,
+    halfLength: layout.halfLength,
+    avenueHalf: layout.avenueHalf,
+    // The road from the start line, measured back from the city's centre.
+    roadStart: -cityLead - 30,
+  }
+  const mapState = () => {
+    const lapZ = Math.floor(elapsed / LOOP) * LOOP_DISTANCE
+    const cityZ = lapZ + cityLead
+    return {
+      car: { x: car.position.x, z: car.position.z - cityZ, y: car.position.y, yaw: drive.on ? drive.yaw : 0 },
+      gate: { x: 0, z: lapZ + GATE_AT - cityZ },
+      exit: { x: EXIT_X, z: lapZ + EXIT_AT - cityZ },
+      rings: blimps.map((b) => ({ x: b.mesh.position.x, z: b.mesh.position.z, done: b.ring.done })),
+    }
+  }
+  return Object.assign(stop, { toggleSound, mapPlan, mapState })
 }

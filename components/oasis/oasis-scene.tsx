@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import type { CameraMode } from './scene'
+import type { District } from './districts'
+import { type MapPlan, type MapState, OasisMap } from './oasis-map'
 
 type Status = 'loading' | 'ready' | 'error'
 
@@ -20,6 +22,10 @@ export function OasisScene() {
   const [soundOn, setSoundOn] = useState(false)
   const [driving, setDriving] = useState(false)
   const [exiting, setExiting] = useState(false)
+  const [mapOpen, setMapOpen] = useState(false)
+  const [map, setMap] = useState<{ plan: MapPlan; state: () => MapState } | null>(null)
+  // The district the car is in, shown briefly as it crosses into one.
+  const [district, setDistrict] = useState<{ d: District; id: number } | null>(null)
   const [rings, setRings] = useState({ passed: 0, total: 5 })
   // A message across the top of the screen for each ring flown through.
   const [toast, setToast] = useState<{ text: string; id: number } | null>(null)
@@ -44,6 +50,7 @@ export function OasisScene() {
           onSoundChange: setSoundOn,
           onDriveChange: setDriving,
           onExit: () => setExiting(true),
+          onDistrict: (d) => setDistrict(d ? { d, id: Date.now() } : null),
           onRings: (passed, total) => {
             setRings({ passed, total })
             if (passed === 0) return setToast(null)
@@ -59,6 +66,7 @@ export function OasisScene() {
         })
         stop = scene
         toggleSoundRef.current = scene.toggleSound
+        setMap({ plan: scene.mapPlan, state: scene.mapState })
       })
       .catch(() => setStatus('error'))
 
@@ -85,12 +93,25 @@ export function OasisScene() {
   }, [toast])
 
   useEffect(() => {
+    if (!district) return
+    const timer = setTimeout(() => setDistrict(null), 3500)
+    return () => clearTimeout(timer)
+  }, [district])
+
+  useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') router.push('/')
+      if (e.metaKey || e.ctrlKey || e.altKey || e.repeat) return
+      if (e.key === 'Escape') {
+        // Esc closes the map first, and leaves the OASIS after.
+        if (mapOpen) setMapOpen(false)
+        else router.push('/')
+      } else if (e.key.toLowerCase() === 'n') {
+        setMapOpen((open) => !open)
+      }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [router])
+  }, [router, mapOpen])
 
   return (
     <div className="fixed inset-0 z-[100] bg-[#0d0f12] font-mono text-[11px] uppercase tracking-[0.2em] text-white/80">
@@ -112,6 +133,7 @@ export function OasisScene() {
                 <br />q · sink · land
               </>
             )}
+            <br />n · map
             <br />r · restart
             <br />
             red pad · exit home
@@ -151,6 +173,23 @@ export function OasisScene() {
           </div>
         </div>
       )}
+      {district && (
+        <div
+          key={district.id}
+          className="pointer-events-none absolute inset-x-0 bottom-[14%] flex justify-center [animation:oasis-toast_0.5s_ease-out]"
+        >
+          <div className="text-center">
+            <div className="text-[10px] tracking-[0.35em] text-white/60">Now entering</div>
+            <div
+              className="mt-1 text-[22px] tracking-[0.3em]"
+              style={{ color: district.d.color, textShadow: `0 0 18px ${district.d.color}99` }}
+            >
+              {district.d.name}
+            </div>
+          </div>
+        </div>
+      )}
+      {mapOpen && map && <OasisMap plan={map.plan} state={map.state} onClose={() => setMapOpen(false)} />}
       {status === 'ready' && (
         <div className="absolute bottom-5 right-5 flex flex-col items-end gap-3">
           {musicLoaded && (
@@ -164,6 +203,14 @@ export function OasisScene() {
               className={`rounded-xl border-0 shadow-2xl ${musicOpen ? '' : 'hidden'}`}
             />
           )}
+          <button
+            type="button"
+            aria-expanded={mapOpen}
+            onClick={() => setMapOpen((open) => !open)}
+            className="uppercase tracking-[0.2em] transition-colors hover:text-white"
+          >
+            {mapOpen ? 'close map' : '🗺 map'}
+          </button>
           <button
             type="button"
             aria-pressed={soundOn}
