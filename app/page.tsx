@@ -66,12 +66,12 @@ function KeyIcon() {
   )
 }
 
-/** The way into the hidden /oasis/ page. Dark in both themes, so it reads
- *  as a door into somewhere else rather than another link. */
+/** The way into the OASIS, which lives on its own subdomain. Dark in both
+ *  themes, so it reads as a door into somewhere else rather than a link. */
 function OasisLink() {
   return (
-    <Link
-      href="/oasis/"
+    <a
+      href="https://oasis.parzival.computer"
       className="group mt-6 inline-flex rounded-full bg-gradient-to-r from-[#ffc34d] via-[#ff6b3d] to-[#7fd8ff] p-px shadow-[0_0_0_0_rgba(255,195,77,0)] transition-shadow duration-300 hover:shadow-[0_0_24px_2px_rgba(255,140,80,0.35)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
     >
       <span className="inline-flex items-center gap-2.5 rounded-full bg-[#0d0f12] px-4 py-2 font-mono text-xs uppercase tracking-[0.2em] text-[#ffe9a8]">
@@ -86,7 +86,7 @@ function OasisLink() {
           &rarr;
         </span>
       </span>
-    </Link>
+    </a>
   )
 }
 

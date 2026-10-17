@@ -157,11 +157,3 @@ html {
     animation: none;
   }
 }
-
-
-@keyframes oasis-toast {
-  from {
-    opacity: 0;
-    transform: translateY(8px) scale(0.96);
-  }
-}
