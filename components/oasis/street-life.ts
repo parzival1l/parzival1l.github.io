@@ -20,6 +20,7 @@ const hash = (i: number) => {
 // --- Trees -----------------------------------------------------------------
 
 const TREE_RANGE = 900
+const TREE_FADE = 150
 
 // Rows are one species, mostly green, some birch and some red maple; each
 // tree in a row is a random variant of it, sized and turned at random.
@@ -92,27 +93,39 @@ export function buildTrees(gltf: GLTF, spots: number[]) {
     batches.set(material, { mesh, ids, instances: [] })
     group.add(mesh)
   }
-  const placed: { batch: Batch; id: number; x: number; z: number }[] = []
+  const placed: { batch: Batch; id: number; matrix: THREE.Matrix4; size: number }[] = []
   for (const { variant, matrix } of plan) {
     variant.materials.forEach((m, k) => {
       const batch = batches.get(m)!
       const id = batch.mesh.addInstance(batch.ids.get(variant.geometries[k])!)
       batch.mesh.setMatrixAt(id, matrix)
-      placed.push({ batch, id, x: matrix.elements[12], z: matrix.elements[14] })
+      placed.push({ batch, id, matrix, size: 1 })
     })
   }
 
   let frame = 0
+  const scaled = new THREE.Matrix4()
   return {
     group,
-    // Hide trees far from the camera (`camX`, `camZ` in city coordinates).
-    // Every few frames is plenty.
+    // Hide trees far from the camera (`camX`, `camZ` in city coordinates),
+    // shrinking them away over the last stretch rather than popping. Every
+    // few frames is plenty.
     update(camX: number, camZ: number) {
       if (frame++ % 10 !== 0) return
       for (const p of placed) {
-        const dx = p.x - camX
-        const dz = p.z - camZ
-        p.batch.mesh.setVisibleAt(p.id, dx * dx + dz * dz < TREE_RANGE * TREE_RANGE)
+        const dx = p.matrix.elements[12] - camX
+        const dz = p.matrix.elements[14] - camZ
+        const d2 = dx * dx + dz * dz
+        const near = d2 < TREE_RANGE * TREE_RANGE
+        p.batch.mesh.setVisibleAt(p.id, near)
+        if (!near) continue
+        const size = Math.min((TREE_RANGE - Math.sqrt(d2)) / TREE_FADE, 1)
+        if (size === p.size) continue
+        p.size = size
+        // Scale about the trunk's foot: the matrix's first three columns.
+        const e = scaled.copy(p.matrix).elements
+        for (const i of [0, 1, 2, 4, 5, 6, 8, 9, 10]) e[i] *= size
+        p.batch.mesh.setMatrixAt(p.id, scaled)
       }
     },
   }
@@ -138,6 +151,8 @@ const FLEET: [string, number][] = [
 const LANE_OFFSET = 3.3
 const CAR_SPACING = 70 // metres of lane per car, on average
 const TRAFFIC_RANGE = 700
+const TRAFFIC_FADE = 120 // metres at the edge of the range over which cars shrink away
+const LANE_FADE = 10 // the same, at each end of a lane
 const LIGHT_CYCLE = 24 // seconds: along-avenue green, then cross green
 const ALL_RED = 2.5
 const BRAKE = 6 // m/s²
@@ -248,13 +263,17 @@ export function buildTraffic(gltf: GLTF, layout: CityLayout) {
   }
   const mesh = new THREE.BatchedMesh(capacity, vertices, indices, material!)
   mesh.castShadow = true
+  // three works out the batch's bounding sphere once, from wherever the cars
+  // were then, and never again; the whole batch would vanish whenever that
+  // stale sphere left the view. Each car is still culled on its own.
+  mesh.frustumCulled = false
   const geometryIds = models.map((m) => mesh.addGeometry(m.geometry))
   for (const lane of lanes) for (const car of lane.cars) car.id = mesh.addInstance(geometryIds[car.geometry])
 
   const matrix = new THREE.Matrix4()
   const q = new THREE.Quaternion()
   const pos = new THREE.Vector3()
-  const one = new THREE.Vector3(1, 1, 1)
+  const size = new THREE.Vector3()
   const up = new THREE.Vector3(0, 1, 0)
   const world = (lane: Lane, s: number) => {
     const along = lane.dir > 0 ? lane.from + s : lane.to - s
@@ -319,10 +338,19 @@ export function buildTraffic(gltf: GLTF, layout: CityLayout) {
           const [x, z] = world(lane, car.s)
           const dx = x - camX
           const dz = z - camZ
-          const near = dx * dx + dz * dz < TRAFFIC_RANGE * TRAFFIC_RANGE
+          const d2 = dx * dx + dz * dz
+          const near = d2 < TRAFFIC_RANGE * TRAFFIC_RANGE
           mesh.setVisibleAt(car.id, near)
           if (!near) continue
-          mesh.setMatrixAt(car.id, matrix.compose(pos.set(x, 0, z), q, one))
+          // Cars shrink away at the edge of the range, and at the ends of
+          // the lane where they loop back to its start, rather than popping.
+          const fade = Math.min(
+            (TRAFFIC_RANGE - Math.sqrt(d2)) / TRAFFIC_FADE,
+            car.s / LANE_FADE,
+            (length - car.s) / LANE_FADE,
+            1,
+          )
+          mesh.setMatrixAt(car.id, matrix.compose(pos.set(x, 0, z), q, size.setScalar(Math.max(fade, 0))))
         }
       }
     },
@@ -378,10 +406,7 @@ export function buildPedestrians(people: GLTF[], layout: CityLayout) {
     const root = SkeletonUtils.clone(p.gltf.scene)
     root.scale.setScalar(p.scale * (0.92 + hash(i + 0.3) * 0.14))
     root.traverse((o) => {
-      if (o instanceof THREE.Mesh) {
-        o.castShadow = false
-        o.frustumCulled = false
-      }
+      if (o instanceof THREE.Mesh) o.castShadow = false
     })
     const mixer = new THREE.AnimationMixer(root)
     const speed = WALK_SPEED * (0.85 + hash(i + 0.7) * 0.3)

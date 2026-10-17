@@ -340,6 +340,12 @@ export function startOasis(
       car.add(gltf.scene)
       gltf.scene.traverse((o) => {
         if (o instanceof THREE.Mesh) o.castShadow = true
+        // One small, frosted strip on the car is transmissive. To refract
+        // what's behind it, three draws the whole scene a second time every
+        // frame. Plain see-through looks the same at that roughness.
+        if (o instanceof THREE.Mesh && o.material instanceof THREE.MeshPhysicalMaterial && o.material.transmission > 0) {
+          o.material.transmission = 0
+        }
         // Each wheel loads as a group of per-material meshes (Wheel_FL_1, ...);
         // only the group itself should turn.
         if (!/^Wheel_(FL|FR|RL|RR)$/.test(o.name)) return
@@ -353,7 +359,7 @@ export function startOasis(
       })
       loaded = true
       if (process.env.NODE_ENV === 'development') {
-        Object.assign(window, { __oasis: { camera, controls, car, wheels, city, sound, drive, blimps, lots, THREE } })
+        Object.assign(window, { __oasis: { camera, controls, car, wheels, city, sound, drive, blimps, lots, THREE, renderer, composer, scene } })
       }
       onReady()
     },
@@ -393,6 +399,18 @@ export function startOasis(
   composer.addPass(new RenderPass(scene, camera))
   composer.addPass(new UnrealBloomPass(new THREE.Vector2(1, 1), 0.1, 0.2, 0.98))
   composer.addPass(new OutputPass())
+
+  // On a machine that can't keep up, drop the resolution a step at a time,
+  // judged on the median frame over a couple of seconds so that one-off
+  // stalls (a shader compiling, a model loading) don't count.
+  const SLOW_FRAME = 1000 / 45
+  const frameTimes: number[] = []
+  const stepDownResolution = () => {
+    const ratio = Math.max(renderer.getPixelRatio() - 0.25, 1)
+    renderer.setPixelRatio(ratio)
+    composer.setPixelRatio(ratio)
+    for (const p of [sparkles, carSparkles, fireworks]) p.material.uniforms.uPixel.value = ratio
+  }
 
   const controls = new OrbitControls(camera, canvas)
   controls.enableDamping = true
@@ -808,6 +826,14 @@ export function startOasis(
   renderer.setAnimationLoop(() => {
     const now = performance.now()
     const frameDt = Math.min((now - last) / 1000, 0.05)
+    if (loaded && renderer.getPixelRatio() > 1) {
+      frameTimes.push(now - last)
+      if (frameTimes.length === 120) {
+        frameTimes.sort((a, b) => a - b)
+        if (frameTimes[60] > SLOW_FRAME) stepDownResolution()
+        frameTimes.length = 0
+      }
+    }
     last = now
     const liveDt = reducedMotion || paused || !loaded ? 0 : frameDt
     const dt = drive.on ? 0 : liveDt
