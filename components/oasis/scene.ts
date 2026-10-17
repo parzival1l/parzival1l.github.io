@@ -14,7 +14,7 @@ import {
   buildCity,
   buildSunLight,
 } from './world'
-import { buildBlimp, buildFireworks, buildScoreboard } from './sky-props'
+import { buildBlimp, buildFireworks, buildScoreboard, buildStartGate } from './sky-props'
 
 export type CameraMode = 'cinematic' | 'free'
 
@@ -41,6 +41,9 @@ const WHEEL_TUCK = 0.14
 const WHEEL_DROP = 0.06
 // The city sits under the middle of the cruise.
 const CITY_AT = 21
+// The starting gate, in metres down the road from where each lap starts.
+// The car passes under it about three seconds in.
+const GATE_AT = 85
 
 const smooth = (a: number, b: number, t: number) => {
   const x = Math.min(Math.max((t - a) / (b - a), 0), 1)
@@ -96,9 +99,10 @@ function distanceAt(elapsed: number) {
 type ShotKey = { t: number; az: number; h: number; d: number; look: [number, number] }
 const PI = Math.PI
 const SHOTS: ShotKey[] = [
-  { t: 0, az: PI + 0.25, h: 0.05, d: 2.4, look: [0.7, -1.8] }, // the PARZIVAL plate
-  { t: 2.5, az: PI - 0.2, h: 0.5, d: 3.6, look: [0.7, -1.2] },
-  { t: 4, az: PI + 0.5, h: 1.0, d: 5.5, look: [0.6, 0] }, // a turn around the car
+  { t: 0, az: PI, h: 2.6, d: 10, look: [4, 45] }, // behind, the starting gate ahead
+  { t: 2.2, az: PI + 0.12, h: 1.3, d: 6, look: [2.5, 22] }, // under the gate
+  { t: 3.4, az: PI + 0.25, h: 0.1, d: 2.6, look: [0.7, -1.8] }, // the PARZIVAL plate
+  { t: 4.6, az: PI + 0.5, h: 1.0, d: 5.5, look: [0.6, 0] }, // a turn around the car
   { t: 6.5, az: 2 * PI + 0.5, h: 0.5, d: 5.2, look: [0.5, 0] }, // side-on as the wheels fold
   { t: 9, az: 3 * PI + 0.5, h: 0.2, d: 6, look: [0.5, 0] },
   { t: 11.5, az: 3 * PI + 0.9, h: -3, d: 9, look: [0.4, 1] }, // from below as it climbs
@@ -225,7 +229,9 @@ export function startOasis(
   const scoreboard = buildScoreboard()
   scene.add(scoreboard)
 
-  // Fireworks start each lap of the race.
+  // Each lap starts under a gate, with fireworks going off over it.
+  const startGate = buildStartGate()
+  scene.add(startGate.gate)
   const fireworks = buildFireworks()
   scene.add(fireworks.points)
   fireworks.material.uniforms.uPixel.value = renderer.getPixelRatio()
@@ -457,15 +463,19 @@ export function startOasis(
     scoreboard.rotation.y = Math.PI + Math.sin(elapsed * 0.15) * 0.25
     ;(scoreboard.material as THREE.ShaderMaterial).uniforms.uTime.value = elapsed
 
-    // A volley of shells over the road for the first seconds of each lap.
+    // The gate stands GATE_AT metres down the road from where each lap
+    // starts; a volley of shells bursts over it for the first seconds.
     const lapStart = elapsed - t
+    const gateZ = Math.floor(elapsed / LOOP) * LOOP_DISTANCE + GATE_AT
+    startGate.gate.position.set(0, 0, gateZ)
+    startGate.update(elapsed)
     if (t < 6 && elapsed >= nextBurst) {
       if (nextBurst < lapStart) nextBurst = lapStart
-      const k = Math.round((nextBurst - lapStart) / 0.45)
+      const k = Math.round((nextBurst - lapStart) / 0.32)
       const side = k % 2 === 0 ? -1 : 1
-      burstAt.set(side * (30 + ((k * 37) % 50)), 70 + ((k * 53) % 60), carZ + 180 + ((k * 71) % 120))
+      burstAt.set(side * (10 + ((k * 37) % 40)), 32 + ((k * 53) % 40), gateZ + 15 + ((k * 71) % 60))
       fireworks.launch(burstAt, elapsed)
-      nextBurst += 0.45
+      nextBurst += 0.32
     } else if (t >= 6) nextBurst = lapStart + LOOP
     fireworks.material.uniforms.uTime.value = elapsed
     ground.cityZ.set(cityZ - CITY_HALF_LENGTH, cityZ + CITY_HALF_LENGTH, 1e9, 1e9)

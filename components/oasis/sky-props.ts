@@ -134,7 +134,7 @@ export function buildBlimp() {
 
 // --- Fireworks -------------------------------------------------------------
 
-const BURSTS = 8
+const BURSTS = 10
 const SPARKS = 160
 const BURST_LIFE = 2.6
 const PALETTE = [0xffc34d, 0xff6b3d, 0xfff1c9, 0x7fd8ff, 0xff4d6d]
@@ -218,6 +218,138 @@ export function buildFireworks() {
     launch(at: THREE.Vector3, time: number) {
       centres[next].set(at.x, at.y, at.z, time)
       next = (next + 1) % BURSTS
+    },
+  }
+}
+
+// --- Starting gate ---------------------------------------------------------
+
+const GATE_SPAN = 22 // between the towers, clear of the road and shoulders
+const GATE_HEIGHT = 11
+const BULBS = 28
+
+function drawGateSign() {
+  const canvas = document.createElement('canvas')
+  canvas.width = 2048
+  canvas.height = 256
+  const g = canvas.getContext('2d')!
+  const gold = '#ffcf5a'
+  g.fillStyle = '#0b0f17'
+  g.fillRect(0, 0, canvas.width, canvas.height)
+  g.strokeStyle = gold
+  g.lineWidth = 10
+  g.strokeRect(12, 12, canvas.width - 24, canvas.height - 24)
+  g.fillStyle = gold
+  g.font = '800 132px ui-sans-serif, Helvetica, Arial, sans-serif'
+  g.textAlign = 'center'
+  g.textBaseline = 'middle'
+  g.fillText('WELCOME TO THE OASIS', canvas.width / 2, canvas.height / 2 + 6)
+  const t = new THREE.CanvasTexture(canvas)
+  t.colorSpace = THREE.SRGBColorSpace
+  t.anisotropy = 8
+  return t
+}
+
+function drawChecker() {
+  const canvas = document.createElement('canvas')
+  canvas.width = 64
+  canvas.height = 8
+  const g = canvas.getContext('2d')!
+  for (let x = 0; x < 64; x++) {
+    for (let y = 0; y < 8; y++) {
+      g.fillStyle = (x + y) % 2 === 0 ? '#e9e6dc' : '#121212'
+      g.fillRect(x, y, 1, 1)
+    }
+  }
+  const t = new THREE.CanvasTexture(canvas)
+  t.colorSpace = THREE.SRGBColorSpace
+  t.magFilter = THREE.NearestFilter
+  t.minFilter = THREE.NearestFilter
+  return t
+}
+
+// A steel truss over the road with a lit sign, a row of chase lights, and a
+// checkered line painted across the road beneath it. The car approaches
+// from -Z.
+export function buildStartGate() {
+  const gate = new THREE.Group()
+  const steel = new THREE.MeshStandardMaterial({ color: 0x2b2f36, roughness: 0.45, metalness: 0.75 })
+  const add = (w: number, h: number, d: number, x: number, y: number, z: number, rz = 0) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), steel)
+    m.position.set(x, y, z)
+    m.rotation.z = rz
+    m.castShadow = true
+    gate.add(m)
+  }
+  const half = GATE_SPAN / 2
+  for (const side of [-1, 1]) {
+    add(1.3, GATE_HEIGHT, 1.3, side * half, GATE_HEIGHT / 2, 0)
+    add(2.6, 0.4, 2.6, side * half, 0.2, 0)
+  }
+  // Truss: two chords with diagonals between them.
+  const top = GATE_HEIGHT
+  const bottom = GATE_HEIGHT - 3.6
+  add(GATE_SPAN + 1.3, 0.45, 0.9, 0, top, 0)
+  add(GATE_SPAN + 1.3, 0.45, 0.9, 0, bottom, 0)
+  const bays = 8
+  const bay = GATE_SPAN / bays
+  const rise = top - bottom
+  const diag = Math.hypot(bay, rise)
+  for (let i = 0; i < bays; i++) {
+    const x = -half + bay * (i + 0.5)
+    const tilt = Math.atan2(rise, bay) * (i % 2 === 0 ? 1 : -1)
+    add(diag, 0.22, 0.5, x, (top + bottom) / 2, 0.35, tilt)
+    add(diag, 0.22, 0.5, x, (top + bottom) / 2, -0.35, tilt)
+  }
+
+  // The sign, readable from both sides.
+  const signMat = new THREE.MeshBasicMaterial({ map: drawGateSign(), toneMapped: false })
+  for (const face of [-1, 1]) {
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(GATE_SPAN - 3, (GATE_SPAN - 3) / 8), signMat)
+    sign.position.set(0, (top + bottom) / 2, face * 0.8)
+    sign.rotation.y = face < 0 ? Math.PI : 0
+    gate.add(sign)
+  }
+
+  // Chase lights along the top chord, both faces.
+  const bulbGeo = new THREE.SphereGeometry(0.16, 10, 8)
+  const bulbMat = new THREE.MeshBasicMaterial({ toneMapped: false })
+  const bulbs = new THREE.InstancedMesh(bulbGeo, bulbMat, BULBS * 2)
+  const m = new THREE.Matrix4()
+  for (let i = 0; i < BULBS; i++) {
+    const x = -half + (GATE_SPAN * (i + 0.5)) / BULBS
+    m.setPosition(x, top + 0.45, 0.5)
+    bulbs.setMatrixAt(i, m)
+    m.setPosition(x, top + 0.45, -0.5)
+    bulbs.setMatrixAt(i + BULBS, m)
+  }
+  gate.add(bulbs)
+
+  // Checkered start line across the road.
+  const checker = drawChecker()
+  checker.wrapS = THREE.RepeatWrapping
+  const line = new THREE.Mesh(
+    new THREE.PlaneGeometry(16, 2),
+    new THREE.MeshStandardMaterial({ map: checker, roughness: 0.8 }),
+  )
+  line.rotation.x = -Math.PI / 2
+  line.position.y = 0.02
+  line.receiveShadow = true
+  gate.add(line)
+
+  const on = new THREE.Color(0xffd27a).multiplyScalar(2.2)
+  const off = new THREE.Color(0x3a2a10)
+  return {
+    gate,
+    // Lights chase across the gate in groups of three.
+    update(time: number) {
+      const step = Math.floor(time * 8)
+      for (let i = 0; i < BULBS; i++) {
+        const c = (i + step) % 3 === 0 ? on : off
+        bulbs.setColorAt(i, c)
+        bulbs.setColorAt(i + BULBS, c)
+      }
+      bulbs.instanceColor!.needsUpdate = true
     },
   }
 }
