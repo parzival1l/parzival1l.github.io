@@ -61,11 +61,14 @@ export function OasisScene() {
           <div className="text-white/50">
             drag · orbit
             <br />
-            scroll · zoom
+            scroll · zoom to cursor
+            <br />
+            right-drag · pan
             <br />
             space · {paused ? 'play' : 'pause'}
             {mode === 'free' && (
               <>
+                <br />f · focus car
                 <br />c · cinematic
               </>
             )}

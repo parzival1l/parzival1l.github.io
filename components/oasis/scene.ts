@@ -295,10 +295,14 @@ export function startOasis(
   const controls = new OrbitControls(camera, canvas)
   controls.enableDamping = true
   controls.dampingFactor = 0.08
-  controls.enablePan = false
-  controls.minDistance = 2.2
-  controls.maxDistance = 150
-  controls.zoomSpeed = 0.8
+  // Scroll zooms toward whatever is under the cursor (a tower, a blimp, the
+  // car), and right-drag pans, so the reader can explore the whole city.
+  controls.zoomToCursor = true
+  controls.enablePan = true
+  controls.screenSpacePanning = true
+  controls.minDistance = 1
+  controls.maxDistance = 2500
+  controls.zoomSpeed = 1.2
 
   let mode: CameraMode = 'cinematic'
   let blend = 1
@@ -310,6 +314,27 @@ export function startOasis(
   }
   controls.addEventListener('start', () => setMode('free'))
 
+  // OrbitControls only zooms as deep as its focus point, which sits by the
+  // car. Before each scroll, push that point out (straight ahead, so the
+  // view doesn't jump) to the depth of whatever is under the cursor. Then a
+  // scroll over a far tower flies to the tower.
+  const ray = new THREE.Raycaster()
+  const pointer = new THREE.Vector2()
+  const forward = new THREE.Vector3()
+  const zoomTargets = [car, city, ground.mesh]
+  const onWheel = (e: WheelEvent) => {
+    if (e.target !== canvas) return
+    const r = canvas.getBoundingClientRect()
+    pointer.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1)
+    ray.setFromCamera(pointer, camera)
+    const hit = ray.intersectObjects(zoomTargets, true)[0]
+    if (!hit) return
+    camera.getWorldDirection(forward)
+    const depth = hit.point.clone().sub(camera.position).dot(forward)
+    if (depth > controls.minDistance) controls.target.copy(camera.position).addScaledVector(forward, depth)
+  }
+  window.addEventListener('wheel', onWheel, { capture: true, passive: true })
+
   let paused = false
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.metaKey || e.ctrlKey || e.altKey) return
@@ -319,6 +344,11 @@ export function startOasis(
       onPauseChange?.(paused)
     } else if (e.key.toLowerCase() === 'c') {
       setMode('cinematic')
+    } else if (e.key.toLowerCase() === 'f' && mode === 'free') {
+      // Bring the focus back to the car, keeping the camera's distance.
+      const shift = lookAt.set(car.position.x, car.position.y + 0.5, car.position.z).sub(controls.target)
+      controls.target.add(shift)
+      camera.position.add(shift)
     }
   }
   window.addEventListener('keydown', onKeyDown)
@@ -424,7 +454,9 @@ export function startOasis(
     } else {
       // Ride along with the car, keeping whatever angle the reader chose.
       camera.position.add(desired.subVectors(car.position, previous))
-      controls.target.set(car.position.x, car.position.y + 0.5, carZ)
+      // The focus point rides along too, rather than snapping back to the
+      // car, so zooming and panning keep wherever the reader took them.
+      controls.target.add(desired)
       controls.update()
       if (camera.position.y < 0.15) camera.position.y = 0.15
     }
@@ -443,6 +475,7 @@ export function startOasis(
     renderer.setAnimationLoop(null)
     window.removeEventListener('resize', resize)
     window.removeEventListener('keydown', onKeyDown)
+    window.removeEventListener('wheel', onWheel, { capture: true })
     controls.dispose()
     scene.traverse((o) => {
       if (o instanceof THREE.Mesh) {
