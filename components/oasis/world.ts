@@ -30,6 +30,10 @@ const AVENUE_HALF = 22 // from the centre line to the first row of buildings
 export const CITY_HALF_LENGTH = (ROWS * (BLOCK_Z + STREET)) / 2
 const CITY_HALF_WIDTH = AVENUE_HALF + COLUMNS * (BLOCK_X + STREET)
 
+// The brightest the sky gets, before tone mapping. At the scene's exposure
+// this keeps the area round the sun below white.
+const SKY_PEAK = 0.9
+
 function configureSky(sky: Sky) {
   const u = sky.material.uniforms
   // Dusty air reddens the low sun and the horizon.
@@ -46,6 +50,21 @@ function configureSky(sky: Sky) {
   u.cloudDensity.value = 0.7
   u.cloudScale.value = 0.00028
   u.sunPosition.value.copy(SUN_DIRECTION)
+
+  // The stock shader lights cloud edges near the sun far brighter than the
+  // rest of the sky, and bloom smears that across the frame. Soften those
+  // edges, then roll off anything brighter than SKY_PEAK so the sun reads as
+  // a warm glow rather than a white-out.
+  const m = sky.material
+  m.fragmentShader = m.fragmentShader
+    .replace('cloudColor += sunColor * silver * edge * 0.6;', 'cloudColor += sunColor * silver * edge * 0.12;')
+    .replace(
+      'gl_FragColor = vec4( texColor, 1.0 );',
+      /* glsl */ `float peak = max(texColor.r, max(texColor.g, texColor.b));
+      texColor *= ${SKY_PEAK.toFixed(3)} * (1.0 - exp(-peak / ${SKY_PEAK.toFixed(3)})) / max(peak, 1e-5);
+      gl_FragColor = vec4( texColor, 1.0 );`,
+    )
+  m.needsUpdate = true
 }
 
 export function buildAtmosphere(renderer: THREE.WebGLRenderer) {
