@@ -288,39 +288,47 @@ function buildGrid() {
   return mesh
 }
 
-// Glowing pylons beside the road; they sell the speed.
-const PYLONS = 72
-const PYLON_SPAN = 360
-function buildPylons() {
-  const geometry = new THREE.BoxGeometry(0.35, 1, 0.35)
-  geometry.translate(0, 0.5, 0)
-  const material = new THREE.MeshBasicMaterial({ color: 0xffffff })
-  const mesh = new THREE.InstancedMesh(geometry, material, PYLONS)
-  const cyan = new THREE.Color(0x19e6ff).multiplyScalar(1.4)
-  const pink = new THREE.Color(0xff2bd6).multiplyScalar(1.4)
-  const layout = Array.from({ length: PYLONS }, (_, i) => {
-    const side = i % 2 === 0 ? 1 : -1
-    const lane = Math.floor(i / 2) % 3
-    const x = side * (9 + lane * 9 + ((i * 37) % 5))
-    const z = (i / PYLONS) * PYLON_SPAN
-    const h = 3 + ((i * 53) % 9)
-    mesh.setColorAt(i, lane === 1 ? pink : cyan)
-    return { x, z, h }
+// City blocks line both sides of the road. The scan is one block of
+// Manhattan around the Flatiron (229 m wide, 317 m deep); copies repeat
+// along the road, turned alternately so the repeat is harder to spot, and
+// leapfrog ahead as the car passes them. The road stays open down the middle
+// so the sun shows at the end of it.
+const BLOCK_WIDTH = 229
+const BLOCK_DEPTH = 317
+const BLOCKS_PER_SIDE = 3
+const CITY_SPAN = BLOCK_DEPTH * BLOCKS_PER_SIDE
+const ROAD_CLEARANCE = 42
+
+function buildCity(source: THREE.Object3D) {
+  source.traverse((o) => {
+    if (!(o instanceof THREE.Mesh)) return
+    const m = o.material as THREE.MeshStandardMaterial
+    // Night-time: darken the daylight scan, and let its own texture glow
+    // faintly pink so windows and facades read against the haze.
+    m.color.setScalar(0.2)
+    m.emissiveMap = m.map
+    m.emissive.set(0xff6ad5).multiplyScalar(0.16)
+    m.roughness = 0.9
+    m.metalness = 0
   })
-  return { mesh, layout }
+  const blocks = Array.from({ length: BLOCKS_PER_SIDE * 2 }, (_, i) => {
+    const block = source.clone()
+    const side = i % 2 === 0 ? 1 : -1
+    block.rotation.y = (Math.floor(i / 2) + (side > 0 ? 0 : 1)) % 2 === 0 ? 0 : Math.PI
+    return { block, side, z: Math.floor(i / 2) * BLOCK_DEPTH }
+  })
+  return blocks
 }
 
-function placePylons(
-  pylons: ReturnType<typeof buildPylons>,
-  carZ: number,
-  m: THREE.Matrix4,
-) {
-  pylons.layout.forEach((p, i) => {
-    const rel = (((p.z - carZ + 60) % PYLON_SPAN) + PYLON_SPAN) % PYLON_SPAN
-    m.makeScale(1, p.h, 1).setPosition(p.x, 0, carZ - 60 + rel)
-    pylons.mesh.setMatrixAt(i, m)
-  })
-  pylons.mesh.instanceMatrix.needsUpdate = true
+function placeCity(blocks: ReturnType<typeof buildCity>, carZ: number) {
+  for (const b of blocks) {
+    const rel = (((b.z - carZ + BLOCK_DEPTH) % CITY_SPAN) + CITY_SPAN) % CITY_SPAN
+    b.block.position.set(
+      b.side * (ROAD_CLEARANCE + BLOCK_WIDTH / 2),
+      0.15,
+      carZ - BLOCK_DEPTH / 2 + rel,
+    )
+  }
 }
 
 export function startOasis(
@@ -345,8 +353,9 @@ export function startOasis(
   const sky = buildSky()
   const sun = buildSun()
   const grid = buildGrid()
-  const pylons = buildPylons()
-  scene.add(sky, sun, grid, pylons.mesh)
+  scene.add(sky, sun, grid)
+  scene.fog = new THREE.Fog(HAZE, 140, 700)
+  let city: ReturnType<typeof buildCity> = []
 
   const car = new THREE.Group()
   scene.add(car)
@@ -401,6 +410,12 @@ export function startOasis(
       if (!disposed) onError(err)
     },
   )
+  // The car doesn't wait for the city; the blocks appear once they load.
+  loader.load('/oasis/city.glb', (gltf) => {
+    if (disposed) return
+    city = buildCity(gltf.scene)
+    for (const b of city) scene.add(b.block)
+  })
 
   const composer = new EffectComposer(renderer)
   composer.addPass(new RenderPass(scene, camera))
@@ -449,7 +464,6 @@ export function startOasis(
   resize()
   window.addEventListener('resize', resize)
 
-  const matrix = new THREE.Matrix4()
   const desired = new THREE.Vector3()
   const lookAt = new THREE.Vector3()
   const previous = new THREE.Vector3()
@@ -518,7 +532,7 @@ export function startOasis(
     sun.position.set(0, 55, carZ + 520)
     sun.lookAt(sun.position.x, sun.position.y, carZ)
     ;(sun.material as THREE.ShaderMaterial).uniforms.uTime.value = elapsed
-    placePylons(pylons, carZ, matrix)
+    placeCity(city, carZ)
 
     composer.render()
   })
