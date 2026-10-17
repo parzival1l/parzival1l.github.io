@@ -7,11 +7,20 @@ import type { CameraMode } from './scene'
 
 type Status = 'loading' | 'ready' | 'error'
 
+// Alan Silvestri's score, through Spotify's official player. The player only
+// loads once the reader opens it, so visiting the page contacts no one.
+const SOUNDTRACK_EMBED =
+  'https://open.spotify.com/embed/album/166LfpstziUpezunLrOxUR?utm_source=generator&theme=0'
+
 export function OasisScene() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [status, setStatus] = useState<Status>('loading')
   const [mode, setMode] = useState<CameraMode>('cinematic')
   const [paused, setPaused] = useState(false)
+  const [musicOpen, setMusicOpen] = useState(false)
+  // Once opened, the player stays mounted while hidden, so the music keeps
+  // playing when the panel closes.
+  const [musicLoaded, setMusicLoaded] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -81,6 +90,32 @@ export function OasisScene() {
       >
         esc · log out
       </Link>
+      {status === 'ready' && (
+        <div className="absolute bottom-5 right-5 flex flex-col items-end gap-3">
+          {musicLoaded && (
+            <iframe
+              title="Ready Player One: Original Motion Picture Soundtrack on Spotify"
+              src={SOUNDTRACK_EMBED}
+              width="320"
+              height="152"
+              loading="lazy"
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              className={`rounded-xl border-0 shadow-2xl ${musicOpen ? '' : 'hidden'}`}
+            />
+          )}
+          <button
+            type="button"
+            aria-expanded={musicOpen}
+            onClick={() => {
+              setMusicLoaded(true)
+              setMusicOpen((open) => !open)
+            }}
+            className="uppercase tracking-[0.2em] transition-colors hover:text-white"
+          >
+            {musicOpen ? 'hide soundtrack' : '♪ soundtrack'}
+          </button>
+        </div>
+      )}
       {status !== 'ready' && (
         <div className="absolute inset-0 flex items-center justify-center text-white/80">
           {status === 'loading' ? 'Entering the OASIS…' : 'The OASIS is offline.'}
