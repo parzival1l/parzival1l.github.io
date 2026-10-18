@@ -1,0 +1,149 @@
+---
+import "../styles/oasis.css";
+
+const title = "Credits · The OASIS";
+
+// Every third-party model, library and font on the site. Changes are
+// listed where a license asks for them (CC-BY).
+const models = [
+  {
+    name: "Parzival's DeLorean DMC-12",
+    author: "JandroS",
+    authorUrl: "https://sketchfab.com/JandroS",
+    url: "https://sketchfab.com/3d-models/parzivals-delorean-dmc-12-6bcaee578c8e4dbbbaf5fdb746e5ff8c",
+    license: "CC BY 4.0",
+    licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+    use: "The car.",
+    changes:
+      "Reduced to about 64,000 triangles, compressed with Draco, license plate redrawn to read MONTREAL / PARZIVAL, and one glass strip made plainly transparent.",
+  },
+  {
+    name: "Car Kit",
+    author: "Kenney",
+    authorUrl: "https://kenney.nl",
+    url: "https://kenney.nl/assets/car-kit",
+    license: "CC0",
+    licenseUrl: "https://creativecommons.org/publicdomain/zero/1.0/",
+    use: "The traffic: twelve cars, vans and trucks, resized to real proportions.",
+  },
+  {
+    name: "Tree, Trees, Birch Trees and Maple Trees",
+    author: "Quaternius",
+    authorUrl: "https://quaternius.com",
+    url: "https://poly.pizza/u/Quaternius",
+    license: "CC0",
+    licenseUrl: "https://creativecommons.org/publicdomain/zero/1.0/",
+    use: "The street trees, simplified for the web.",
+    links: [
+      ["Tree", "https://poly.pizza/m/qZtx0AHhcy"],
+      ["Trees", "https://poly.pizza/m/etFGNvsiFv"],
+      ["Birch Trees", "https://poly.pizza/m/R7qMWzb7nk"],
+      ["Maple Trees", "https://poly.pizza/m/iGFtQd0PJO"],
+    ],
+  },
+  {
+    name: "Animated characters",
+    author: "Quaternius",
+    authorUrl: "https://quaternius.com",
+    url: "https://poly.pizza/u/Quaternius",
+    license: "CC0",
+    licenseUrl: "https://creativecommons.org/publicdomain/zero/1.0/",
+    use: "The people walking the sidewalks.",
+    links: [
+      ["Animated Woman", "https://poly.pizza/m/9kF7eTDbhO"],
+      ["Animated Woman", "https://poly.pizza/m/qJ2gsTUBHL"],
+      ["Animated Woman", "https://poly.pizza/m/nIItLV9nxS"],
+      ["Casual Character", "https://poly.pizza/m/kZ3DmIoGip"],
+      ["Man", "https://poly.pizza/m/HMnuH5geEG"],
+    ],
+  },
+];
+
+const software = [
+  { name: "three.js", url: "https://threejs.org", license: "MIT" },
+  { name: "Draco decoder", url: "https://github.com/google/draco", license: "Apache 2.0" },
+  { name: "Astro", url: "https://astro.build", license: "MIT" },
+  { name: "React", url: "https://react.dev", license: "MIT" },
+  { name: "Geist Mono", url: "https://vercel.com/font", license: "SIL Open Font License" },
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content="The models, code and music behind the OASIS, and who made them." />
+    <meta name="theme-color" content="#0d0f12" />
+    <link rel="icon" href="data:," />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap" />
+  </head>
+  <body class="h-full overflow-y-auto font-mono text-[13px] leading-relaxed text-white/75">
+    <main class="mx-auto max-w-2xl px-6 py-14">
+      <a href="/" class="text-[11px] uppercase tracking-[0.25em] text-white/50 hover:text-white">&larr; Back to the OASIS</a>
+      <h1 class="mt-8 text-[15px] uppercase tracking-[0.3em] text-[#ffe9a8]">Credits</h1>
+      <p class="mt-4 text-white/60">
+        The OASIS is a fan-made Ready Player One easter egg by{" "}
+        <a class="underline decoration-white/30 underline-offset-4 hover:text-white" href="https://parzival.computer">Nanda Kumar</a>.
+        The city, sky, signs and sound effects are made in code. These people made the rest.
+      </p>
+
+      <h2 class="mt-12 text-[11px] uppercase tracking-[0.25em] text-white/40">Models</h2>
+      <ul class="mt-4 space-y-6">
+        {
+          models.map((m) => (
+            <li class="border-l border-white/10 pl-4">
+              <div class="text-white">
+                <a class="hover:text-[#ffe9a8]" href={m.url}>{m.name}</a>
+                <span class="text-white/50"> by </span>
+                <a class="hover:text-[#ffe9a8]" href={m.authorUrl}>{m.author}</a>
+              </div>
+              <div class="mt-1">
+                License: <a class="underline decoration-white/30 underline-offset-4 hover:text-white" href={m.licenseUrl}>{m.license}</a>
+              </div>
+              <div class="mt-1 text-white/60">{m.use}</div>
+              {m.changes && <div class="mt-1 text-white/60">Changes: {m.changes}</div>}
+              {m.links && (
+                <div class="mt-1 text-white/50">
+                  {m.links.map(([label, href], i) => (
+                    <>
+                      {i > 0 && " · "}
+                      <a class="hover:text-white" href={href}>{label}</a>
+                    </>
+                  ))}
+                </div>
+              )}
+            </li>
+          ))
+        }
+      </ul>
+
+      <h2 class="mt-12 text-[11px] uppercase tracking-[0.25em] text-white/40">Software and fonts</h2>
+      <ul class="mt-4 space-y-1.5">
+        {
+          software.map((s) => (
+            <li>
+              <a class="text-white hover:text-[#ffe9a8]" href={s.url}>{s.name}</a>
+              <span class="text-white/50"> · {s.license}</span>
+            </li>
+          ))
+        }
+      </ul>
+
+      <h2 class="mt-12 text-[11px] uppercase tracking-[0.25em] text-white/40">Music</h2>
+      <p class="mt-4 text-white/60">
+        The soundtrack button plays Alan Silvestri's score for <em>Ready Player One</em> through Spotify's official player.
+        Nothing from the film is hosted here.
+      </p>
+
+      <h2 class="mt-12 text-[11px] uppercase tracking-[0.25em] text-white/40">Ready Player One</h2>
+      <p class="mt-4 text-white/60">
+        Ready Player One, the OASIS and Parzival come from Ernest Cline's novel and Steven Spielberg's film. This is an
+        unofficial fan project with no connection to either.
+      </p>
+    </main>
+  </body>
+</html>

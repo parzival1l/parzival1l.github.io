@@ -12,6 +12,9 @@ export interface ProjectData {
   /** Optional product site. When set, the card title links here instead of
       the repo. The small `github` link next to the title always shows. */
   url?: string
+  /** Optional link for the `github` label, for a project that lives in a
+      folder of another repo. Defaults to the repo. */
+  source?: string
   /** Short facet chips: language, distribution, whatever earns the space. */
   tags: string[]
 }
@@ -77,7 +80,7 @@ export function ProjectCard({ project }: { project: ProjectData }) {
             {project.name}
           </a>
           <a
-            href={`https://github.com/${project.repo}`}
+            href={project.source ?? `https://github.com/${project.repo}`}
             className="text-xs text-neutral-500 underline-offset-4 hover:underline"
           >
             github

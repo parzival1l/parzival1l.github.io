@@ -1,0 +1,29 @@
+---
+import "../styles/oasis.css";
+import { OasisScene } from "../oasis/oasis-scene";
+
+const title = "The OASIS · Parzival";
+const description =
+  "Drive and fly Parzival's DeLorean through a three.js city. Five rings, one exit home.";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content="https://oasis.parzival.computer/" />
+    <meta name="theme-color" content="#0d0f12" />
+    <link rel="icon" href="data:," />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap" />
+  </head>
+  <body>
+    <OasisScene client:only="react" homeUrl="https://parzival.computer/" />
+  </body>
+</html>

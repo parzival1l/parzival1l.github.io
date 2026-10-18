@@ -38,6 +38,7 @@ build or deploy `sites/`.
 
 - `sites/threadhop/` → `threadhop.parzival.computer` (Worker `threadhop-site`) — PR #17
 - `sites/docket/` → `docket.parzival.computer` (Worker `docket-site`) — PR #18
+- `sites/oasis/` → `oasis.parzival.computer` (Worker `oasis-site`)
 
 Shared pattern: pure-static Astro (no adapter), `wrangler.jsonc` with
 `assets.directory: ./dist` + `custom_domain` route, `public/install.sh` copied
@@ -62,6 +63,14 @@ interactive product mock = build-time `<template>`s + vanilla JS.
 - Positioning: dispatch. Any agent runs `docket ready`, picks a task, `docket done` unblocks dependents. Deliberately no TDD / model talk.
 - Product shot is interactive: click a task → detail pane; `docket done T-N` moves dependents into Ready; sidebar filters; `j`/`k`. Fixture in `src/data/tasks.ts` (16 tasks, 3 groups, real dep rules).
 - Design: Paper file `01M24N1S4RK02FASCPCHGPS6GA`.
+
+## oasis.parzival.computer — 2026-10-17
+
+- Live at `https://oasis.parzival.computer`: a three.js Ready Player One easter egg (drive and fly the DeLorean, five rings, map, exit pad).
+- Source: `sites/oasis/` (Astro, static output). The scene is one `client:only` React island in `src/oasis/`; models in `public/oasis/`. Moved out of the blog's `components/oasis` and `/oasis/` route.
+- Deploy: `cd sites/oasis && npm run deploy`. Wrangler created the `oasis` DNS record when binding the custom domain.
+- The exit pad and Esc go to `https://parzival.computer/`; the blog homepage's "Go to the OASIS" button links out.
+- Working files (Blender scripts, source models): `~/Personal/oasis-assets/`.
 
 ## Future projects
 
