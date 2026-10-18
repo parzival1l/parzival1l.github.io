@@ -242,7 +242,7 @@ export function OasisScene({ homeUrl }: { homeUrl: string }) {
         {exiting && 'Logging out of the OASIS'}
       </div>
       {status !== 'ready' && (
-        <div className="absolute inset-0 flex items-center justify-center text-white/80">
+        <div className="absolute inset-0 flex items-center justify-center bg-[#0d0f12] text-white/80">
           {status === 'loading' ? 'Entering the OASIS…' : 'The OASIS is offline.'}
         </div>
       )}
