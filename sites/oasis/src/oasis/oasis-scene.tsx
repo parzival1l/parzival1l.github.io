@@ -118,7 +118,12 @@ export function OasisScene({ homeUrl }: { homeUrl: string }) {
         ref={canvasRef}
         className="block h-full w-full cursor-grab touch-none active:cursor-grabbing"
       />
-      <div className="pointer-events-none absolute left-5 top-5">OASIS · Parzival</div>
+      <div className="absolute left-5 top-5 flex gap-4">
+        <span className="pointer-events-none">OASIS · Parzival</span>
+        <a href="/credits/" className="text-white/40 transition-colors hover:text-white">
+          credits
+        </a>
+      </div>
       {status === 'ready' && (
         <div className="pointer-events-none absolute right-5 top-5 text-right leading-6">
           <div>
