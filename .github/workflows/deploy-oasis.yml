@@ -1,0 +1,44 @@
+name: Deploy OASIS
+
+# oasis.parzival.computer runs on Cloudflare Workers, separate from the
+# GitHub Pages blog. Deploy only when the OASIS itself changes.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'sites/oasis/**'
+      - '.github/workflows/deploy-oasis.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: oasis
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sites/oasis
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: sites/oasis/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build and deploy to Cloudflare
+        run: npm run deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

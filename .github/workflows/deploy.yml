@@ -3,6 +3,10 @@ name: Deploy site
 on:
   push:
     branches: [main]
+    # The blog never reads sites/; those deploy through their own workflows.
+    paths-ignore:
+      - 'sites/**'
+      - '.github/workflows/deploy-oasis.yml'
   workflow_dispatch:
 
 permissions:
