@@ -332,7 +332,12 @@ export function startOasis(
   })
   const hubGeometry = new THREE.CircleGeometry(0.26, 32)
 
-  const draco = new DRACOLoader().setDecoderPath('/oasis/draco/')
+  // WASM only. The 512 KB pure-JS fallback is for browsers without
+  // WebAssembly, and those can't run this scene anyway.
+  const draco = new DRACOLoader().setDecoderPath({
+    js: '/oasis/draco/draco_wasm_wrapper.js',
+    wasm: '/oasis/draco/draco_decoder.wasm',
+  })
   const loader = new GLTFLoader().setDRACOLoader(draco)
   let loaded = false
   const carReady = loader.loadAsync('/oasis/delorean.glb').then((gltf) => {
