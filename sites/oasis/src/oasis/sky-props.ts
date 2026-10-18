@@ -58,6 +58,7 @@ export function buildScoreboard() {
     transparent: true,
     depthWrite: false,
     side: THREE.DoubleSide,
+    forceSinglePass: true,
     blending: THREE.AdditiveBlending,
     fog: false,
     toneMapped: false,
@@ -509,6 +510,7 @@ export function buildExitPad() {
       depthWrite: false,
       blending: THREE.AdditiveBlending,
       side: THREE.DoubleSide,
+      forceSinglePass: true,
       uniforms: { uTime: { value: 0 } },
       vertexShader: /* glsl */ `
         varying vec2 vUv;

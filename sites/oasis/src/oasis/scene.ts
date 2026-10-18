@@ -190,6 +190,7 @@ function buildThrusterMaterial() {
     depthWrite: false,
     blending: THREE.AdditiveBlending,
     side: THREE.DoubleSide,
+    forceSinglePass: true,
     uniforms: { uPower: { value: 0 }, uTime: { value: 0 } },
     vertexShader: /* glsl */ `
       varying vec2 vUv;
@@ -327,73 +328,115 @@ export function startOasis(
     blending: THREE.AdditiveBlending,
     depthWrite: false,
     side: THREE.DoubleSide,
+    forceSinglePass: true,
   })
   const hubGeometry = new THREE.CircleGeometry(0.26, 32)
 
   const draco = new DRACOLoader().setDecoderPath('/oasis/draco/')
   const loader = new GLTFLoader().setDRACOLoader(draco)
   let loaded = false
-  loader.load(
-    '/oasis/delorean.glb',
-    (gltf) => {
-      if (disposed) return
-      car.add(gltf.scene)
-      gltf.scene.traverse((o) => {
-        if (o instanceof THREE.Mesh) o.castShadow = true
-        // One small, frosted strip on the car is transmissive. To refract
-        // what's behind it, three draws the whole scene a second time every
-        // frame. Plain see-through looks the same at that roughness.
-        if (o instanceof THREE.Mesh && o.material instanceof THREE.MeshPhysicalMaterial && o.material.transmission > 0) {
-          o.material.transmission = 0
-        }
-        // Each wheel loads as a group of per-material meshes (Wheel_FL_1, ...);
-        // only the group itself should turn.
-        if (!/^Wheel_(FL|FR|RL|RR)$/.test(o.name)) return
-        // Spin about the axle first, then fold about the car's length.
-        o.rotation.order = 'ZYX'
-        const hub = new THREE.Mesh(hubGeometry, hubMaterial)
-        hub.rotation.x = Math.PI / 2
-        const jet = new THREE.Mesh(thrusterGeometry, thrusterMaterial)
-        car.add(hub, jet)
-        wheels.push({ node: o, side: o.position.x > 0 ? 1 : -1, home: o.position.clone(), hub, jet })
-      })
-      loaded = true
-      if (import.meta.env.DEV) {
-        Object.assign(window, { __oasis: { camera, controls, car, wheels, city, sound, drive, blimps, lots, THREE, renderer, composer, scene } })
+  const carReady = loader.loadAsync('/oasis/delorean.glb').then((gltf) => {
+    if (disposed) return
+    car.add(gltf.scene)
+    gltf.scene.traverse((o) => {
+      if (o instanceof THREE.Mesh) o.castShadow = true
+      // One small, frosted strip on the car is transmissive. To refract
+      // what's behind it, three draws the whole scene a second time every
+      // frame. Plain see-through looks the same at that roughness.
+      if (o instanceof THREE.Mesh && o.material instanceof THREE.MeshPhysicalMaterial && o.material.transmission > 0) {
+        o.material.transmission = 0
       }
-      onReady()
-    },
-    undefined,
-    (err) => {
-      if (!disposed) onError(err)
-    },
-  )
+      // three draws transparent double-sided materials in two passes,
+      // flipping the side between them, which marks the material changed
+      // and re-checks its shader every frame. One pass looks the same here.
+      if (o instanceof THREE.Mesh && o.material.transparent && o.material.side === THREE.DoubleSide) {
+        o.material.forceSinglePass = true
+      }
+      // Each wheel loads as a group of per-material meshes (Wheel_FL_1, ...);
+      // only the group itself should turn.
+      if (!/^Wheel_(FL|FR|RL|RR)$/.test(o.name)) return
+      // Spin about the axle first, then fold about the car's length.
+      o.rotation.order = 'ZYX'
+      const hub = new THREE.Mesh(hubGeometry, hubMaterial)
+      hub.rotation.x = Math.PI / 2
+      const jet = new THREE.Mesh(thrusterGeometry, thrusterMaterial)
+      car.add(hub, jet)
+      wheels.push({ node: o, side: o.position.x > 0 ? 1 : -1, home: o.position.clone(), hub, jet })
+    })
+  })
 
-  // Street life: trees, traffic and people (see street-life.ts). Each
-  // loads on its own after the car, so the scene starts without them.
+  // Street life: trees, traffic and people (see street-life.ts). The scene
+  // starts without any that fail to load.
   const treeSpots = streetTreeSpots()
   const layout = cityLayout()
   let districtId: string | null = null
   let trees: ReturnType<typeof buildTrees> | null = null
   let traffic: ReturnType<typeof buildTraffic> | null = null
   let walkers: ReturnType<typeof buildPedestrians> | null = null
-  loader.load('/oasis/trees.glb', (gltf) => {
-    if (disposed) return
-    trees = buildTrees(gltf, treeSpots)
-    city.add(trees.group)
-  })
-  loader.load('/oasis/traffic.glb', (gltf) => {
-    if (disposed) return
-    traffic = buildTraffic(gltf, layout)
-    city.add(traffic.mesh)
-  })
-  Promise.all([0, 1, 2, 3, 4].map((i) => loader.loadAsync(`/oasis/person-${i}.glb`)))
-    .then((people) => {
+  const streetReady = Promise.allSettled([
+    loader.loadAsync('/oasis/trees.glb').then((gltf) => {
+      if (disposed) return
+      trees = buildTrees(gltf, treeSpots)
+      city.add(trees.group)
+    }),
+    loader.loadAsync('/oasis/traffic.glb').then((gltf) => {
+      if (disposed) return
+      traffic = buildTraffic(gltf, layout)
+      city.add(traffic.mesh)
+    }),
+    Promise.all([0, 1, 2, 3, 4].map((i) => loader.loadAsync(`/oasis/person-${i}.glb`))).then((people) => {
       if (disposed) return
       walkers = buildPedestrians(people, layout)
       city.add(walkers.group)
+    }),
+  ])
+
+  // three compiles a shader the first time something is drawn a new way,
+  // and that stalls a frame for up to 100 ms: a tree first falling inside
+  // the sun's shadow, say. So before the reader sees anything, draw the
+  // whole scene once with nothing culled or hidden and the shadow covering
+  // the city, which compiles them all.
+  const warmUp = async () => {
+    const restore: (() => void)[] = []
+    scene.traverse((o) => {
+      if (!o.visible) {
+        o.visible = true
+        restore.push(() => (o.visible = false))
+      }
+      if (o.frustumCulled) {
+        o.frustumCulled = false
+        restore.push(() => (o.frustumCulled = true))
+      }
+      if (o instanceof THREE.BatchedMesh && o.perObjectFrustumCulled) {
+        o.perObjectFrustumCulled = false
+        restore.push(() => (o.perObjectFrustumCulled = true))
+      }
     })
-    .catch(() => {})
+    const shadow = light.sun.shadow.camera
+    const frame = [shadow.left, shadow.right, shadow.top, shadow.bottom, shadow.far] as const
+    Object.assign(shadow, { left: -4000, right: 4000, top: 4000, bottom: -4000, far: 20000 })
+    shadow.updateProjectionMatrix()
+    await renderer.compileAsync(scene, camera)
+    composer.render()
+    ;[shadow.left, shadow.right, shadow.top, shadow.bottom, shadow.far] = frame
+    shadow.updateProjectionMatrix()
+    for (const undo of restore) undo()
+  }
+
+  carReady
+    .then(() => streetReady)
+    .then(warmUp)
+    .then(() => {
+      if (disposed) return
+      loaded = true
+      if (import.meta.env.DEV) {
+        Object.assign(window, { __oasis: { camera, controls, car, wheels, city, sound, drive, blimps, lots, THREE, renderer, composer, scene } })
+      }
+      onReady()
+    })
+    .catch((err) => {
+      if (!disposed) onError(err)
+    })
 
   const composer = new EffectComposer(renderer)
   composer.addPass(new RenderPass(scene, camera))

@@ -87,6 +87,9 @@ export function buildTrees(gltf: GLTF, spots: number[]) {
       mat.side = THREE.DoubleSide
     }
     const mesh = new THREE.BatchedMesh(c.instances, vertices, indices, mat)
+    // Sorting thousands of opaque trees per pass, every frame, only saves a
+    // little overdraw and makes megabytes of garbage a second.
+    mesh.sortObjects = false
     mesh.castShadow = true
     const ids = new Map<THREE.BufferGeometry, number>()
     for (const g of c.geometries) ids.set(g, mesh.addGeometry(g))
@@ -262,6 +265,7 @@ export function buildTraffic(gltf: GLTF, layout: CityLayout) {
     indices += m.geometry.index!.count
   }
   const mesh = new THREE.BatchedMesh(capacity, vertices, indices, material!)
+  mesh.sortObjects = false
   mesh.castShadow = true
   // three works out the batch's bounding sphere once, from wherever the cars
   // were then, and never again; the whole batch would vanish whenever that
@@ -275,9 +279,19 @@ export function buildTraffic(gltf: GLTF, layout: CityLayout) {
   const pos = new THREE.Vector3()
   const size = new THREE.Vector3()
   const up = new THREE.Vector3(0, 1, 0)
+  // Distance along a lane to city coordinates, written into `out` rather
+  // than a new array: this runs for every car, every frame.
+  const at = { x: 0, z: 0 }
   const world = (lane: Lane, s: number) => {
     const along = lane.dir > 0 ? lane.from + s : lane.to - s
-    return lane.axis === 'z' ? [lane.across, along] : [along, lane.across]
+    if (lane.axis === 'z') {
+      at.x = lane.across
+      at.z = along
+    } else {
+      at.x = along
+      at.z = lane.across
+    }
+    return at
   }
   // Stop lines in lane distance.
   const stopS = (lane: Lane, stop: number) => (lane.dir > 0 ? stop - lane.from : lane.to + stop)
@@ -314,7 +328,8 @@ export function buildTraffic(gltf: GLTF, layout: CityLayout) {
             }
           }
           if (player) {
-            const [px, pz] = lane.axis === 'z' ? [player.x, player.z] : [player.z, player.x]
+            const px = lane.axis === 'z' ? player.x : player.z
+            const pz = lane.axis === 'z' ? player.z : player.x
             if (Math.abs(px - lane.across) < 1.8) {
               const ps = lane.dir > 0 ? pz - lane.from : lane.to - pz
               const d = ps - car.s - car.length / 2 - 2.5 - MIN_GAP
@@ -335,7 +350,7 @@ export function buildTraffic(gltf: GLTF, layout: CityLayout) {
         const heading = lane.axis === 'z' ? (lane.dir > 0 ? 0 : Math.PI) : lane.dir > 0 ? Math.PI / 2 : -Math.PI / 2
         q.setFromAxisAngle(up, heading)
         for (const car of cars) {
-          const [x, z] = world(lane, car.s)
+          const { x, z } = world(lane, car.s)
           const dx = x - camX
           const dz = z - camZ
           const d2 = dx * dx + dz * dz
@@ -361,7 +376,7 @@ export function buildTraffic(gltf: GLTF, layout: CityLayout) {
         const across = lane.axis === 'z' ? x : z
         if (Math.abs(across - lane.across) > r + 2) continue
         for (const car of lane.cars) {
-          const [cx, cz] = world(lane, car.s)
+          const { x: cx, z: cz } = world(lane, car.s)
           if (Math.abs(cx - x) > r + car.length || Math.abs(cz - z) > r + car.length) continue
           const hl = car.length / 2
           const hw = 1.0
@@ -399,14 +414,29 @@ export function buildPedestrians(people: GLTF[], layout: CityLayout) {
     gltf.scene.updateMatrixWorld(true)
     const box = new THREE.Box3().setFromObject(gltf.scene)
     const height = box.max.y - box.min.y
-    return { gltf, scale: 1.72 / height }
+    // A skinned mesh works out its bounds by posing every vertex, the first
+    // time it's culled; for 70 walkers at once that's an 80 ms stall. Work
+    // it out once per figure here, with room for swinging limbs, and share
+    // it with every copy.
+    const spheres: THREE.Sphere[] = []
+    gltf.scene.traverse((o) => {
+      if (!(o instanceof THREE.SkinnedMesh)) return
+      o.skeleton.update()
+      o.computeBoundingSphere()
+      const sphere = o.boundingSphere!.clone()
+      sphere.radius *= 1.3
+      spheres.push(sphere)
+    })
+    return { gltf, scale: 1.72 / height, spheres }
   })
   for (let i = 0; i < WALKERS; i++) {
     const p = prototypes[i % prototypes.length]
     const root = SkeletonUtils.clone(p.gltf.scene)
     root.scale.setScalar(p.scale * (0.92 + hash(i + 0.3) * 0.14))
+    let k = 0
     root.traverse((o) => {
       if (o instanceof THREE.Mesh) o.castShadow = false
+      if (o instanceof THREE.SkinnedMesh) o.boundingSphere = p.spheres[k++].clone()
     })
     const mixer = new THREE.AnimationMixer(root)
     const speed = WALK_SPEED * (0.85 + hash(i + 0.7) * 0.3)
