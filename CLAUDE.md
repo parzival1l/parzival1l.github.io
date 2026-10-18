@@ -38,6 +38,9 @@ active plan and tasks.
 - **Drafts** are MDX files with `draft: true` in frontmatter. They're
   filtered out of `getAllPosts()` (so the homepage and `/blog/` index hide
   them) but `generateStaticParams` includes them, so direct URLs resolve.
+- **Unedited posts** carry `wip: true`. They stay listed, but the homepage
+  rail shows a "Draft" pill instead of "Published", and the post page
+  notes that it isn't fully edited. Don't confuse `wip` with `draft`.
 - **Reading list** entries live in `content/reading.yaml` and render at
   `/reading/`. Shape and required fields are in `lib/reading.ts`
   (`ReadingEntry`); the file header documents them too. A missing required

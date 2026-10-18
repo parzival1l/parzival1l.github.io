@@ -44,6 +44,7 @@ export default async function PostPage({
       slug={post.slug}
       date={post.frontmatter.date}
       category={post.frontmatter.categories?.[0]}
+      wip={post.frontmatter.wip}
       tags={[
         ...new Set([
           ...(post.frontmatter.categories ?? []),

@@ -196,13 +196,19 @@ export default function HomePage() {
         </h2>
         <ul className="space-y-3">
           {posts.map((p) => {
-            const { mon, day, monthYear } = dateParts(p.frontmatter.date)
+            const { mon, day } = dateParts(p.frontmatter.date)
             return (
               <li key={p.slug}>
                 <Link href={`/blog/${p.slug}/`} className={ROW}>
                   <DateBadge mon={mon} day={day} />
                   <span className={ROW_TITLE}>{p.frontmatter.title}</span>
-                  <span className={ROW_RAIL}>{monthYear}</span>
+                  {p.frontmatter.wip ? (
+                    <span className="shrink-0 rounded-full border border-neutral-200 px-2.5 py-0.5 text-xs text-neutral-500">
+                      Draft
+                    </span>
+                  ) : (
+                    <span className={ROW_RAIL}>Published</span>
+                  )}
                 </Link>
               </li>
             )

@@ -11,6 +11,8 @@ export interface PostFrontmatter {
   description?: string
   /** Hidden from listings; still rendered if requested directly via slug. */
   draft?: boolean
+  /** Listed like any post, but labelled as not fully edited yet. */
+  wip?: boolean
 }
 
 export interface Post {

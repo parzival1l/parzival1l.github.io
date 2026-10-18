@@ -9,6 +9,7 @@ export function PostLayout({
   slug,
   date,
   category,
+  wip = false,
   tags = [],
   headings = [],
   children,
@@ -17,6 +18,7 @@ export function PostLayout({
   slug: string
   date: string
   category?: string
+  wip?: boolean
   /** Full category + tag set, rendered as chips under the dateline. */
   tags?: string[]
   headings?: PostHeading[]
@@ -44,6 +46,11 @@ export function PostLayout({
               </span>
             ))}
           </div>
+        ) : null}
+        {wip ? (
+          <p className="mt-4 text-sm italic text-neutral-500">
+            This post is still not completely edited.
+          </p>
         ) : null}
       </header>
       <div className="prose prose-neutral dark:prose-invert max-w-none">{children}</div>
