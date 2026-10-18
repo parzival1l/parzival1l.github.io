@@ -10,6 +10,18 @@ export const metadata = {
     me into committing, so don't cache it. */
 const projects: ProjectData[] = [
   {
+    name: 'The OASIS',
+    repo: 'parzival1l/parzival1l.github.io',
+    source: 'https://github.com/parzival1l/parzival1l.github.io/tree/main/sites/oasis',
+    url: 'https://oasis.parzival.computer',
+    description:
+      'A Ready Player One easter egg in three.js. Parzival\u2019s DeLorean ' +
+      'races out of the starting gate, folds its wheels and flies a ' +
+      'generated city, or you take the wheel: drive the streets, fly ' +
+      'through five rings under the blimps, and find the exit home.',
+    tags: ['three.js', 'WebGL', 'Astro', 'Blender'],
+  },
+  {
     name: 'tidyread',
     repo: 'parzival1l/tidyread',
     description:
