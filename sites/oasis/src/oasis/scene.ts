@@ -441,7 +441,12 @@ export function startOasis(
     const frame = [shadow.left, shadow.right, shadow.top, shadow.bottom, shadow.far] as const
     Object.assign(shadow, { left: -4000, right: 4000, top: 4000, bottom: -4000, far: 20000 })
     shadow.updateProjectionMatrix()
+    // Compile against the composer's target, not the canvas: the scene is
+    // drawn into it in linear colour without tone mapping, and that is a
+    // different shader from the one the canvas would need.
+    renderer.setRenderTarget(composer.readBuffer)
     await renderer.compileAsync(scene, camera)
+    renderer.setRenderTarget(null)
     composer.render()
     ;[shadow.left, shadow.right, shadow.top, shadow.bottom, shadow.far] = frame
     shadow.updateProjectionMatrix()
