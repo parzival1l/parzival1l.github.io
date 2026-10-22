@@ -92,10 +92,11 @@ export function buildAtmosphere(renderer: THREE.WebGLRenderer) {
   return { sky, env, fog }
 }
 
-export function buildSunLight() {
+// `shadowSize` is the shadow map's side in texels.
+export function buildSunLight(shadowSize = 2048) {
   const sun = new THREE.DirectionalLight(0xffb070, 2.4)
   sun.castShadow = true
-  sun.shadow.mapSize.set(2048, 2048)
+  sun.shadow.mapSize.set(shadowSize, shadowSize)
   const cam = sun.shadow.camera
   cam.left = -14
   cam.right = 14

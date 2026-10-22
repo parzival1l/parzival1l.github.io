@@ -43,6 +43,8 @@ type Options = {
   onSoundChange?: (on: boolean) => void
   // The reader took the wheel (true) or pressed R to restart (false).
   onDriveChange?: (driving: boolean) => void
+  // The car left the ground (true) or landed (false) while the reader drives.
+  onAirChange?: (air: boolean) => void
   onRings?: (passed: number, total: number) => void
   // The reader drove onto the exit pad.
   onExit?: () => void
@@ -222,13 +224,31 @@ function buildThrusterMaterial() {
 
 export function startOasis(
   canvas: HTMLCanvasElement,
-  { onReady, onError, onModeChange, onPauseChange, onSoundChange, onDriveChange, onRings, onExit, onDistrict, startAt = 0 }: Options,
+  {
+    onReady,
+    onError,
+    onModeChange,
+    onPauseChange,
+    onSoundChange,
+    onDriveChange,
+    onAirChange,
+    onRings,
+    onExit,
+    onDistrict,
+    startAt = 0,
+  }: Options,
 ) {
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   let disposed = false
 
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' })
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+  // Phones and tablets: their GPUs drive dense screens, so start at a lower
+  // resolution and a smaller shadow map.
+  const handheld = window.matchMedia('(pointer: coarse)').matches
+  // No antialias: the scene draws into the composer's own render targets,
+  // which have no multisampling, so a multisampled canvas would only cost
+  // memory and bandwidth.
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' })
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, handheld ? 1.5 : 2))
   renderer.toneMapping = THREE.ACESFilmicToneMapping
   renderer.toneMappingExposure = 0.6
   renderer.shadowMap.enabled = true
@@ -243,7 +263,7 @@ export function startOasis(
   camera.position.set(0, 2.5, -8)
 
   const ground = buildGround()
-  const light = buildSunLight()
+  const light = buildSunLight(handheld ? 1024 : 2048)
   scene.add(atmosphere.sky, ground.mesh, light.sun, light.sun.target, light.fill)
 
   // One city per loop. When a loop ends, it jumps ahead to sit under the
@@ -575,6 +595,12 @@ export function startOasis(
     KeyQ: 'sink',
   }
   const held = new Set<string>()
+  // The on-screen joystick, each axis from -1 to 1: x right, y forward.
+  const stick = { x: 0, y: 0 }
+  // The Fly button: climb for a moment off the ground, or sink until landed.
+  let autoClimb = 0
+  let autoLand = false
+  let reportedAir = false
 
   // Hand the car to the reader wherever it is in the flight.
   const takeWheel = () => {
@@ -601,6 +627,13 @@ export function startOasis(
   const restart = () => {
     drive.on = false
     held.clear()
+    stick.x = stick.y = 0
+    autoClimb = 0
+    autoLand = false
+    if (reportedAir) {
+      reportedAir = false
+      onAirChange?.(false)
+    }
     elapsed = 0
     prevT = 0
     nextBurst = -1
@@ -652,7 +685,40 @@ export function startOasis(
     if (key) held.delete(key)
   }
   // Keys released while the tab is in the background never send keyup.
-  const onBlur = () => held.clear()
+  const onBlur = () => {
+    held.clear()
+    stick.x = stick.y = 0
+  }
+
+  // On-screen controls for touch screens. Any input takes the wheel, as a
+  // key does.
+  const canDrive = () => loaded && !reducedMotion
+  const setStick = (x: number, y: number) => {
+    stick.x = x
+    stick.y = y
+    if ((x || y) && !drive.on && canDrive()) takeWheel()
+  }
+  const setHeld = (key: 'rise' | 'sink', on: boolean) => {
+    if (on) {
+      held.add(key)
+      autoLand = false
+      autoClimb = 0
+      if (!drive.on && canDrive()) takeWheel()
+    } else held.delete(key)
+  }
+  const fly = () => {
+    if (!canDrive()) return
+    if (!drive.on) takeWheel()
+    if (drive.air) {
+      autoLand = true
+      autoClimb = 0
+    } else {
+      autoClimb = 1.2
+      autoLand = false
+    }
+  }
+  // Back to the chase camera (or the cinematic one) after orbiting.
+  const followCar = () => setMode(drive.on ? 'drive' : 'cinematic')
   window.addEventListener('keyup', onKeyUp)
   window.addEventListener('blur', onBlur)
   window.addEventListener('keydown', onKeyDown)
@@ -703,12 +769,13 @@ export function startOasis(
   const ringPoint = new THREE.Vector3()
   const stepDrive = (dt: number, cityZ: number, gateZ: number, lapZ: number) => {
     const input = (k: string) => (held.has(k) ? 1 : 0)
-    const throttle = input('up') - input('down')
-    const turn = input('left') - input('right')
+    const clamp1 = (n: number) => THREE.MathUtils.clamp(n, -1, 1)
+    const throttle = clamp1(input('up') - input('down') + stick.y)
+    const turn = clamp1(input('left') - input('right') - stick.x)
     const p = drive.air ? DRIVE.air : DRIVE.road
     let v = drive.v
-    if (throttle > 0) v += (v < 0 ? p.brake : p.accel) * dt
-    else if (throttle < 0) v -= (v > 0 ? p.brake : p.reverse) * dt
+    if (throttle > 0) v += (v < 0 ? p.brake : p.accel) * throttle * dt
+    else if (throttle < 0) v += (v > 0 ? p.brake : p.reverse) * throttle * dt
     else v -= Math.sign(v) * Math.min(Math.abs(v), p.coast * dt)
     v -= v * Math.abs(v) * p.drag * dt
     v = THREE.MathUtils.clamp(v, -p.maxReverse, p.max)
@@ -725,7 +792,8 @@ export function startOasis(
     }
 
     // Height: E climbs (and lifts off the road), Q sinks.
-    const lift = input('rise') - input('sink')
+    autoClimb = Math.max(autoClimb - dt, 0)
+    const lift = clamp1(input('rise') - input('sink') + (autoClimb > 0 ? 1 : 0) - (autoLand ? 1 : 0))
     if (!drive.air && lift > 0) {
       drive.air = true
       sound.hover(true)
@@ -806,6 +874,7 @@ export function startOasis(
       y = floor
       if (drive.air && drive.vy <= 0 && lift < 0) {
         drive.air = false
+        autoLand = false
         sound.touchdown()
       }
       drive.vy = Math.max(drive.vy, 0)
@@ -895,6 +964,10 @@ export function startOasis(
 
     if (drive.on) {
       stepDrive(liveDt, cityZ, gateZ, lapZ)
+      if (drive.air !== reportedAir) {
+        reportedAir = drive.air
+        onAirChange?.(drive.air)
+      }
     } else {
       const s = flightState(t)
       const carZ = distanceAt(elapsed)
@@ -1104,5 +1177,5 @@ export function startOasis(
       rings: blimps.map((b) => ({ x: b.mesh.position.x, z: b.mesh.position.z, done: b.ring.done })),
     }
   }
-  return Object.assign(stop, { toggleSound, mapPlan, mapState })
+  return Object.assign(stop, { toggleSound, mapPlan, mapState, setStick, setHeld, fly, restart, followCar })
 }
