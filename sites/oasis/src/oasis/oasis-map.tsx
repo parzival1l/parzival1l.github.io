@@ -173,11 +173,11 @@ export function OasisMap({ plan, state, onClose }: { plan: MapPlan; state: () =>
       onClick={onClose}
     >
       <div
-        className="flex h-[88vh] w-[min(92vw,880px)] gap-6 rounded-2xl border border-white/10 bg-[#0d0f12]/90 p-5 shadow-2xl"
+        className="flex h-[88dvh] w-[min(92vw,880px)] gap-3 rounded-2xl border border-white/10 bg-[#0d0f12]/90 p-3 sm:gap-6 sm:p-5 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <canvas ref={canvasRef} className="h-full min-w-0 flex-1" aria-label="Map of the OASIS city" role="img" />
-        <div className="flex w-56 shrink-0 flex-col gap-5 normal-case tracking-normal">
+        <div className="flex w-40 shrink-0 flex-col gap-5 sm:w-56 normal-case tracking-normal">
           <div className="flex items-baseline justify-between">
             <div className="text-[13px] uppercase tracking-[0.25em] text-white">Map</div>
             <button
