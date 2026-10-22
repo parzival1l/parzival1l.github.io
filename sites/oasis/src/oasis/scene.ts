@@ -739,6 +739,11 @@ export function startOasis(
   resize()
   window.addEventListener('resize', resize)
 
+  // The camera's view, last frame's, for culling walkers' animation.
+  const viewFrustum = new THREE.Frustum()
+  const viewMatrix = new THREE.Matrix4()
+  const walkerSphere = new THREE.Sphere()
+  const walkerAt = new THREE.Vector3()
   const desired = new THREE.Vector3()
   const lookAt = new THREE.Vector3()
   const previous = new THREE.Vector3()
@@ -1016,7 +1021,13 @@ export function startOasis(
     trees?.update(camX, camZ)
     playerAt.set(car.position.x, 0, car.position.z - cityZ)
     traffic?.update(liveDt, clock, camX, camZ, drive.on && car.position.y < 2 ? playerAt : null)
-    walkers?.update(liveDt, camX, camZ, camera.position.y < 160)
+    if (walkers) {
+      viewFrustum.setFromProjectionMatrix(
+        viewMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse),
+      )
+      const seen = (x: number, z: number) => viewFrustum.intersectsSphere(walkerSphere.set(walkerAt.set(x, 1, z + cityZ), 3))
+      walkers.update(liveDt, camX, camZ, camera.position.y < 160, seen)
+    }
     carSparkles.material.uniforms.uTime.value = clock
 
     scoreboard.position.set(0, 330, (drive.on ? cityZ : car.position.z + 950))

@@ -393,6 +393,8 @@ export function buildTraffic(gltf: GLTF, layout: CityLayout) {
 const WALKERS = 70
 const WALK_RANGE = 260
 const WALK_SPEED = 1.35 // m/s
+// Beyond this, in metres from the camera, walkers glide without striding.
+const ANIMATE_RANGE = 90
 
 // People walk loops around the blocks near the camera, some clockwise by
 // the buildings, some the other way near the curb. When one falls far
@@ -403,6 +405,8 @@ export function buildPedestrians(people: GLTF[], layout: CityLayout) {
   type Walker = {
     root: THREE.Object3D
     mixer: THREE.AnimationMixer
+    // Animation time not yet played, while the walker was out of sight.
+    lag: number
     block: number
     offset: number
     s: number
@@ -448,6 +452,7 @@ export function buildPedestrians(people: GLTF[], layout: CityLayout) {
     walkers.push({
       root,
       mixer,
+      lag: 0,
       block: -1,
       // Metres out from the block's edge: by the shop fronts, or the curb.
       offset: curb ? streetHalf - roadwayHalf - 0.9 : 1.0,
@@ -492,8 +497,9 @@ export function buildPedestrians(people: GLTF[], layout: CityLayout) {
   let seed = 0
   return {
     group,
-    // `show` is false when the camera is too high to see anyone.
-    update(dt: number, camX: number, camZ: number, show: boolean) {
+    // `show` is false when the camera is too high to see anyone. `seen`
+    // says whether a walker at (x, z) is in the camera's view.
+    update(dt: number, camX: number, camZ: number, show: boolean, seen: (x: number, z: number) => boolean) {
       group.visible = show
       if (!show) return
       let candidates: ReturnType<typeof nearby> | null = null
@@ -515,8 +521,17 @@ export function buildPedestrians(people: GLTF[], layout: CityLayout) {
         const heading = at(block, w.offset, w.s, pos)
         w.root.position.copy(pos)
         w.root.rotation.y = heading + (w.dir < 0 ? Math.PI : 0)
-        w.root.visible = true
-        w.mixer.update(dt)
+        // Each walker is a whole skeleton. Out of view, skip its bones'
+        // matrices and its animation; far away, where a stride is a few
+        // pixels, skip just the animation.
+        const inView = seen(pos.x, pos.z)
+        w.root.visible = inView
+        w.root.matrixWorldAutoUpdate = inView
+        w.lag += dt
+        if (inView && Math.hypot(pos.x - camX, pos.z - camZ) < ANIMATE_RANGE) {
+          w.mixer.update(w.lag)
+          w.lag = 0
+        }
       }
     },
   }
