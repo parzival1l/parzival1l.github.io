@@ -441,7 +441,12 @@ export function startOasis(
     const frame = [shadow.left, shadow.right, shadow.top, shadow.bottom, shadow.far] as const
     Object.assign(shadow, { left: -4000, right: 4000, top: 4000, bottom: -4000, far: 20000 })
     shadow.updateProjectionMatrix()
+    // Compile against the composer's target, not the canvas: the scene is
+    // drawn into it in linear colour without tone mapping, and that is a
+    // different shader from the one the canvas would need.
+    renderer.setRenderTarget(composer.readBuffer)
     await renderer.compileAsync(scene, camera)
+    renderer.setRenderTarget(null)
     composer.render()
     ;[shadow.left, shadow.right, shadow.top, shadow.bottom, shadow.far] = frame
     shadow.updateProjectionMatrix()
@@ -734,6 +739,11 @@ export function startOasis(
   resize()
   window.addEventListener('resize', resize)
 
+  // The camera's view, last frame's, for culling walkers' animation.
+  const viewFrustum = new THREE.Frustum()
+  const viewMatrix = new THREE.Matrix4()
+  const walkerSphere = new THREE.Sphere()
+  const walkerAt = new THREE.Vector3()
   const desired = new THREE.Vector3()
   const lookAt = new THREE.Vector3()
   const previous = new THREE.Vector3()
@@ -1011,7 +1021,13 @@ export function startOasis(
     trees?.update(camX, camZ)
     playerAt.set(car.position.x, 0, car.position.z - cityZ)
     traffic?.update(liveDt, clock, camX, camZ, drive.on && car.position.y < 2 ? playerAt : null)
-    walkers?.update(liveDt, camX, camZ, camera.position.y < 160)
+    if (walkers) {
+      viewFrustum.setFromProjectionMatrix(
+        viewMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse),
+      )
+      const seen = (x: number, z: number) => viewFrustum.intersectsSphere(walkerSphere.set(walkerAt.set(x, 1, z + cityZ), 3))
+      walkers.update(liveDt, camX, camZ, camera.position.y < 160, seen)
+    }
     carSparkles.material.uniforms.uTime.value = clock
 
     scoreboard.position.set(0, 330, (drive.on ? cityZ : car.position.z + 950))
