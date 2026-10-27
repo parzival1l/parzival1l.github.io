@@ -6,6 +6,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js'
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js'
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js'
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js'
 import {
   CITY_EXTENT_X,
   CITY_HALF_LENGTH,
@@ -470,6 +471,29 @@ export function startOasis(
 
   const composer = new EffectComposer(renderer)
   composer.addPass(new RenderPass(scene, camera))
+  // Now and then a pixel of the scene comes out NaN or past what a half
+  // float holds. The bloom blurs it into whole rows and columns, and for a
+  // frame those strips show the page behind the canvas. Zero any NaN and
+  // cap the rest before the bloom sees them.
+  composer.addPass(
+    new ShaderPass({
+      uniforms: { tDiffuse: { value: null } },
+      vertexShader: /* glsl */ `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }`,
+      fragmentShader: /* glsl */ `
+        uniform sampler2D tDiffuse;
+        varying vec2 vUv;
+        void main() {
+          vec4 c = texture2D(tDiffuse, vUv);
+          if (any(isnan(c))) c = vec4(0.0, 0.0, 0.0, 1.0);
+          gl_FragColor = clamp(c, 0.0, 1000.0);
+        }`,
+    }),
+  )
   composer.addPass(new UnrealBloomPass(new THREE.Vector2(1, 1), 0.1, 0.2, 0.98))
   composer.addPass(new OutputPass())
 
