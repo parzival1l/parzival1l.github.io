@@ -136,18 +136,6 @@ export default async function ReadingNotePage({ params }: { params: Promise<{ sl
         </div>
       </section>
 
-      {note.tags.length > 0 ? (
-        <p className="mt-10 text-[13px] text-neutral-500">
-          {note.tags.map((tag, i) => (
-            <span key={tag}>
-              {i > 0 ? <span aria-hidden="true"> · </span> : null}
-              <Link href={`/reading/?tag=${encodeURIComponent(tag)}`} className="hover:text-neutral-900">
-                {tag}
-              </Link>
-            </span>
-          ))}
-        </p>
-      ) : null}
 
       {older || newer ? (
         <nav

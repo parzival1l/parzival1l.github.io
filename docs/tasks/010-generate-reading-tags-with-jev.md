@@ -10,10 +10,9 @@ depends_on: [009]
 
 ## Context
 
-Tags on reading entries (the `agents · patterns` line under each note)
-should come from Jev, not from the author typing them. Writing tags by
-hand is the slowest part of adding an entry, and hand-picked tags drift
-("llm" vs "llms").
+Tags on reading entries should come from Jev, not from the author typing
+them. Writing tags by hand is the slowest part of adding an entry, and
+hand-picked tags drift ("llm" vs "llms").
 
 Jev is TypeSafe AI's "System One Model" for decisions inside software. It
 takes structured questions and returns typed decisions with probabilities
@@ -22,7 +21,12 @@ and confidence estimates. Access is through the API, in early access.
 - Docs: https://docs.typesafe.ai/introduction
 - Console and API keys: https://console.typesafe.ai/
 
-Task 009 makes `tags` optional and turns each tag into a filter link.
+Task 009 made `tags` optional. Since 2026-11-01 tags are not displayed and
+have no filter links (the author removed the tags line from both reading
+pages). Search on `/reading/` still matches them, so generated tags only
+improve search until a tag UI returns. Confirm with the author that this
+is still worth doing before starting.
+
 Plan: `docs/plans/2026-11-01-reading-notes.md`.
 
 ## Acceptance criteria

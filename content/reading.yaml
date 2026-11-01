@@ -10,13 +10,14 @@
 #   url       one of    link to the original; leave it out for a plain note
 #   note      one of    my take, shown in full as the large text in the log
 #   title     with url  the source's title, shown as the citation link
-#   summary   optional  a line or two about the source, shown in grey
+#   summary   optional  a line or two about the source, shown on a long
+#                       note's page (not in the log)
 #   type      optional  article | paper | video | tweet | repo; inferred from
 #                       the url when left out (arxiv → paper, youtube →
 #                       video, github → repo, x.com → tweet, else article)
-#   tags      optional  lowercase; each one links to a filtered log
-#   archive   optional  archive.ph snapshot; adds an "archive" link
-#   repo      optional  source code; adds a "code" link
+#   tags      optional  lowercase; not shown, but search matches them
+#   archive   optional  archive.ph snapshot; a long note's page links it
+#   repo      optional  source code; kept for reference, not shown
 #
 # A note too long for the log belongs in content/reading/<slug>.mdx instead.
 # It gets its own page, and the log shows its first paragraph.

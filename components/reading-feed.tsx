@@ -17,14 +17,6 @@ const META = 'text-[13px] text-neutral-500'
 
 // No hover transitions on purpose: this page has no motion at all.
 const TITLE_LINK = 'text-neutral-900 hover:text-accent'
-const QUIET_LINK =
-  'underline decoration-neutral-300 underline-offset-[3px] hover:text-neutral-900 dark:decoration-neutral-600'
-
-/** Read `?tag=` from the address bar. */
-function tagFromUrl(): string | null {
-  return new URLSearchParams(window.location.search).get('tag')
-}
-
 function SearchIcon() {
   return (
     <svg
@@ -39,56 +31,6 @@ function SearchIcon() {
       <circle cx="11" cy="11" r="7.5" />
       <path d="m21 21-4.9-4.9" />
     </svg>
-  )
-}
-
-/** The small line under an entry: tags, then archive and code links. */
-function EntryFooter({
-  entry,
-  onTag,
-}: {
-  entry: ReadingEntry
-  onTag: (tag: string) => void
-}) {
-  const links: React.ReactNode[] = [
-    ...entry.tags.map(tag => (
-      <a
-        key={`tag-${tag}`}
-        href={`/reading/?tag=${encodeURIComponent(tag)}`}
-        onClick={e => {
-          e.preventDefault()
-          onTag(tag)
-        }}
-        className="hover:text-neutral-900"
-      >
-        {tag}
-      </a>
-    )),
-  ]
-  if (entry.archive) {
-    links.push(
-      <a key="archive" href={entry.archive} target="_blank" rel="noreferrer" className={QUIET_LINK}>
-        archive
-      </a>,
-    )
-  }
-  if (entry.repo) {
-    links.push(
-      <a key="repo" href={entry.repo} target="_blank" rel="noreferrer" className={QUIET_LINK}>
-        code
-      </a>,
-    )
-  }
-  if (links.length === 0) return null
-  return (
-    <p className="text-[13px] leading-5 text-neutral-500">
-      {links.map((link, i) => (
-        <span key={i}>
-          {i > 0 ? <span aria-hidden="true"> · </span> : null}
-          {link}
-        </span>
-      ))}
-    </p>
   )
 }
 
@@ -116,19 +58,17 @@ function EntryTitle({ entry }: { entry: ReadingEntry }) {
 }
 
 /**
- * One log entry: the title, then my note a step smaller, then tags. No type
- * or domain line and no summary: the title says what it is, and the note
- * says why it is here.
+ * One log entry: the title, then my note a step smaller. No type or domain
+ * line, no summary and no tags: the title says what it is, and the note says
+ * why it is here.
  */
 function Entry({
   entry,
   showDate,
-  onTag,
 }: {
   entry: ReadingEntry
   /** False when the entry above has the same date; the gutter stays blank. */
   showDate: boolean
-  onTag: (tag: string) => void
 }) {
   const date = formatShortDate(entry.date)
   return (
@@ -162,7 +102,6 @@ function Entry({
             <span className={META}>· {entry.readingMinutes} min read</span>
           </p>
         ) : null}
-        <EntryFooter entry={entry} onTag={onTag} />
       </div>
     </article>
   )
@@ -170,19 +109,9 @@ function Entry({
 
 export function ReadingFeed({ entries }: { entries: ReadingEntry[] }) {
   const [activeType, setActiveType] = useState<ReadingType | null>(null)
-  const [activeTag, setActiveTag] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [limit, setLimit] = useState(PAGE)
   const searchRef = useRef<HTMLInputElement>(null)
-
-  // The static export can't know the query string at build time, so the tag
-  // filter is read after hydration. Back/forward keeps it in sync.
-  useEffect(() => {
-    const sync = () => setActiveTag(tagFromUrl())
-    sync()
-    window.addEventListener('popstate', sync)
-    return () => window.removeEventListener('popstate', sync)
-  }, [])
 
   // "/" jumps to search, unless the reader is already typing somewhere.
   useEffect(() => {
@@ -197,25 +126,17 @@ export function ReadingFeed({ entries }: { entries: ReadingEntry[] }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  function chooseTag(tag: string | null) {
-    setActiveTag(tag)
-    setLimit(PAGE)
-    const url = tag ? `/reading/?tag=${encodeURIComponent(tag)}` : '/reading/'
-    window.history.pushState(null, '', url)
-    window.scrollTo({ top: 0 })
-  }
-
   function clearAll() {
     setActiveType(null)
     setQuery('')
-    chooseTag(null)
+    setLimit(PAGE)
   }
 
-  // Tag and search narrow everything; the type tabs then split what is left,
-  // so each tab's count is what clicking it would show.
+  // Search narrows everything; the type tabs then split what is left, so each
+  // tab's count is what clicking it would show. Tags are not shown, but
+  // search still matches them.
   const q = query.trim().toLowerCase()
   const narrowed = entries.filter(entry => {
-    if (activeTag && !entry.tags.includes(activeTag)) return false
     if (!q) return true
     const haystack = [entry.title, entry.summary, entry.note, entry.url, ...entry.tags]
       .filter(Boolean)
@@ -296,15 +217,6 @@ export function ReadingFeed({ entries }: { entries: ReadingEntry[] }) {
         </label>
       </div>
 
-      {activeTag ? (
-        <p className="mt-6 text-sm text-neutral-600">
-          Tagged <span className="font-medium text-neutral-900">{activeTag}</span>
-          <span aria-hidden="true"> · </span>
-          <button type="button" onClick={() => chooseTag(null)} className="text-accent hover:underline">
-            Clear
-          </button>
-        </p>
-      ) : null}
 
       {visible.length === 0 ? (
         <div className="mt-12 text-neutral-600">
@@ -325,7 +237,6 @@ export function ReadingFeed({ entries }: { entries: ReadingEntry[] }) {
                   key={entry.id}
                   entry={entry}
                   showDate={i === 0 || month.entries[i - 1].date !== entry.date}
-                  onTag={chooseTag}
                 />
               ))}
             </section>
