@@ -44,7 +44,7 @@ scope**. Distribution surfaces (007) remain deferred to a future plan.
 
 The ID **007 is deliberately skipped** — it was referenced by the
 superseded plan for RSS+sitemap+GA4 work that has been deferred. Per
-`docs/tasks/CLAUDE.md`, IDs are never reused, so 007 stays reserved for
+`docs/tasks/AGENTS.md`, IDs are never reused, so 007 stays reserved for
 when those distribution surfaces come back.
 
 ## Sequencing

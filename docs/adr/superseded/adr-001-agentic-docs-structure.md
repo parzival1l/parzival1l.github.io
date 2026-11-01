@@ -1,10 +1,10 @@
 ---
 id: 001
 title: Agentic-dev docs structure
-status: accepted
+status: superseded
 date: 2026-05-01
 supersedes: []
-superseded_by: []
+superseded_by: [adr-009]
 ---
 
 ## Context

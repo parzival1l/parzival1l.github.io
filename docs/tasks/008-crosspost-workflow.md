@@ -362,7 +362,7 @@ merged before the secrets are set.
 
 1. Set frontmatter `status: done`
 2. `git mv docs/tasks/008-crosspost-workflow.md docs/tasks/completed/`
-3. Update the index in `docs/tasks/CLAUDE.md`
+3. Update the index in `docs/tasks/AGENTS.md`
 4. If task 006 is also done, flip the plan
    `2026-05-01-cleanup-and-syndication.md` to `status: completed` and
    write the next plan covering custom domain and RSS+sitemap+GA4

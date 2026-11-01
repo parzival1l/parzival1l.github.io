@@ -26,7 +26,7 @@ builds the site and deploys it to GitHub Pages on every push to `main`.
 - `components/` — UI: site chrome, post layout, TOC, footer.
 - `lib/` — content loading and formatting.
 - `public/` — static assets.
-- `docs/` — architecture, ADRs, plans, tasks. Start at `docs/CLAUDE.md`.
+- `docs/` — architecture, ADRs, plans, tasks. Start at `docs/AGENTS.md`.
 - `.github/workflows/deploy.yml` — build and deploy pipeline.
 
 ## Writing a post

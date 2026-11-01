@@ -8,17 +8,17 @@ should be able to land here cold and resume work without prior context.
 
 ```
 docs/
-├── CLAUDE.md              ← you are here (navigation)
+├── AGENTS.md              ← you are here (navigation)
 ├── architecture.md        ← evergreen "what we are building"
 ├── adr/                   ← Architecture Decision Records (the "why")
-│   ├── CLAUDE.md
+│   ├── AGENTS.md
 │   ├── adr-NNN-*.md       ← one decision per file, immutable once accepted
 │   └── superseded/        ← ADRs replaced by later decisions
 ├── plans/                 ← time-boxed execution plans (the "how, this batch")
-│   ├── CLAUDE.md
+│   ├── AGENTS.md
 │   └── YYYY-MM-DD-name.md ← dated; each plan covers 3–4 tasks
 └── tasks/                 ← discrete units of work (the "do this")
-    ├── CLAUDE.md
+    ├── AGENTS.md
     ├── NNN-*.md           ← one task per file, agent-executable
     └── completed/         ← tasks moved here when status=done
 ```
@@ -26,9 +26,9 @@ docs/
 ## Reading order for a fresh agent
 
 1. **`architecture.md`** — what this project is and what it should look like
-2. **`adr/CLAUDE.md`** then the ADR index — why current state is the way it is
-3. **`plans/CLAUDE.md`** — find the most recent active plan
-4. **`tasks/CLAUDE.md`** — find tasks referenced by that plan
+2. **`adr/AGENTS.md`** then the ADR index — why current state is the way it is
+3. **`plans/AGENTS.md`** — find the most recent active plan
+4. **`tasks/AGENTS.md`** — find tasks referenced by that plan
 
 The plan tells you *what batch of work to do next*. The task files tell you
 *exactly how to do each piece*. ADRs explain *why constraints exist* if a task

@@ -17,7 +17,7 @@ now Next.js-only. The root `README.md` describes the Next.js app, not the
 old starter.
 
 If you're a fresh agent landing here to do work, **start with
-`docs/CLAUDE.md`**. It explains the docs structure and gets you to the
+`docs/AGENTS.md`**. It explains the docs structure and gets you to the
 active plan and tasks.
 
 ## Where to look first
@@ -25,7 +25,7 @@ active plan and tasks.
 | If you want to... | Read |
 |---|---|
 | Understand what this project is | `docs/architecture.md` |
-| Understand why decisions were made | `docs/adr/` (ADR-001 through ADR-008; ADR-004 superseded by 008) |
+| Understand why decisions were made | `docs/adr/` (ADR-002 through ADR-009; ADR-001 superseded by 009, ADR-004 by 008) |
 | Find what work to do next | `docs/plans/` (the file with `status: active`) |
 | Execute a specific task | `docs/tasks/NNN-*.md` referenced by the active plan |
 | See what's been shipped | `docs/tasks/completed/` and plans with `status: completed` |
@@ -51,7 +51,8 @@ active plan and tasks.
   `lib/reading-shared.ts`. A broken entry throws at build time. The page
   has no animation, on purpose.
 - **Documentation** lives under `docs/` and follows the agentic-dev structure
-  defined in ADR-001. Use CLAUDE.md (not README.md) for folder navigation.
+  defined in ADR-009. Use AGENTS.md (not README.md or CLAUDE.md) for
+  folder navigation.
 - **Footer is route-aware** (`components/site-footer.tsx`): the homepage
   shows the contact colophon (`components/contact-section.tsx` — email plus
   brand-icon socials from `components/social-icons.tsx`) above the clock;
@@ -66,12 +67,12 @@ active plan and tasks.
   recreate it as a route without a nav decision.
 - **ADRs are immutable** once accepted. To change a decision, write a new
   ADR that supersedes the old one and `git mv` the old file to
-  `docs/adr/superseded/`. Lifecycle details in `docs/adr/CLAUDE.md`.
+  `docs/adr/superseded/`. Lifecycle details in `docs/adr/AGENTS.md`.
 - **Plans are immutable** once `status: completed`. Write a new dated plan
-  for follow-up work. Lifecycle in `docs/plans/CLAUDE.md`.
+  for follow-up work. Lifecycle in `docs/plans/AGENTS.md`.
 - **Tasks** flip `status: todo` → `in-progress` → `done`, then get
   `git mv`'d to `docs/tasks/completed/`. IDs are never reused. Lifecycle
-  and full rules in `docs/tasks/CLAUDE.md`.
+  and full rules in `docs/tasks/AGENTS.md`.
 
 ## Active work
 
