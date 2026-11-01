@@ -50,6 +50,12 @@ active plan and tasks.
   Loader and validation: `lib/reading.ts`; client-safe types:
   `lib/reading-shared.ts`. A broken entry throws at build time. The page
   has no animation, on purpose.
+- **Index pages share one frame.** Blog, Reading and Projects all use
+  `PageHeader` + `PAGE_SHELL` (`components/page-header.tsx`), so the title
+  sits in the same spot on each. Blog and Reading share `FilterBar`
+  (`components/filter-bar.tsx`: tabs with counts, search, "/" to focus) and
+  the calendar `DateBadge` (`components/date-badge.tsx`). Projects render
+  as full-width rows (`components/project-card.tsx`).
 - **Documentation** lives under `docs/` and follows the agentic-dev structure
   defined in ADR-009. Use AGENTS.md (not README.md or CLAUDE.md) for
   folder navigation.

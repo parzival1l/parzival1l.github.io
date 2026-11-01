@@ -1,4 +1,4 @@
-import { PageLayout } from '@/components/page-layout'
+import { PAGE_BODY, PAGE_SHELL, PageHeader } from '@/components/page-header'
 import { ProjectCard, type ProjectData } from '@/components/project-card'
 
 export const metadata = {
@@ -57,13 +57,15 @@ const projects: ProjectData[] = [
 
 export default function ProjectsPage() {
   return (
-    <PageLayout title="Projects">
-      <p>A running list of things I&rsquo;m building.</p>
-      <div className="not-prose mt-8 grid gap-4 sm:grid-cols-2">
+    <div className={PAGE_SHELL}>
+      <PageHeader title="Projects">
+        <p>A running list of things I&rsquo;m building.</p>
+      </PageHeader>
+      <div className={`${PAGE_BODY} border-t border-neutral-200`}>
         {projects.map((project) => (
           <ProjectCard key={project.repo} project={project} />
         ))}
       </div>
-    </PageLayout>
+    </div>
   )
 }

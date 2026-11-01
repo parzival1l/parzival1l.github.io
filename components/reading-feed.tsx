@@ -1,14 +1,16 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import {
   TYPE_LABELS,
   type ReadingEntry,
   type ReadingType,
 } from '@/lib/reading-shared'
-import { formatMonth, formatShortDate } from '@/lib/format'
+import { formatMonth } from '@/lib/format'
 import { TypeIcon } from '@/components/reading-icons'
+import { DateBadge, dateParts } from '@/components/date-badge'
+import { FilterBar, type FilterTab } from '@/components/filter-bar'
 
 /** Entries rendered before "Show older entries"; each click adds as many. */
 const PAGE = 20
@@ -21,26 +23,13 @@ const TITLE_LINK = 'text-neutral-900 hover:text-accent'
 
 // The rule that marks my words. Solid in dark mode, where alpha borders glow.
 const NOTE_RULE = 'border-neutral-300 dark:border-[#3a3a3a]'
-function SearchIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      className="h-3.5 w-3.5 flex-none"
-      aria-hidden="true"
-    >
-      <circle cx="11" cy="11" r="7.5" />
-      <path d="m21 21-4.9-4.9" />
-    </svg>
-  )
-}
 
 // Two lanes inside an entry: markers (type icon, note rule) sit at the left
 // edge, and every line of text starts 24px in, so titles and notes align.
 const TEXT_LANE = 'pl-6'
+
+// Fixed slot for the date tile, kept even when a same-day entry hides it.
+const BADGE_SLOT = 'w-[52px] flex-none'
 
 /**
  * The type icon and title. A linked entry opens the source; a long note with
@@ -83,20 +72,15 @@ function Entry({
   /** False when the entry above has the same date; the gutter stays blank. */
   showDate: boolean
 }) {
-  const date = formatShortDate(entry.date)
+  const { mon, day } = dateParts(entry.date)
   const hasTitle = Boolean(entry.url || entry.slug)
   return (
-    <article className="flex gap-6">
-      <time
-        dateTime={entry.date}
-        className="hidden w-16 flex-none text-[13px] leading-[24px] tabular-nums text-neutral-500 sm:block"
-      >
-        {showDate ? date : null}
+    <article className="flex gap-4">
+      {/* The blog's calendar tile, so dates read the same on both pages. */}
+      <time dateTime={entry.date} className={BADGE_SLOT}>
+        {showDate ? <DateBadge mon={mon} day={day} /> : null}
       </time>
-      <div className="flex min-w-0 flex-1 flex-col gap-2">
-        <time dateTime={entry.date} className={`sm:hidden ${TEXT_LANE} ${META}`}>
-          {date}
-        </time>
+      <div className="flex min-w-0 flex-1 flex-col gap-2 pt-3">
         <EntryTitle entry={entry} />
         {entry.note && hasTitle ? (
           <p className={`max-w-[624px] border-l-2 ${NOTE_RULE} pl-[22px] text-base leading-[26px] text-neutral-700`}>
@@ -130,20 +114,6 @@ export function ReadingFeed({ entries }: { entries: ReadingEntry[] }) {
   const [activeType, setActiveType] = useState<ReadingType | null>(null)
   const [query, setQuery] = useState('')
   const [limit, setLimit] = useState(PAGE)
-  const searchRef = useRef<HTMLInputElement>(null)
-
-  // "/" jumps to search, unless the reader is already typing somewhere.
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey) return
-      const el = e.target as HTMLElement | null
-      if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return
-      e.preventDefault()
-      searchRef.current?.focus()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [])
 
   function clearAll() {
     setActiveType(null)
@@ -180,64 +150,33 @@ export function ReadingFeed({ entries }: { entries: ReadingEntry[] }) {
     else months.push({ key, entries: [entry] })
   }
 
-  const tabs: { type: ReadingType | null; label: string; count: number }[] = [
-    { type: null, label: 'All', count: narrowed.length },
-    ...typesPresent.map(t => ({ type: t, label: TYPE_LABELS[t].many, count: counts.get(t) ?? 0 })),
+  const tabs: FilterTab<ReadingType>[] = [
+    { key: null, label: 'All', count: narrowed.length },
+    ...typesPresent.map(t => ({
+      key: t,
+      label: TYPE_LABELS[t].many,
+      count: counts.get(t) ?? 0,
+      icon: <TypeIcon type={t} className="h-3.5 w-3.5 text-neutral-500" />,
+    })),
   ]
 
   return (
     <div>
-      <div className="flex flex-col gap-3 border-b border-neutral-200 pb-3 sm:flex-row sm:items-center sm:justify-between">
-        <div
-          role="group"
-          aria-label="Filter by type"
-          className="-mx-6 flex gap-5 overflow-x-auto px-6 text-sm sm:mx-0 sm:px-0"
-        >
-          {tabs.map(tab => {
-            const active = activeType === tab.type
-            return (
-              <button
-                key={tab.label}
-                type="button"
-                aria-pressed={active}
-                onClick={() => {
-                  setActiveType(tab.type)
-                  setLimit(PAGE)
-                }}
-                className={`flex flex-none items-center gap-1.5 whitespace-nowrap py-1 ${
-                  active ? 'font-medium text-neutral-900' : 'text-neutral-600 hover:text-neutral-900'
-                }`}
-              >
-                {tab.type ? <TypeIcon type={tab.type} className="h-3.5 w-3.5 text-neutral-500" /> : null}
-                {/* Only the label is underlined, so the mark stays one piece. */}
-                <span className={active ? 'underline decoration-accent underline-offset-[6px]' : undefined}>
-                  {tab.label}
-                </span>
-                <span className="text-[13px] font-normal tabular-nums text-neutral-500">{tab.count}</span>
-              </button>
-            )
-          })}
-        </div>
-        <label className="flex items-center gap-2 rounded-md text-sm text-neutral-500 focus-within:text-neutral-900">
-          <SearchIcon />
-          <input
-            ref={searchRef}
-            type="search"
-            value={query}
-            onChange={e => {
-              setQuery(e.target.value)
-              setLimit(PAGE)
-            }}
-            placeholder="Search"
-            aria-label="Search the reading log"
-            className="w-full bg-transparent py-1 text-neutral-900 outline-none placeholder:text-neutral-500 sm:w-32"
-          />
-          <kbd className="hidden rounded border border-neutral-200 px-1.5 text-xs text-neutral-500 sm:inline">
-            /
-          </kbd>
-        </label>
-      </div>
-
+      <FilterBar
+        tabs={tabs}
+        active={activeType}
+        onSelect={key => {
+          setActiveType(key)
+          setLimit(PAGE)
+        }}
+        query={query}
+        onQuery={value => {
+          setQuery(value)
+          setLimit(PAGE)
+        }}
+        label="Filter by type"
+        searchLabel="Search the reading log"
+      />
 
       {visible.length === 0 ? (
         <div className="mt-12 text-neutral-600">
@@ -266,8 +205,8 @@ export function ReadingFeed({ entries }: { entries: ReadingEntry[] }) {
       )}
 
       {shown.length > visible.length ? (
-        <div className="mt-14 flex flex-col items-stretch gap-2 border-t border-neutral-200 pt-6 sm:flex-row sm:items-center sm:gap-6">
-          <span className="hidden w-16 flex-none sm:block" />
+        <div className="mt-14 flex flex-col items-stretch gap-2 border-t border-neutral-200 pt-6 sm:flex-row sm:items-center sm:gap-4">
+          <span className={`hidden sm:block ${BADGE_SLOT}`} />
           <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:gap-3">
             <button
               type="button"

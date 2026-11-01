@@ -1,5 +1,6 @@
 import { getAllPosts } from '@/lib/posts'
 import { BlogFeed, type BlogFeedPost } from '@/components/blog-feed'
+import { PAGE_BODY, PAGE_SHELL, PageHeader } from '@/components/page-header'
 
 export const metadata = {
   title: 'Blog',
@@ -18,14 +19,14 @@ export default function BlogIndexPage() {
     date: p.frontmatter.date,
     description: p.frontmatter.description,
     tags: postTags(p.frontmatter.categories, p.frontmatter.tags),
+    category: p.frontmatter.categories?.[0],
   }))
-  const allTags = Array.from(new Set(posts.flatMap(p => p.tags))).sort(
-    (a, b) => a.toLowerCase().localeCompare(b.toLowerCase()),
-  )
-
   return (
-    <div className="mx-auto max-w-3xl px-6 py-16">
-      <BlogFeed posts={posts} tags={allTags} />
+    <div className={PAGE_SHELL}>
+      <PageHeader title="Blog" />
+      <div className={PAGE_BODY}>
+        <BlogFeed posts={posts} />
+      </div>
     </div>
   )
 }

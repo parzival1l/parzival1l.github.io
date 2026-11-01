@@ -67,52 +67,52 @@ function useLastPush(repo: string): string | null {
   return pushedAt
 }
 
+/**
+ * One project as a full-width row: name, github link and freshness on the
+ * left; the whole description and the tags on the right. Stacks on phones.
+ */
 export function ProjectCard({ project }: { project: ProjectData }) {
   const pushedAt = useLastPush(project.repo)
   const freshness = pushedAt ? nudge(pushedAt) : null
 
   return (
-    <article className="flex flex-col gap-3 rounded-lg border border-neutral-200 p-5 transition-colors hover:border-neutral-500">
-      {/* Name and github link on one line, freshness on its own line below:
-          a two-column card is too narrow to fit all three side by side. */}
-      <div className="flex flex-col gap-1">
-        <span className="flex flex-wrap items-baseline gap-x-2">
-          <a
-            href={project.url ?? `https://github.com/${project.repo}`}
-            className="text-base font-medium text-neutral-900 underline-offset-4 hover:underline"
-          >
-            {project.name}
-          </a>
+    <article className="flex flex-col gap-3 border-b border-neutral-200 py-8 sm:flex-row sm:gap-8">
+      <div className="flex flex-col gap-1 sm:w-44 sm:flex-none">
+        <a
+          href={project.url ?? `https://github.com/${project.repo}`}
+          className="text-[17px] font-medium leading-snug text-neutral-900 underline-offset-4 hover:underline"
+        >
+          {project.name}
+        </a>
+        <span className="flex flex-col gap-0.5 text-[13px]">
           <a
             href={project.source ?? `https://github.com/${project.repo}`}
-            className="text-xs text-neutral-500 underline-offset-4 hover:underline"
+            className="text-neutral-500 underline-offset-4 hover:text-neutral-900 hover:underline"
           >
             github
           </a>
+          {freshness ? (
+            <span
+              className={freshness.stale ? 'text-amber-600' : 'text-neutral-500'}
+              title={pushedAt ?? undefined}
+            >
+              {freshness.label}
+            </span>
+          ) : null}
         </span>
-        {freshness ? (
-          <span
-            className={`text-xs ${
-              freshness.stale ? 'text-amber-600' : 'text-neutral-500'
-            }`}
-            title={pushedAt ?? undefined}
-          >
-            {freshness.label}
-          </span>
-        ) : null}
       </div>
-      <p className="text-sm leading-relaxed text-neutral-600">
-        {project.description}
-      </p>
-      <div className="mt-auto flex flex-wrap gap-1.5">
-        {project.tags.map((tag) => (
-          <span
-            key={tag}
-            className="rounded-full border border-neutral-200 px-2.5 py-0.5 text-xs text-neutral-500"
-          >
-            {tag}
-          </span>
-        ))}
+      <div className="flex min-w-0 flex-1 flex-col gap-3">
+        <p className="text-[15px] leading-relaxed text-neutral-700">{project.description}</p>
+        <div className="flex flex-wrap gap-1.5">
+          {project.tags.map((tag) => (
+            <span
+              key={tag}
+              className="rounded-full border border-neutral-200 px-2.5 py-0.5 text-xs text-neutral-500"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
       </div>
     </article>
   )
