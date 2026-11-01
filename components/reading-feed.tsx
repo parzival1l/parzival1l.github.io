@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import {
   TYPE_LABELS,
-  domainOf,
   type ReadingEntry,
   type ReadingType,
 } from '@/lib/reading-shared'
@@ -93,26 +92,34 @@ function EntryFooter({
   )
 }
 
-/** Title and summary of the linked source, under a thin grey rule. */
-function SourceCitation({ entry }: { entry: ReadingEntry }) {
-  if (!entry.url) return null
-  return (
-    <div className="flex max-w-[600px] flex-col gap-1 border-l-2 border-neutral-200 py-0.5 pl-3.5">
-      <a
-        href={entry.url}
-        target="_blank"
-        rel="noreferrer"
-        className={`text-[15px] font-medium leading-snug ${TITLE_LINK}`}
-      >
-        {entry.title} <span className="font-normal text-neutral-500">↗</span>
+/**
+ * The entry's title. A linked entry opens the source; a long note with no
+ * link opens its own page. Plain text otherwise.
+ */
+function EntryTitle({ entry }: { entry: ReadingEntry }) {
+  const cls = `text-[17px] font-medium leading-snug ${TITLE_LINK}`
+  if (entry.url) {
+    return (
+      <a href={entry.url} target="_blank" rel="noreferrer" className={cls}>
+        {entry.title}
       </a>
-      {entry.summary ? (
-        <p className="text-sm leading-relaxed text-neutral-600">{entry.summary}</p>
-      ) : null}
-    </div>
-  )
+    )
+  }
+  if (entry.slug) {
+    return (
+      <Link href={`/reading/${entry.slug}/`} className={cls}>
+        {entry.title}
+      </Link>
+    )
+  }
+  return null
 }
 
+/**
+ * One log entry: the title, then my note a step smaller, then tags. No type
+ * or domain line and no summary: the title says what it is, and the note
+ * says why it is here.
+ */
 function Entry({
   entry,
   showDate,
@@ -128,52 +135,33 @@ function Entry({
     <article className="flex gap-6">
       <time
         dateTime={entry.date}
-        className="hidden w-16 flex-none text-[13px] leading-[26px] tabular-nums text-neutral-500 sm:block"
+        className="hidden w-16 flex-none text-[13px] leading-[24px] tabular-nums text-neutral-500 sm:block"
       >
         {showDate ? date : null}
       </time>
-      <div className="flex min-w-0 flex-1 flex-col gap-2.5">
-        <p className={`leading-[26px] ${META}`}>
-          <span className="sm:hidden">{date} · </span>
-          {TYPE_LABELS[entry.type].one}
-          {entry.url ? <> · {domainOf(entry.url)}</> : null}
-        </p>
-
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <time dateTime={entry.date} className={`sm:hidden ${META}`}>
+          {date}
+        </time>
+        <EntryTitle entry={entry} />
         {entry.note ? (
-          <>
-            <p className="max-w-[600px] text-base leading-[26px] text-neutral-900 sm:text-[17px] sm:leading-7">
-              {entry.note}
-            </p>
-            {entry.slug ? (
-              <p className="text-[15px] leading-6">
-                <Link href={`/reading/${entry.slug}/`} className="font-medium text-accent hover:underline">
-                  Read the full note →
-                </Link>{' '}
-                <span className="text-[13px] text-neutral-500">
-                  {entry.readingMinutes} min read
-                </span>
-              </p>
-            ) : null}
-            <SourceCitation entry={entry} />
-          </>
-        ) : (
-          <div className="-mt-1.5 flex flex-col gap-1">
-            <a
-              href={entry.url}
-              target="_blank"
-              rel="noreferrer"
-              className={`text-base font-medium leading-6 ${TITLE_LINK}`}
-            >
-              {entry.title} <span className="font-normal text-neutral-500">↗</span>
-            </a>
-            {entry.summary ? (
-              <p className="max-w-[600px] text-sm leading-relaxed text-neutral-600">
-                {entry.summary}
-              </p>
-            ) : null}
-          </div>
-        )}
-
+          <p
+            className={`max-w-[600px] leading-[26px] ${
+              // A plain note has no title above it, so it takes the title's size.
+              entry.url || entry.slug ? 'text-base text-neutral-700' : 'text-[17px] text-neutral-900'
+            }`}
+          >
+            {entry.note}
+          </p>
+        ) : null}
+        {entry.slug ? (
+          <p className="text-[15px] leading-6">
+            <Link href={`/reading/${entry.slug}/`} className="font-medium text-accent hover:underline">
+              Read the full note
+            </Link>{' '}
+            <span className={META}>· {entry.readingMinutes} min read</span>
+          </p>
+        ) : null}
         <EntryFooter entry={entry} onTag={onTag} />
       </div>
     </article>

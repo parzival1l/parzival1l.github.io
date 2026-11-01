@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { MDXRemote } from 'next-mdx-remote/rsc'
 import {
-  TYPE_LABELS,
   domainOf,
   getReadingNote,
   getReadingNotes,
@@ -54,9 +53,6 @@ function SourceCard({ note }: { note: ReadingNote }) {
       aria-label="The source"
       className="flex flex-col gap-2.5 rounded-[10px] border border-black/[0.08] bg-black/[0.02] p-5 sm:px-6 dark:border-neutral-200 dark:bg-white/[0.03]"
     >
-      <p className={META}>
-        {TYPE_LABELS[note.type].one} · {domain}
-      </p>
       {video ? (
         <iframe
           src={`https://www.youtube-nocookie.com/embed/${video}`}
@@ -76,7 +72,7 @@ function SourceCard({ note }: { note: ReadingNote }) {
           rel="noreferrer"
           className="rounded-md bg-neutral-900 px-3.5 py-3 text-center text-[15px] font-medium text-[var(--bg)] hover:bg-neutral-700 sm:py-2 sm:text-sm"
         >
-          {video ? 'Watch' : 'Read'} on {domain} ↗
+          {video ? 'Watch' : 'Read'} on {domain}
         </a>
         {note.archive ? (
           <a
@@ -100,7 +96,7 @@ function Neighbour({ note, dir }: { note: ReadingNote; dir: 'older' | 'newer' })
       href={`/reading/${note.slug}/`}
       className={`group flex flex-col gap-1 ${older ? 'items-start' : 'items-end text-right'}`}
     >
-      <span className={META}>{older ? '← Older' : 'Newer →'}</span>
+      <span className={META}>{older ? 'Older' : 'Newer'}</span>
       <span className="text-[15px] text-neutral-900 group-hover:text-accent">{noteTitle(note)}</span>
     </Link>
   )
@@ -119,7 +115,7 @@ export default async function ReadingNotePage({ params }: { params: Promise<{ sl
   return (
     <article className="mx-auto max-w-3xl px-6 py-12">
       <Link href="/reading/" className="text-sm text-neutral-600 hover:text-neutral-900">
-        ← Reading
+        Reading
       </Link>
 
       <header className="mt-10 flex flex-col gap-3">
