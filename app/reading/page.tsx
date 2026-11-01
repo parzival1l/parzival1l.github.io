@@ -18,8 +18,8 @@ export default function ReadingPage() {
           no link.
         </p>
         <p className="text-sm text-neutral-500">
-          This section is a work in progress, so entries and their layout will
-          change.
+          I&apos;m experimenting with the UI a little bit, so this page might
+          change in the foreseeable future.
         </p>
       </div>
       <div className="mt-10">
