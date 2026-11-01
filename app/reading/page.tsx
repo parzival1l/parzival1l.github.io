@@ -1,4 +1,4 @@
-import { getReadingList, getReadingTags, getReadingTypes } from '@/lib/reading'
+import { getReadingList } from '@/lib/reading'
 import { ReadingFeed } from '@/components/reading-feed'
 
 export const metadata = {
@@ -6,26 +6,16 @@ export const metadata = {
 }
 
 export default function ReadingPage() {
-  const entries = getReadingList()
-
   return (
-    <div className="mx-auto max-w-6xl px-6 py-16">
-      <ReadingFeed
-        entries={entries}
-        tags={getReadingTags(entries)}
-        types={getReadingTypes(entries)}
-        header={
-          <>
-            <h1 className="mb-3 text-2xl font-medium text-neutral-900">
-              Reading
-            </h1>
-            <p className="text-neutral-600">
-              Articles, papers, videos and posts I read and keep, with my
-              notes on each. Each card links to the original.
-            </p>
-          </>
-        }
-      />
+    <div className="mx-auto max-w-3xl px-6 py-16">
+      <h1 className="text-2xl font-medium text-neutral-900">Reading</h1>
+      <p className="mt-3 max-w-[560px] text-neutral-600">
+        A running log of what I read and what I thought about it. Some entries
+        are just a thought, no link.
+      </p>
+      <div className="mt-10">
+        <ReadingFeed entries={getReadingList()} />
+      </div>
     </div>
   )
 }

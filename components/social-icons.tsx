@@ -1,8 +1,7 @@
 /**
  * Brand icons for the contact colophon. Sized by the caller via className;
  * the mark itself always fills currentColor, so the existing neutral-*
- * palette remap handles dark mode with no extra work. The GitHub path is
- * the same octocat mark used in components/reading-feed.tsx.
+ * palette remap handles dark mode with no extra work.
  */
 export function GitHubIcon({ className = '' }: { className?: string }) {
   return (

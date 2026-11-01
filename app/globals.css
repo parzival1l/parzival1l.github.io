@@ -157,3 +157,16 @@ html {
     animation: none;
   }
 }
+
+/* Reading notes: a quote from the source reads as their words, not mine —
+   grey text on a thin grey rule, upright, with no added quote marks. */
+.reading-note blockquote {
+  font-style: normal;
+  font-weight: 400;
+  color: var(--color-neutral-600);
+  border-inline-start-color: var(--color-neutral-200);
+}
+.reading-note blockquote p::before,
+.reading-note blockquote p::after {
+  content: none;
+}

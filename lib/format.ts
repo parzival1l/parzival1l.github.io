@@ -16,3 +16,21 @@ export function formatDate(iso: string): string {
     day: 'numeric',
   })
 }
+
+function localDate(iso: string): Date | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso)
+  if (!m) return null
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]))
+}
+
+/** "Nov 3" — the date gutter in the reading log. */
+export function formatShortDate(iso: string): string {
+  const d = localDate(iso)
+  return d ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : iso
+}
+
+/** "November 2026" — month headings in the reading log. */
+export function formatMonth(iso: string): string {
+  const d = localDate(iso)
+  return d ? d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : iso
+}

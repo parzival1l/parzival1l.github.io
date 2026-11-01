@@ -41,11 +41,15 @@ active plan and tasks.
 - **Unedited posts** carry `wip: true`. They stay listed, but the homepage
   rail shows a "Draft" pill instead of "Published", and the post page
   notes that it isn't fully edited. Don't confuse `wip` with `draft`.
-- **Reading list** entries live in `content/reading.yaml` and render at
-  `/reading/`. Shape and required fields are in `lib/reading.ts`
-  (`ReadingEntry`); the file header documents them too. A missing required
-  field throws at build time, so a bad entry fails the deploy instead of
-  shipping a broken row.
+- **Reading** lives at `/reading/` as a single-column log (design: Paper
+  file `Personal-Blog`, page `Reading-Page`, the "A" artboards). Short
+  entries go in `content/reading.yaml`: only `date` plus a `url` or a `note`
+  is required, and `type` is inferred from the url. Long notes go in
+  `content/reading/<slug>.mdx`, get a page at `/reading/<slug>/` titled
+  `Notes on “<source title>”`, and show their first paragraph in the log.
+  Loader and validation: `lib/reading.ts`; client-safe types:
+  `lib/reading-shared.ts`. A broken entry throws at build time. The page
+  has no animation, on purpose.
 - **Documentation** lives under `docs/` and follows the agentic-dev structure
   defined in ADR-001. Use CLAUDE.md (not README.md) for folder navigation.
 - **Footer is route-aware** (`components/site-footer.tsx`): the homepage
@@ -80,6 +84,12 @@ surfaces are deferred to a future plan.
 
 Per the author (2026-08-07): 005 is on hold until the domain is purchased;
 008 is on hold too. Both task files exist as todo and are ready to pick up.
+
+Second active plan (2026-11-01): **`docs/plans/2026-11-01-reading-notes.md`**
+covers task **009** (done: `/reading/` rebuilt as a single-column log
+with `/reading/<slug>/` note pages) and task **010** (generate reading
+tags with Jev from TypeSafe AI, at authoring time, never at build time).
+010 is a todo the author will pick up later.
 
 The original phase-2 plan
 (`docs/plans/2026-05-01-domain-and-cleanup.md`, `status: superseded`)

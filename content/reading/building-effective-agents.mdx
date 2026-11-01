@@ -1,0 +1,24 @@
+---
+title: Building effective agents
+url: https://www.anthropic.com/engineering/building-effective-agents
+archive: https://archive.ph/newest/https://www.anthropic.com/engineering/building-effective-agents
+date: 2026-08-07
+summary: >-
+  Anthropic's field guide to agent systems: start with simple workflows, and
+  reach for autonomous agents only when the task needs dynamic
+  decision-making.
+tags: [agents, patterns]
+---
+
+The distinction between workflows and agents is the part I keep coming back
+to. Most of what teams call "agents" in production are really workflows with
+an LLM step in the middle.
+
+The routing and parallelization patterns here map directly onto what we ship.
+The uncomfortable corollary: if your use case fits a workflow, an agent mostly
+buys you latency and failure modes.
+
+I've started asking "which pattern from this post is this?" in design reviews,
+and half the time the honest answer is "an augmented LLM with extra steps."
+That's not a knock. Simple patterns are the ones that survive contact with
+production.

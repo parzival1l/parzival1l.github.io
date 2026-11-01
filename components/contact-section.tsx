@@ -16,7 +16,7 @@ const SOCIALS = [
 ]
 
 const ICON_LINK =
-  // Matches the icon-link treatment in components/reading-feed.tsx.
+  // A 28px hit area around a 15px glyph; neutral-500 is remapped under .dark.
   'inline-flex h-7 w-7 items-center justify-center rounded text-neutral-500 transition-colors hover:text-neutral-900'
 
 export function ContactSection({ className = '' }: { className?: string }) {

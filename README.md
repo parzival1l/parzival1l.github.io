@@ -18,8 +18,9 @@ builds the site and deploys it to GitHub Pages on every push to `main`.
 
 - `content/posts/*.mdx` — posts, the source of truth. Frontmatter shape is
   `PostFrontmatter` in `lib/posts.ts`.
-- `content/reading.yaml` — reading list entries. Schema is `ReadingEntry` in
-  `lib/reading.ts`.
+- `content/reading.yaml` — short reading entries; `content/reading/*.mdx` —
+  long reading notes, each with a page at `/reading/<slug>/`. Both load
+  through `lib/reading.ts`; the field list is in the YAML file's header.
 - `app/` — routes: home, blog, reading, projects. Publications live in the
   homepage's Selected works section (no separate route).
 - `components/` — UI: site chrome, post layout, TOC, footer.

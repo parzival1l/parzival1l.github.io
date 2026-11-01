@@ -12,6 +12,7 @@ Tasks not in `completed/` and with `status` other than `done`.
 |-----|---------------------------------------------|--------|------------|
 | 005 | Custom domain migration to parzival.blog    | todo   | 2026-05-01 |
 | 008 | Cross-posting workflow                      | todo   | 2026-05-01 |
+| 010 | Generate reading tags with Jev              | todo   | 2026-11-01 |
 
 The active plan
 (`docs/plans/2026-05-01-cleanup-and-syndication.md`) references tasks
@@ -19,6 +20,10 @@ The active plan
 deliberately skipped and reserved — it was referenced by the now-superseded
 `2026-05-01-domain-and-cleanup.md` plan and will be picked up by a future
 plan covering distribution surfaces.
+
+Tasks **009** and **010** belong to
+`docs/plans/2026-11-01-reading-notes.md`, which runs alongside the on-hold
+phase-2 plan.
 
 (Completed tasks live in `completed/` — their IDs remain unique forever;
 never reused. Find the next free ID by `ls`-ing both `tasks/` and
@@ -33,6 +38,7 @@ never reused. Find the next free ID by `ls`-ing both `tasks/` and
 | 003 | Build layout and theme (Lee-style)     | 2026-05-01 | `completed/003-build-layout-and-theme.md` |
 | 004 | Replace deploy workflow                | 2026-05-01 | `completed/004-replace-deploy-workflow.md` |
 | 006 | Remove Jekyll artifacts               | 2026-05-01 | `completed/006-remove-jekyll-artifacts.md` |
+| 009 | Rebuild the reading page as a log with note pages | 2026-11-01 | `completed/009-reading-log-and-note-pages.md` |
 
 ## Format
 
