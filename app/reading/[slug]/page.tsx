@@ -15,7 +15,7 @@ import {
 } from '@/lib/reading'
 import { formatDate } from '@/lib/format'
 
-const MONO_LABEL = 'font-mono text-[11px] uppercase tracking-[0.06em] text-neutral-500'
+const META = 'text-[13px] text-neutral-500'
 
 // Only the notes listed below exist; any other slug is a 404 in the export.
 export const dynamicParams = false
@@ -54,7 +54,7 @@ function SourceCard({ note }: { note: ReadingNote }) {
       aria-label="The source"
       className="flex flex-col gap-2.5 rounded-[10px] border border-black/[0.08] bg-black/[0.02] p-5 sm:px-6 dark:border-neutral-200 dark:bg-white/[0.03]"
     >
-      <p className={MONO_LABEL}>
+      <p className={META}>
         {TYPE_LABELS[note.type].one} · {domain}
       </p>
       {video ? (
@@ -100,7 +100,7 @@ function Neighbour({ note, dir }: { note: ReadingNote; dir: 'older' | 'newer' })
       href={`/reading/${note.slug}/`}
       className={`group flex flex-col gap-1 ${older ? 'items-start' : 'items-end text-right'}`}
     >
-      <span className={MONO_LABEL}>{older ? '← Older' : 'Newer →'}</span>
+      <span className={META}>{older ? '← Older' : 'Newer →'}</span>
       <span className="text-[15px] text-neutral-900 group-hover:text-accent">{noteTitle(note)}</span>
     </Link>
   )
@@ -123,7 +123,7 @@ export default async function ReadingNotePage({ params }: { params: Promise<{ sl
       </Link>
 
       <header className="mt-10 flex flex-col gap-3">
-        <p className={MONO_LABEL}>
+        <p className={META}>
           <time dateTime={note.date}>{formatDate(note.date)}</time> · {note.readingMinutes} min read
         </p>
         <h1 className="text-2xl font-medium leading-tight text-neutral-900">{noteTitle(note)}</h1>
@@ -134,14 +134,14 @@ export default async function ReadingNotePage({ params }: { params: Promise<{ sl
       </div>
 
       <section aria-label="My notes" className="mt-12">
-        <h2 className={MONO_LABEL}>My notes</h2>
+        <h2 className="text-sm font-medium text-neutral-900">My notes</h2>
         <div className="reading-note prose prose-neutral dark:prose-invert mt-5 max-w-prose">
           <MDXRemote source={note.body} />
         </div>
       </section>
 
       {note.tags.length > 0 ? (
-        <p className="mt-10 font-mono text-xs text-neutral-500">
+        <p className="mt-10 text-[13px] text-neutral-500">
           {note.tags.map((tag, i) => (
             <span key={tag}>
               {i > 0 ? <span aria-hidden="true"> · </span> : null}

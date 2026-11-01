@@ -10,9 +10,15 @@
     ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   /* next/font sets --font-inter / --font-geist-mono on <html> (see
      app/layout.tsx); fallbacks keep the site usable while fonts load. */
+  /* Bear Sans (Wild Edge LLC, all rights reserved) is not licensed for
+     redistribution, so no font files ship. It renders only where it is
+     installed locally; every other reader gets Inter. */
   --font-sans:
-    var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
-    Roboto, sans-serif;
+    "Bear Sans UI", var(--font-inter), ui-sans-serif, system-ui,
+    -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-heading:
+    "Bear Sans UI Heading", "Bear Sans UI", var(--font-inter), ui-sans-serif,
+    system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono:
     var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
   --color-accent: #2d5bff;
@@ -169,4 +175,12 @@ html {
 .reading-note blockquote p::before,
 .reading-note blockquote p::after {
   content: none;
+}
+
+/* Headings use the heading cut of the same family. */
+h1,
+h2,
+h3,
+.prose :where(h1, h2, h3) {
+  font-family: var(--font-heading);
 }

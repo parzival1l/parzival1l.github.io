@@ -13,7 +13,8 @@ import { formatMonth, formatShortDate } from '@/lib/format'
 /** Entries rendered before "Show older entries"; each click adds as many. */
 const PAGE = 20
 
-const MONO_LABEL = 'font-mono text-[11px] uppercase tracking-[0.06em] text-neutral-500'
+// One family on this page: labels are small sans in sentence case.
+const META = 'text-[13px] text-neutral-500'
 
 // No hover transitions on purpose: this page has no motion at all.
 const TITLE_LINK = 'text-neutral-900 hover:text-accent'
@@ -81,7 +82,7 @@ function EntryFooter({
   }
   if (links.length === 0) return null
   return (
-    <p className="font-mono text-xs leading-5 text-neutral-500">
+    <p className="text-[13px] leading-5 text-neutral-500">
       {links.map((link, i) => (
         <span key={i}>
           {i > 0 ? <span aria-hidden="true"> · </span> : null}
@@ -127,12 +128,12 @@ function Entry({
     <article className="flex gap-6">
       <time
         dateTime={entry.date}
-        className="hidden w-16 flex-none font-mono text-xs leading-[26px] text-neutral-500 sm:block"
+        className="hidden w-16 flex-none text-[13px] leading-[26px] tabular-nums text-neutral-500 sm:block"
       >
         {showDate ? date : null}
       </time>
       <div className="flex min-w-0 flex-1 flex-col gap-2.5">
-        <p className={`leading-[26px] ${MONO_LABEL}`}>
+        <p className={`leading-[26px] ${META}`}>
           <span className="sm:hidden">{date} · </span>
           {TYPE_LABELS[entry.type].one}
           {entry.url ? <> · {domainOf(entry.url)}</> : null}
@@ -148,8 +149,8 @@ function Entry({
                 <Link href={`/reading/${entry.slug}/`} className="font-medium text-accent hover:underline">
                   Read the full note →
                 </Link>{' '}
-                <span className="font-mono text-xs text-neutral-500">
-                  {entry.readingMinutes} min
+                <span className="text-[13px] text-neutral-500">
+                  {entry.readingMinutes} min read
                 </span>
               </p>
             ) : null}
@@ -282,7 +283,7 @@ export function ReadingFeed({ entries }: { entries: ReadingEntry[] }) {
                 }`}
               >
                 {tab.label}{' '}
-                <span className="font-mono text-xs font-normal text-neutral-500">{tab.count}</span>
+                <span className="text-[13px] font-normal tabular-nums text-neutral-500">{tab.count}</span>
               </button>
             )
           })}
@@ -301,7 +302,7 @@ export function ReadingFeed({ entries }: { entries: ReadingEntry[] }) {
             aria-label="Search the reading log"
             className="w-full bg-transparent py-1 text-neutral-900 outline-none placeholder:text-neutral-500 sm:w-32"
           />
-          <kbd className="hidden rounded border border-neutral-200 px-1.5 font-mono text-[11px] text-neutral-500 sm:inline">
+          <kbd className="hidden rounded border border-neutral-200 px-1.5 text-xs text-neutral-500 sm:inline">
             /
           </kbd>
         </label>
@@ -328,7 +329,7 @@ export function ReadingFeed({ entries }: { entries: ReadingEntry[] }) {
         <div className="mt-12 flex flex-col gap-14">
           {months.map(month => (
             <section key={month.key} aria-label={formatMonth(month.key + '-01')} className="flex flex-col gap-9">
-              <h2 className="font-mono text-xs uppercase tracking-[0.06em] text-neutral-500">
+              <h2 className="text-sm font-medium text-neutral-900">
                 {formatMonth(month.key + '-01')}
               </h2>
               {month.entries.map((entry, i) => (
@@ -355,7 +356,7 @@ export function ReadingFeed({ entries }: { entries: ReadingEntry[] }) {
             >
               Show older entries
             </button>
-            <span className="text-center font-mono text-xs text-neutral-500">
+            <span className="text-center text-[13px] tabular-nums text-neutral-500">
               {visible.length} of {shown.length} shown
             </span>
           </div>
