@@ -126,24 +126,6 @@ function Entry({
   )
 }
 
-/** The key to the icons and the note rule, shown under the page intro. */
-export function ReadingLegend({ types }: { types: ReadingType[] }) {
-  return (
-    <ul aria-label="Legend" className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px] text-neutral-500">
-      {types.map(type => (
-        <li key={type} className="flex items-center gap-1.5">
-          <TypeIcon type={type} className="h-3.5 w-3.5" />
-          {TYPE_LABELS[type].one}
-        </li>
-      ))}
-      <li className="flex items-center gap-1.5">
-        <span aria-hidden="true" className={`h-3.5 border-l-2 ${NOTE_RULE}`} />
-        My take
-      </li>
-    </ul>
-  )
-}
-
 export function ReadingFeed({ entries }: { entries: ReadingEntry[] }) {
   const [activeType, setActiveType] = useState<ReadingType | null>(null)
   const [query, setQuery] = useState('')
@@ -222,13 +204,15 @@ export function ReadingFeed({ entries }: { entries: ReadingEntry[] }) {
                   setActiveType(tab.type)
                   setLimit(PAGE)
                 }}
-                className={`flex-none whitespace-nowrap py-1 ${
-                  active
-                    ? 'font-medium text-neutral-900 underline decoration-accent underline-offset-[6px]'
-                    : 'text-neutral-600 hover:text-neutral-900'
+                className={`flex flex-none items-center gap-1.5 whitespace-nowrap py-1 ${
+                  active ? 'font-medium text-neutral-900' : 'text-neutral-600 hover:text-neutral-900'
                 }`}
               >
-                {tab.label}{' '}
+                {tab.type ? <TypeIcon type={tab.type} className="h-3.5 w-3.5 text-neutral-500" /> : null}
+                {/* Only the label is underlined, so the mark stays one piece. */}
+                <span className={active ? 'underline decoration-accent underline-offset-[6px]' : undefined}>
+                  {tab.label}
+                </span>
                 <span className="text-[13px] font-normal tabular-nums text-neutral-500">{tab.count}</span>
               </button>
             )
