@@ -8,6 +8,7 @@ import {
   type ReadingType,
 } from '@/lib/reading-shared'
 import { formatMonth, formatShortDate } from '@/lib/format'
+import { TypeIcon } from '@/components/reading-icons'
 
 /** Entries rendered before "Show older entries"; each click adds as many. */
 const PAGE = 20
@@ -17,6 +18,9 @@ const META = 'text-[13px] text-neutral-500'
 
 // No hover transitions on purpose: this page has no motion at all.
 const TITLE_LINK = 'text-neutral-900 hover:text-accent'
+
+// The rule that marks my words. Solid in dark mode, where alpha borders glow.
+const NOTE_RULE = 'border-neutral-300 dark:border-[#3a3a3a]'
 function SearchIcon() {
   return (
     <svg
@@ -34,33 +38,42 @@ function SearchIcon() {
   )
 }
 
+// Two lanes inside an entry: markers (type icon, note rule) sit at the left
+// edge, and every line of text starts 24px in, so titles and notes align.
+const TEXT_LANE = 'pl-6'
+
 /**
- * The entry's title. A linked entry opens the source; a long note with no
- * link opens its own page. Plain text otherwise.
+ * The type icon and title. A linked entry opens the source; a long note with
+ * no link opens its own page.
  */
 function EntryTitle({ entry }: { entry: ReadingEntry }) {
   const cls = `text-[17px] font-medium leading-snug ${TITLE_LINK}`
-  if (entry.url) {
-    return (
-      <a href={entry.url} target="_blank" rel="noreferrer" className={cls}>
-        {entry.title}
-      </a>
-    )
-  }
-  if (entry.slug) {
-    return (
-      <Link href={`/reading/${entry.slug}/`} className={cls}>
-        {entry.title}
-      </Link>
-    )
-  }
-  return null
+  const label = <span className="sr-only">{TYPE_LABELS[entry.type].one}: </span>
+  const title = entry.url ? (
+    <a href={entry.url} target="_blank" rel="noreferrer" className={cls}>
+      {label}
+      {entry.title}
+    </a>
+  ) : entry.slug ? (
+    <Link href={`/reading/${entry.slug}/`} className={cls}>
+      {label}
+      {entry.title}
+    </Link>
+  ) : null
+  if (!title) return null
+  return (
+    <h3 className="relative pl-6">
+      <span className="absolute left-0 top-[3px] text-neutral-500">
+        <TypeIcon type={entry.type} />
+      </span>
+      {title}
+    </h3>
+  )
 }
 
 /**
- * One log entry: the title, then my note a step smaller. No type or domain
- * line, no summary and no tags: the title says what it is, and the note says
- * why it is here.
+ * One log entry: the type icon and title, then my take under a thin rule.
+ * A plain note has no title, so its pencil icon sits beside the text instead.
  */
 function Entry({
   entry,
@@ -71,6 +84,7 @@ function Entry({
   showDate: boolean
 }) {
   const date = formatShortDate(entry.date)
+  const hasTitle = Boolean(entry.url || entry.slug)
   return (
     <article className="flex gap-6">
       <time
@@ -80,22 +94,27 @@ function Entry({
         {showDate ? date : null}
       </time>
       <div className="flex min-w-0 flex-1 flex-col gap-2">
-        <time dateTime={entry.date} className={`sm:hidden ${META}`}>
+        <time dateTime={entry.date} className={`sm:hidden ${TEXT_LANE} ${META}`}>
           {date}
         </time>
         <EntryTitle entry={entry} />
-        {entry.note ? (
-          <p
-            className={`max-w-[600px] leading-[26px] ${
-              // A plain note has no title above it, so it takes the title's size.
-              entry.url || entry.slug ? 'text-base text-neutral-700' : 'text-[17px] text-neutral-900'
-            }`}
-          >
+        {entry.note && hasTitle ? (
+          <p className={`max-w-[624px] border-l-2 ${NOTE_RULE} pl-[22px] text-base leading-[26px] text-neutral-700`}>
+            <span className="sr-only">My take: </span>
+            {entry.note}
+          </p>
+        ) : null}
+        {entry.note && !hasTitle ? (
+          <p className="relative max-w-[624px] pl-6 text-[17px] leading-[26px] text-neutral-900">
+            <span className="absolute left-0 top-[5px] text-neutral-500">
+              <TypeIcon type="note" />
+            </span>
+            <span className="sr-only">Note: </span>
             {entry.note}
           </p>
         ) : null}
         {entry.slug ? (
-          <p className="text-[15px] leading-6">
+          <p className={`${TEXT_LANE} text-[15px] leading-6`}>
             <Link href={`/reading/${entry.slug}/`} className="font-medium text-accent hover:underline">
               Read the full note
             </Link>{' '}
@@ -104,6 +123,24 @@ function Entry({
         ) : null}
       </div>
     </article>
+  )
+}
+
+/** The key to the icons and the note rule, shown under the page intro. */
+export function ReadingLegend({ types }: { types: ReadingType[] }) {
+  return (
+    <ul aria-label="Legend" className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px] text-neutral-500">
+      {types.map(type => (
+        <li key={type} className="flex items-center gap-1.5">
+          <TypeIcon type={type} className="h-3.5 w-3.5" />
+          {TYPE_LABELS[type].one}
+        </li>
+      ))}
+      <li className="flex items-center gap-1.5">
+        <span aria-hidden="true" className={`h-3.5 border-l-2 ${NOTE_RULE}`} />
+        My take
+      </li>
+    </ul>
   )
 }
 
