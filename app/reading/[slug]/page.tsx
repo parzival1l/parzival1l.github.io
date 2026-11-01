@@ -1,4 +1,4 @@
-// A long reading note: the source first, then my notes. The MDX body is
+// A long reading note: my notes first, then the source they are about. The MDX body is
 // compiled at build time by next-mdx-remote/rsc, the same way blog posts are,
 // so no MDX runtime ships to the client.
 
@@ -125,17 +125,13 @@ export default async function ReadingNotePage({ params }: { params: Promise<{ sl
         <h1 className="text-2xl font-medium leading-tight text-neutral-900">{noteTitle(note)}</h1>
       </header>
 
-      <div className="mt-8">
-        <SourceCard note={note} />
+      <div className="reading-note prose prose-neutral dark:prose-invert mt-8 max-w-prose">
+        <MDXRemote source={note.body} />
       </div>
 
-      <section aria-label="My notes" className="mt-12">
-        <h2 className="text-sm font-medium text-neutral-900">My notes</h2>
-        <div className="reading-note prose prose-neutral dark:prose-invert mt-5 max-w-prose">
-          <MDXRemote source={note.body} />
-        </div>
-      </section>
-
+      <div className="mt-12">
+        <SourceCard note={note} />
+      </div>
 
       {older || newer ? (
         <nav
