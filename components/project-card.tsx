@@ -33,11 +33,13 @@ function nudge(pushedAt: string): { label: string; stale: boolean } {
       label: `last commit: ${Math.floor(days / 7)}w ago`,
       stale: false,
     }
-  if (days < 365)
+  if (days < 365) {
+    const months = Math.floor(days / 30)
     return {
-      label: `gathering dust for ${Math.floor(days / 30)} months`,
+      label: `gathering dust for ${months} ${months === 1 ? 'month' : 'months'}`,
       stale: true,
     }
+  }
   return { label: `abandoned ${Math.floor(days / 365)}y ago?`, stale: true }
 }
 
@@ -71,8 +73,10 @@ export function ProjectCard({ project }: { project: ProjectData }) {
 
   return (
     <article className="flex flex-col gap-3 rounded-lg border border-neutral-200 p-5 transition-colors hover:border-neutral-500">
-      <div className="flex items-baseline justify-between gap-3">
-        <span className="flex items-baseline gap-2">
+      {/* Name and github link on one line, freshness on its own line below:
+          a two-column card is too narrow to fit all three side by side. */}
+      <div className="flex flex-col gap-1">
+        <span className="flex flex-wrap items-baseline gap-x-2">
           <a
             href={project.url ?? `https://github.com/${project.repo}`}
             className="text-base font-medium text-neutral-900 underline-offset-4 hover:underline"
@@ -88,7 +92,7 @@ export function ProjectCard({ project }: { project: ProjectData }) {
         </span>
         {freshness ? (
           <span
-            className={`text-xs whitespace-nowrap ${
+            className={`text-xs ${
               freshness.stale ? 'text-amber-600' : 'text-neutral-500'
             }`}
             title={pushedAt ?? undefined}
