@@ -72,7 +72,7 @@ export function PostToc({ headings }: { headings: PostHeading[] }) {
               </span>
               {/* Title: fades in on rail hover/focus */}
               <span
-                className={`absolute inset-x-4 top-1/2 -translate-y-1/2 truncate text-[13px] opacity-0 transition-[opacity,color] duration-200 ease-out group-hover/toc:opacity-100 group-focus-within/toc:opacity-100 ${
+                className={`absolute inset-x-4 top-1/2 -translate-y-1/2 truncate text-[0.8125rem] opacity-0 transition-[opacity,color] duration-200 ease-out group-hover/toc:opacity-100 group-focus-within/toc:opacity-100 ${
                   active ? 'text-neutral-900' : 'text-neutral-600 group-hover/item:text-neutral-900'
                 }`}
               >

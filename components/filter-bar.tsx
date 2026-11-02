@@ -85,7 +85,7 @@ export function FilterBar<K extends string>({
               <span className={isActive ? 'underline decoration-accent underline-offset-[6px]' : undefined}>
                 {tab.label}
               </span>
-              <span className="text-[13px] font-normal tabular-nums text-neutral-500">{tab.count}</span>
+              <span className="text-[0.8125rem] font-normal tabular-nums text-neutral-500">{tab.count}</span>
             </button>
           )
         })}

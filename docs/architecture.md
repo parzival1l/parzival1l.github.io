@@ -73,6 +73,14 @@ by remapping Tailwind palette vars (`--color-neutral-*`, `--color-accent`)
 under `.dark` in `globals.css` — components stay on `text-neutral-*` classes;
 prose blocks use `dark:prose-invert`.
 
+## Typography
+
+The root font size is 110% of the browser default (17.6px with a 16px
+default), so the site reads comfortably at 100% zoom. Text sizes use rem
+units or Tailwind's type scale; body leading scales with the text. The
+homepage bio is justified with automatic hyphenation on wider screens;
+phones keep natural word spacing and alignment.
+
 ## Content workflow
 
 ```

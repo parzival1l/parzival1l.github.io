@@ -16,7 +16,7 @@ import { FilterBar, type FilterTab } from '@/components/filter-bar'
 const PAGE = 20
 
 // One family on this page: labels are small sans in sentence case.
-const META = 'text-[13px] text-neutral-500'
+const META = 'text-[0.8125rem] text-neutral-500'
 
 // No hover transitions on purpose: this page has no motion at all.
 const TITLE_LINK = 'text-neutral-900 hover:text-accent'
@@ -29,14 +29,14 @@ const NOTE_RULE = 'border-neutral-300 dark:border-[#3a3a3a]'
 const TEXT_LANE = 'pl-6'
 
 // Fixed slot for the date tile, kept even when a same-day entry hides it.
-const BADGE_SLOT = 'w-[52px] flex-none'
+const BADGE_SLOT = 'w-[3.25rem] flex-none'
 
 /**
  * The type icon and title. A linked entry opens the source; a long note with
  * no link opens its own page.
  */
 function EntryTitle({ entry }: { entry: ReadingEntry }) {
-  const cls = `text-[17px] font-medium leading-snug ${TITLE_LINK}`
+  const cls = `text-[1.0625rem] font-medium leading-snug ${TITLE_LINK}`
   const label = <span className="sr-only">{TYPE_LABELS[entry.type].one}: </span>
   const title = entry.url ? (
     <a href={entry.url} target="_blank" rel="noreferrer" className={cls}>
@@ -85,13 +85,13 @@ function Entry({
       <div className="flex min-w-0 flex-1 flex-col gap-2 pt-3">
         <EntryTitle entry={entry} />
         {entry.note && hasTitle ? (
-          <p className={`max-w-[624px] border-l-2 ${NOTE_RULE} pl-[22px] text-base leading-[26px] text-neutral-700`}>
+          <p className={`max-w-[624px] border-l-2 ${NOTE_RULE} pl-[calc(1.5rem-2px)] text-base leading-relaxed text-neutral-700`}>
             <span className="sr-only">My take: </span>
             {entry.note}
           </p>
         ) : null}
         {entry.note && !hasTitle ? (
-          <p className="relative max-w-[624px] pl-6 text-[17px] leading-[26px] text-neutral-900">
+          <p className="relative max-w-[624px] pl-6 text-[1.0625rem] leading-relaxed text-neutral-900">
             <span className="absolute left-0 top-[5px] text-neutral-500">
               <TypeIcon type="note" />
             </span>
@@ -100,7 +100,7 @@ function Entry({
           </p>
         ) : null}
         {entry.slug ? (
-          <p className={`${TEXT_LANE} text-[15px] leading-6`}>
+          <p className={`${TEXT_LANE} text-[0.9375rem] leading-6`}>
             <Link href={`/reading/${entry.slug}/`} className="font-medium text-accent hover:underline">
               Read the full note
             </Link>{' '}
@@ -213,11 +213,11 @@ export function ReadingFeed({ entries }: { entries: ReadingEntry[] }) {
             <button
               type="button"
               onClick={() => setLimit(l => l + PAGE)}
-              className="rounded-md border border-neutral-200 px-3.5 py-3 text-[15px] font-medium text-neutral-900 hover:border-neutral-500 active:bg-neutral-100 sm:py-2 sm:text-sm dark:active:bg-white/5"
+              className="rounded-md border border-neutral-200 px-3.5 py-3 text-[0.9375rem] font-medium text-neutral-900 hover:border-neutral-500 active:bg-neutral-100 sm:py-2 sm:text-sm dark:active:bg-white/5"
             >
               Show older entries
             </button>
-            <span className="text-center text-[13px] tabular-nums text-neutral-500">
+            <span className="text-center text-[0.8125rem] tabular-nums text-neutral-500">
               {visible.length} of {shown.length} shown
             </span>
           </div>

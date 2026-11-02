@@ -15,7 +15,7 @@ function VerifiedBadge() {
   return (
     <svg
       viewBox="0 0 20 20"
-      className="h-[17px] w-[17px]"
+      className="h-[1.0625em] w-[1.0625em]"
       aria-label="Verified"
       role="img"
     >
@@ -44,7 +44,7 @@ function AmpliMark() {
       alt=""
       width={16}
       height={17}
-      className="inline-block h-[17px] w-auto align-[-0.2em] grayscale"
+      className="inline-block h-[1.0625em] w-auto align-[-0.2em] grayscale"
       aria-hidden="true"
     />
   )
@@ -72,7 +72,7 @@ function OasisLink() {
   return (
     <a
       href="https://oasis.parzival.computer"
-      className="group mt-6 inline-flex rounded-full bg-gradient-to-r from-[#ffc34d] via-[#ff6b3d] to-[#7fd8ff] p-px shadow-[0_0_0_0_rgba(255,195,77,0)] transition-shadow duration-300 hover:shadow-[0_0_24px_2px_rgba(255,140,80,0.35)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      className="group mt-5 inline-flex rounded-full bg-gradient-to-r from-[#ffc34d] via-[#ff6b3d] to-[#7fd8ff] p-px shadow-[0_0_0_0_rgba(255,195,77,0)] transition-shadow duration-300 hover:shadow-[0_0_24px_2px_rgba(255,140,80,0.35)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
     >
       <span className="inline-flex items-center gap-2.5 rounded-full bg-[#0d0f12] px-4 py-2 font-mono text-xs uppercase tracking-[0.2em] text-[#ffe9a8]">
         <span className="text-[#ffc34d]">
@@ -131,20 +131,20 @@ export default function HomePage() {
   const posts = getAllPosts().slice(0, 5)
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-16">
-      <section className="mb-16 max-w-prose">
-        <div className="mb-6 flex items-center gap-3.5">
+    <div className="mx-auto max-w-3xl px-6 pt-8 pb-12">
+      <section className="mb-8 max-w-prose">
+        <div className="mb-5 flex items-center gap-3.5">
           <Avatar />
           <div>
-            <p className="flex items-center gap-1.5 text-base font-medium text-neutral-900">
+            <p className="flex items-center justify-center gap-1.5 text-base font-medium text-neutral-900">
               Nanda Kumar
               <VerifiedBadge />
             </p>
-            <p className="text-sm text-neutral-500">Software Engineer</p>
+            <p className="text-center text-sm text-neutral-500">Software Engineer</p>
           </div>
         </div>
 
-        <p className="text-base leading-relaxed text-neutral-700">
+        <p className="text-base leading-relaxed text-neutral-700 sm:text-justify sm:hyphens-auto">
           I&rsquo;m a software engineer at{' '}
           <a
             href="https://www.ampliwork.com"
@@ -155,18 +155,17 @@ export default function HomePage() {
             <AmpliMark />{' '}
             <span className="font-medium text-neutral-900">Ampliwork</span>
           </a>,
-          where we&rsquo;re building the easiest way for enterprise teams to
-          ship their own agents, no code required. I write here about my
-          explorations in this space and the tools I build to make my
-          workflow better.
+          building tools that help enterprise teams create and ship agents
+          without writing code. Here I share what I&rsquo;m learning about AI
+          engineering and the tools I build for my own workflow.
         </p>
-        <p className="mt-4 text-base leading-relaxed text-neutral-700">
-          Previously, I worked as a Machine Learning Engineer at
-          Femtherapeutics, while finishing my master&rsquo;s at Concordia
-          University, where my thesis was on structured information
-          extraction from LLMs (became the PANER paper below).
+        <p className="mt-3 text-base leading-relaxed text-neutral-700 sm:text-justify sm:hyphens-auto">
+          Previously, I was a Machine Learning Engineer at Femtherapeutics
+          while completing my master&rsquo;s at Concordia University. My
+          thesis on structured information extraction from LLMs became the
+          PANER paper below.
         </p>
-        <p className="mt-4 text-base leading-relaxed text-neutral-700">
+        <p className="mt-3 text-base leading-relaxed text-neutral-700">
           You can reach me at{' '}
           <a
             href="https://x.com/parzival1l"
@@ -190,8 +189,8 @@ export default function HomePage() {
         <OasisLink />
       </section>
 
-      <section className="mb-16">
-        <h2 className="mb-6 text-xs font-medium uppercase tracking-wider text-neutral-500">
+      <section className="mb-12">
+        <h2 className="mb-4 text-xs font-medium uppercase tracking-wider text-neutral-500">
           Recent posts
         </h2>
         <ul className="space-y-3">

@@ -14,7 +14,7 @@ import {
 } from '@/lib/reading'
 import { formatDate } from '@/lib/format'
 
-const META = 'text-[13px] text-neutral-500'
+const META = 'text-[0.8125rem] text-neutral-500'
 
 // Only the notes listed below exist; any other slug is a 404 in the export.
 export const dynamicParams = false
@@ -63,14 +63,14 @@ function SourceCard({ note }: { note: ReadingNote }) {
         />
       ) : null}
       {note.summary ? (
-        <p className="max-w-[600px] text-[15px] leading-6 text-neutral-600">{note.summary}</p>
+        <p className="max-w-[600px] text-[0.9375rem] leading-6 text-neutral-600">{note.summary}</p>
       ) : null}
       <div className="mt-1.5 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:gap-5">
         <a
           href={note.url}
           target="_blank"
           rel="noreferrer"
-          className="rounded-md bg-neutral-900 px-3.5 py-3 text-center text-[15px] font-medium text-[var(--bg)] hover:bg-neutral-700 sm:py-2 sm:text-sm"
+          className="rounded-md bg-neutral-900 px-3.5 py-3 text-center text-[0.9375rem] font-medium text-[var(--bg)] hover:bg-neutral-700 sm:py-2 sm:text-sm"
         >
           {video ? 'Watch' : 'Read'} on {domain}
         </a>
@@ -97,7 +97,7 @@ function Neighbour({ note, dir }: { note: ReadingNote; dir: 'older' | 'newer' })
       className={`group flex flex-col gap-1 ${older ? 'items-start' : 'items-end text-right'}`}
     >
       <span className={META}>{older ? 'Older' : 'Newer'}</span>
-      <span className="text-[15px] text-neutral-900 group-hover:text-accent">{noteTitle(note)}</span>
+      <span className="text-[0.9375rem] text-neutral-900 group-hover:text-accent">{noteTitle(note)}</span>
     </Link>
   )
 }

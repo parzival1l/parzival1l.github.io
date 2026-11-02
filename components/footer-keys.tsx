@@ -22,7 +22,7 @@ const CAP_SHADOW_HOVER =
 const TRIGGER =
   'group/key inline-flex items-center gap-1.5 text-xs text-neutral-500 transition-colors hover:text-neutral-900'
 
-const CAP = `inline-flex h-5 min-w-5 items-center justify-center rounded-[5px] border border-neutral-200 px-1 font-mono text-[11px] leading-none text-neutral-500 transition-all duration-100 ease-out ${CAP_SHADOW} ${CAP_SHADOW_HOVER} group-hover/key:translate-y-px group-hover/key:border-neutral-500 group-hover/key:text-neutral-900 group-active/key:translate-y-[2px] group-active/key:[box-shadow:none]`
+const CAP = `inline-flex h-5 min-w-5 items-center justify-center rounded-[5px] border border-neutral-200 px-1 font-mono text-[0.6875rem] leading-none text-neutral-500 transition-all duration-100 ease-out ${CAP_SHADOW} ${CAP_SHADOW_HOVER} group-hover/key:translate-y-px group-hover/key:border-neutral-500 group-hover/key:text-neutral-900 group-active/key:translate-y-[2px] group-active/key:[box-shadow:none]`
 
 export function FooterKeys() {
   const home = (usePathname() ?? '/') === '/'

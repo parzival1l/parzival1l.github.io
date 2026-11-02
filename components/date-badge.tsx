@@ -38,7 +38,7 @@ export function DateBadge({ mon, day }: { mon: string; day: string }) {
   return (
     <span className={BADGE_SHELL}>
       <span className={BADGE_INNER}>
-        <span className="flex h-3.5 w-full shrink-0 items-center justify-center bg-neutral-200 text-[8px] font-medium uppercase leading-none tracking-wider text-neutral-600">
+        <span className="flex h-3.5 w-full shrink-0 items-center justify-center bg-neutral-200 text-[0.5rem] font-medium uppercase leading-none tracking-wider text-neutral-600">
           {mon}
         </span>
         <span className="flex flex-1 items-center justify-center text-lg font-medium leading-none tabular-nums text-neutral-900">

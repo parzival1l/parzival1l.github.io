@@ -80,11 +80,11 @@ export function ProjectCard({ project }: { project: ProjectData }) {
       <div className="flex flex-col gap-1 sm:w-44 sm:flex-none">
         <a
           href={project.url ?? `https://github.com/${project.repo}`}
-          className="text-[17px] font-medium leading-snug text-neutral-900 underline-offset-4 hover:underline"
+          className="text-[1.0625rem] font-medium leading-snug text-neutral-900 underline-offset-4 hover:underline"
         >
           {project.name}
         </a>
-        <span className="flex flex-col gap-0.5 text-[13px]">
+        <span className="flex flex-col gap-0.5 text-[0.8125rem]">
           <a
             href={project.source ?? `https://github.com/${project.repo}`}
             className="text-neutral-500 underline-offset-4 hover:text-neutral-900 hover:underline"
@@ -102,7 +102,7 @@ export function ProjectCard({ project }: { project: ProjectData }) {
         </span>
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-3">
-        <p className="text-[15px] leading-relaxed text-neutral-700">{project.description}</p>
+        <p className="text-[0.9375rem] leading-relaxed text-neutral-700">{project.description}</p>
         <div className="flex flex-wrap gap-1.5">
           {project.tags.map((tag) => (
             <span

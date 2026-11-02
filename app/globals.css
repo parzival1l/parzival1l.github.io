@@ -46,6 +46,7 @@
 }
 
 html {
+  font-size: 110%;
   font-family: var(--font-sans);
   color: var(--fg);
   background: var(--bg);
@@ -69,8 +70,7 @@ html {
   }
 }
 
-/* Tighten the prose plugin's defaults: link color uses our accent, slightly
-   smaller body type, comfortable line-height for long-form reading. */
+/* Keep article text on the site's base size with comfortable leading. */
 .prose {
   --tw-prose-links: var(--color-accent);
   --tw-prose-bullets: #9ca3af;
@@ -82,11 +82,11 @@ html {
    by weight more than size, like the reading surfaces this site borrows
    from. */
 .prose :where(h2) {
-  font-size: 1.25em; /* 20px at 16px body */
+  font-size: 1.25em;
 }
 
 .prose :where(h3) {
-  font-size: 1.0625em; /* 17px */
+  font-size: 1.0625em;
 }
 
 .prose a {

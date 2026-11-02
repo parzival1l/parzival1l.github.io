@@ -42,7 +42,7 @@ export function LocalClock() {
           {[0, 1, 2].map((i) => (
             <span
               key={i}
-              className="cat-z absolute text-[11px] font-semibold leading-none text-neutral-900"
+              className="cat-z absolute text-[0.6875rem] font-semibold leading-none text-neutral-900"
               style={{ '--rang': i } as React.CSSProperties}
             >
               z
