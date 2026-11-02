@@ -41,7 +41,8 @@ active plan and tasks.
 - **Unedited posts** carry `wip: true`. They stay listed, but the homepage
   rail shows a "Draft" pill instead of "Published", and the post page
   notes that it isn't fully edited. Don't confuse `wip` with `draft`.
-- **Reading** lives at `/reading/` as a single-column log (design: Paper
+- **Notes** lives at `/reading/` as a single-column log of things read,
+  learned, and thought about, including standalone ideas (design: Paper
   file `Personal-Blog`, page `Reading-Page`, the "A" artboards). Short
   entries go in `content/reading.yaml`: only `date` plus a `url` or a `note`
   is required, and `type` is inferred from the url. Long notes go in
@@ -50,9 +51,9 @@ active plan and tasks.
   Loader and validation: `lib/reading.ts`; client-safe types:
   `lib/reading-shared.ts`. A broken entry throws at build time. The page
   has no animation, on purpose.
-- **Index pages share one frame.** Blog, Reading and Projects all use
+- **Index pages share one frame.** Blog, Notes and Projects all use
   `PageHeader` + `PAGE_SHELL` (`components/page-header.tsx`), so the title
-  sits in the same spot on each. Blog and Reading share `FilterBar`
+  sits in the same spot on each. Blog and Notes share `FilterBar`
   (`components/filter-bar.tsx`: tabs with counts, search, "/" to focus) and
   the calendar `DateBadge` (`components/date-badge.tsx`). Projects render
   as full-width rows (`components/project-card.tsx`).

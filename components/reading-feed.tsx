@@ -177,7 +177,7 @@ export function ReadingFeed({ entries }: { entries: ReadingEntry[] }) {
           setLimit(PAGE)
         }}
         label="Filter by type"
-        searchLabel="Search the reading log"
+        searchLabel="Search notes"
       />
 
       {visible.length === 0 ? (

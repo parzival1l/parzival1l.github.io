@@ -115,7 +115,7 @@ export default async function ReadingNotePage({ params }: { params: Promise<{ sl
   return (
     <article className="mx-auto max-w-3xl px-6 py-12">
       <Link href="/reading/" className="text-sm text-neutral-600 hover:text-neutral-900">
-        Reading
+        Notes
       </Link>
 
       <header className="mt-10 flex flex-col gap-3">
