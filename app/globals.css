@@ -177,10 +177,13 @@ html {
   content: none;
 }
 
-/* Headings use the heading cut of the same family. */
-h1,
-h2,
-h3,
-.prose :where(h1, h2, h3) {
-  font-family: var(--font-heading);
+/* Headings use the heading cut of the same family. In the base layer so a
+   font utility on a heading (font-sans) can still override it. */
+@layer base {
+  h1,
+  h2,
+  h3,
+  .prose :where(h1, h2, h3) {
+    font-family: var(--font-heading);
+  }
 }

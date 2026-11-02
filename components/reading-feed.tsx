@@ -51,7 +51,9 @@ function EntryTitle({ entry }: { entry: ReadingEntry }) {
   ) : null
   if (!title) return null
   return (
-    <h3 className="relative pl-6">
+    // font-sans: entry titles use the body cut, like Blog rows. The global h3
+    // rule would put them in the heading cut, which reads heavier than Blog.
+    <h3 className="relative pl-6 font-sans">
       <span className="absolute left-0 top-[3px] text-neutral-500">
         <TypeIcon type={entry.type} />
       </span>
