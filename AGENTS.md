@@ -41,6 +41,20 @@ active plan and tasks.
 - **Unedited posts** carry `wip: true`. They stay listed, but the homepage
   rail shows a "Draft" pill instead of "Published", and the post page
   notes that it isn't fully edited. Don't confuse `wip` with `draft`.
+- **Post prose is the author's.** Fix typos, dictation errors and sentence
+  breaks, and flag anything unclear. Don't rewrite sentences into your own
+  phrasing: Pangram flags agent rewrites as AI, and the author's uneven
+  wording is what reads as human. When the author dictates a post, keep
+  their words and only add the structure they ask for.
+- **Notion drafts.** Posts are drafted in the Notion "Posts" database (data
+  source `collection://22390c8a-178b-4f97-9b73-409ef82c6b84`, under the
+  private "Blog" page). Each row maps to `content/posts/<Slug>.mdx`; Status
+  Draft / WIP / Published maps to `draft: true` / `wip: true` / neither.
+  Download Notion images into `public/images/posts/<date>/`, because Notion
+  image links expire. Keep the `.mdx` and the Notion page in sync after edits.
+- **Link previews.** A post's optional `image:` frontmatter sets its
+  `og:image` / `twitter:image`; `metadataBase` in `app/layout.tsx` makes the
+  path absolute.
 - **Notes** lives at `/reading/` as a single-column log of things read,
   learned, and thought about, including standalone ideas (design: Paper
   file `Personal-Blog`, page `Reading-Page`, the "A" artboards). Short
