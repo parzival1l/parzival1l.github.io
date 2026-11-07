@@ -23,9 +23,25 @@ export async function generateMetadata({
   const { slug } = await params
   const post = getPostBySlug(slug)
   if (!post) return {}
+  const { title, description, date, image } = post.frontmatter
+  const images = image ? [image] : undefined
   return {
-    title: post.frontmatter.title,
-    description: post.frontmatter.description,
+    title,
+    description,
+    openGraph: {
+      type: 'article',
+      title,
+      description,
+      url: `/blog/${slug}/`,
+      publishedTime: date,
+      images,
+    },
+    twitter: {
+      card: image ? 'summary_large_image' : 'summary',
+      title,
+      description,
+      images,
+    },
   }
 }
 

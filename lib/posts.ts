@@ -9,6 +9,8 @@ export interface PostFrontmatter {
   categories?: string[]
   tags?: string[]
   description?: string
+  /** Link-preview image (og:image / twitter:image), a path under public/. */
+  image?: string
   /** Hidden from listings; still rendered if requested directly via slug. */
   draft?: boolean
   /** Listed like any post, but labelled as not fully edited yet. */

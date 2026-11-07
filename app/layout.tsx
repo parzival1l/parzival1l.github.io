@@ -15,6 +15,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://parzival.computer'),
   title: {
     default: 'Nanda Kumar',
     template: '%s · Nanda Kumar',
