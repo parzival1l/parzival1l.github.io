@@ -1,0 +1,62 @@
+---
+title: Pacing the Mid-Tier
+date: 2026-11-06
+categories: [Reflection]
+tags: [learning, expectations]
+description: What I'm working on, and writing about, until February.
+image: /images/posts/2026-11-06/cooking-app-screens.png
+---
+
+_The title is a pun on Dario Amodei's essay
+[We Must Pace the Frontier](https://darioamodei.com/post/we-must-pace-the-frontier)._
+
+The next 4 months until February matter a lot to me. I want to spend them
+actually working on things, not just saying I'm working on things. So I'm
+putting them in order and keeping track of what gets done.
+
+This is the plan. It's short on purpose.
+
+## 1. Writing about the app I shipped
+
+I recently shipped an app to production. It has users, and it solves a
+problem for them. I made a lot of new decisions to get it there:
+
+- **Design:** how the frontend, animations and UX should feel.
+- **Backend:** how to structure the code, which frameworks to use, and how
+  to work with AI to write it.
+- **System design:** how the whole system fits together.
+
+I also did some product work:
+
+- **Features and feedback:** using PostHog to test features and adoption,
+  and to find user pain points.
+- **Testing:** a round of user acceptance testing.
+
+I'm going to write a series of posts about these. Maybe one area at a time,
+but I haven't fully mapped it out yet. I especially want to write about
+talking to users. I know less about it, but I work with a great product
+manager and have learnt a few things from them.
+
+## 2. A cooking app for two
+
+I'm also building a personal project for me and my partner. It's a realtime
+multiplayer cooking app, built on Cloudflare Durable Objects. It helps us
+cook at home.
+
+Here's a sneak peek of the UI so far:
+
+![Four screens from the cooking app: planning the week from both phones, a recipe card, and the shared shopping list](/images/posts/2026-11-06/cooking-app-screens.png)
+
+The repo is private for now. The app is hosted publicly, and I don't want
+people spamming it. There are probably ways to keep it secure. Once I learn
+more about that, I'll think about open-sourcing it. I like the idea of
+building in public.
+
+## 3. Writing about what I'm learning
+
+I also want to write about things I'm actively learning. For example, I
+recently found out that Cloudflare runs Workers inside V8 isolates, instead
+of giving each one its own microVM, like Firecracker, which AWS Lambda runs
+on. How those two approaches compare will probably be the first article.
+
+P.S. For future me: come back in February and see what you did.
